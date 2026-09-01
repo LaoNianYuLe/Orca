@@ -67,7 +67,12 @@ fun ProjectsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.workspace_projects_title)) },
+                title = {
+                    androidx.compose.foundation.layout.Box(
+                        Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(stringResource(R.string.workspace_projects_title)) }
+                },
                 actions = {
                     IconButton(onClick = { showCreate = true }) {
                         Icon(Icons.Default.Add, contentDescription = stringResource(R.string.workspace_create_project))
@@ -155,7 +160,12 @@ fun CopywritingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.workspace_copywriting_title)) },
+                title = {
+                    androidx.compose.foundation.layout.Box(
+                        Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(stringResource(R.string.workspace_copywriting_title)) }
+                },
             )
         },
     ) { padding ->

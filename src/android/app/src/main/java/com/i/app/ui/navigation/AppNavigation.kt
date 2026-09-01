@@ -189,9 +189,13 @@ object Routes {
     fun logDetail(fileName: String) = "log_detail/$fileName"
     fun sessionStorageDetail(sessionId: String) = "session_storage/$sessionId"
     fun memoryFileEdit(fileName: String, isGlobal: Boolean) = "memory_file/$fileName/$isGlobal"
-    fun chat(sessionId: String, draft: String? = null): String {
-        if (draft.isNullOrBlank()) return "chat/$sessionId"
-        return "chat/$sessionId?draft=${android.net.Uri.encode(draft)}"
+    fun chat(sessionId: String, draft: String? = null, category: String? = null): String {
+        val params = buildList {
+            if (!draft.isNullOrBlank()) add("draft=${android.net.Uri.encode(draft)}")
+            if (!category.isNullOrBlank()) add("category=${android.net.Uri.encode(category)}")
+        }
+        if (params.isEmpty()) return "chat/$sessionId"
+        return "chat/$sessionId?${params.joinToString("&")}"
     }
     fun providerDetail(instanceId: String) = "provider/$instanceId"
     fun shadowVoiceDetail(instanceId: String) = "voice_service/$instanceId"
@@ -542,7 +546,7 @@ fun AppNavigation(
                 onBack = { navController.safePopBackStack() },
                 onNewCopywritingChat = { prompt ->
                     navController.safeNavigate(
-                        Routes.chat("__new__${java.util.UUID.randomUUID()}", prompt),
+                        Routes.chat("__new__${java.util.UUID.randomUUID()}", prompt, category = "writing"),
                     )
                 },
                 onOpenSession = { sessionId -> navController.safeNavigate(Routes.chat(sessionId)) },
@@ -550,10 +554,15 @@ fun AppNavigation(
         }
 
         composable(
-            route = "${Routes.CHAT}?draft={draft}",
+            route = "${Routes.CHAT}?draft={draft}&category={category}",
             arguments = listOf(
                 navArgument("sessionId") { type = NavType.StringType },
                 navArgument("draft") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("category") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
@@ -562,6 +571,7 @@ fun AppNavigation(
         ) { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId") ?: return@composable
             val draft = backStackEntry.arguments?.getString("draft")
+            val category = backStackEntry.arguments?.getString("category")
             ChatScreen(
                 sessionId = sessionId,
                 chatRepository = chatRepository,
@@ -605,6 +615,7 @@ fun AppNavigation(
                 },
                 onModelGroupsClick = { navController.safeNavigate(Routes.MODEL_GROUPS) },
                 initialInputText = draft,
+                initialCategory = category,
             )
         }
 

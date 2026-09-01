@@ -417,6 +417,7 @@ fun ChatScreen(
      *  Model Groups section header. */
     onModelGroupsClick: () -> Unit = {},
     initialInputText: String? = null,
+    initialCategory: String? = null,
 ) {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -436,6 +437,7 @@ fun ChatScreen(
             memoryRepository = memoryRepository,
             skillRepository = skillRepository,
             mcpRepository = mcpRepository,
+            initialCategory = initialCategory,
         ),
     )
     // [T-android-larky-longsession-followup] Consume the tail-windowed
