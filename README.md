@@ -18,6 +18,28 @@ and theme/startup behavior adapted for this build.
 - Light, dark, and system appearance modes
 - First-install welcome flow when no chat history exists
 
+## Current test release
+
+The first public Android package is a **test release**, not a stable release.
+It is intended for emulator and device testing of the Orca branding, mobile
+sidebar, settings navigation, first-install welcome flow, and light/dark theme
+behavior.
+
+- App version: `1.12` (version code `24`)
+- Package type: Android debug APK
+- Architecture: `arm64-v8a`
+- Test scope: Android; iOS packaging is not included in this release
+- Known limitation: some legacy provider, terminal-sanitizer, and
+  speech-correction tests still need reconciliation with the current fixtures
+
+Install the APK only on a device or emulator you control. Remove an older
+debug build first if Android reports a signature or downgrade conflict. Do not
+use this package as a production release or enter credentials on a device you
+do not trust.
+
+The APK checksum is published in the GitHub release notes so the downloaded
+file can be verified before installation.
+
 ## Build Android
 
 Requirements: Android SDK, JDK 17, and Android NDK r28 or newer.
@@ -32,6 +54,17 @@ The debug APK is generated at:
 ```text
 src/android/app/build/outputs/apk/debug/app-debug.apk
 ```
+
+## First-run setup
+
+1. Install the test APK or build it locally.
+2. Open Orca and complete the welcome flow.
+3. Open Settings → Providers and add your own provider endpoint and API key.
+4. Select a model group, then start a new conversation.
+
+Orca does not provide a shared API account. Provider fees, rate limits, and
+terms are controlled by the provider account you configure. Never put a real
+API key into source files or commit it to Git.
 
 ## Source and distribution
 
