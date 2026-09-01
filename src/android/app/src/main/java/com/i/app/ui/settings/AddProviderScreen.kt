@@ -74,6 +74,9 @@ import com.i.app.data.model.ProviderCredential
 import com.i.app.data.model.ProviderInstance
 import com.i.app.data.model.ProviderType
 import com.i.app.data.repository.ProviderRepository
+import com.i.app.provider.catalog.ProviderCatalog
+import com.i.app.provider.catalog.ProviderProtocol
+import com.i.app.provider.catalog.ProviderSpec
 import com.i.app.R
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -95,6 +98,7 @@ fun AddProviderScreen(
 ) {
     var step by remember { mutableStateOf(AddProviderStep.CHOOSE_TYPE) }
     var selectedType by remember { mutableStateOf<ProviderType?>(null) }
+    var selectedPreset by remember { mutableStateOf<ProviderSpec?>(null) }
     var selectedCredential by remember { mutableStateOf<ProviderCredential?>(null) }
     // [T-android-provider-voice] Non-null when the flow was entered from a
     // Voice Chat Provider template row — preseeds type/base URL/label/appendV1
@@ -111,6 +115,7 @@ fun AddProviderScreen(
             AddProviderStep.CHOOSE_CREDENTIAL -> {
                 step = AddProviderStep.CHOOSE_TYPE
                 selectedType = null
+                selectedPreset = null
             }
             AddProviderStep.CONFIGURE -> {
                 // Voice-template entry skipped the credential step entirely —
@@ -118,12 +123,14 @@ fun AddProviderScreen(
                 if (selectedVoiceTemplate != null) {
                     step = AddProviderStep.CHOOSE_TYPE
                     selectedType = null
+                    selectedPreset = null
                     selectedVoiceTemplate = null
                 } else {
                     val creds = availableCredentials(selectedType!!)
                     if (creds.size == 1) {
                         step = AddProviderStep.CHOOSE_TYPE
                         selectedType = null
+                        selectedPreset = null
                     } else {
                         step = AddProviderStep.CHOOSE_CREDENTIAL
                     }
@@ -140,6 +147,7 @@ fun AddProviderScreen(
         AddProviderStep.CHOOSE_TYPE -> ChooseProviderScreen(
             onBack = handleBack,
             onSelect = { type ->
+                selectedPreset = null
                 selectedType = type
                 val creds = availableCredentials(type)
                 if (creds.size == 1) {
@@ -149,6 +157,12 @@ fun AddProviderScreen(
                 } else {
                     step = AddProviderStep.CHOOSE_CREDENTIAL
                 }
+            },
+            onSelectPreset = { preset ->
+                selectedPreset = preset
+                selectedType = preset.providerType()
+                selectedCredential = ProviderCredential.apiKey
+                step = AddProviderStep.CONFIGURE
             },
             onSelectVoiceTemplate = { template ->
                 // Mirror iOS applyVoiceTemplate: pick the underlying protocol,
@@ -171,6 +185,7 @@ fun AddProviderScreen(
             providerType = selectedType!!,
             credentialType = selectedCredential!!,
             providerRepository = providerRepository,
+            preset = selectedPreset,
             voiceTemplate = selectedVoiceTemplate,
             onBack = handleBack,
             onSaved = onSaved,
@@ -189,6 +204,15 @@ private val providerDisplayOrder = listOf(
     ProviderType.poolside,
     ProviderType.inception,
 )
+
+private fun ProviderSpec.providerType(): ProviderType = when {
+    id == "poolside" -> ProviderType.poolside
+    id == "inception" -> ProviderType.inception
+    protocol == ProviderProtocol.ANTHROPIC -> ProviderType.anthropic
+    protocol == ProviderProtocol.GEMINI -> ProviderType.gemini
+    protocol == ProviderProtocol.OLLAMA -> ProviderType.openAI
+    else -> ProviderType.openAI
+}
 
 /** Icon and color per provider type, matching iOS SF Symbols. */
 private fun providerIcon(type: ProviderType): Pair<ImageVector, Color> = when (type) {
@@ -229,6 +253,7 @@ private fun availableCredentials(type: ProviderType): List<ProviderCredential> {
 private fun ChooseProviderScreen(
     onBack: () -> Unit,
     onSelect: (ProviderType) -> Unit,
+    onSelectPreset: (ProviderSpec) -> Unit = {},
     onSelectVoiceTemplate: (com.i.app.data.model.VoiceProviderTemplate) -> Unit = {},
 ) {
     SettingsScaffold(
@@ -239,36 +264,24 @@ private fun ChooseProviderScreen(
             header = stringResource(R.string.add_provider_choose_provider),
             footer = stringResource(R.string.add_provider_you_can_add_multiple_instances_of_the_sa),
         ) {
-            providerDisplayOrder.forEachIndexed { index, type ->
-                val displayTitle = when (type) {
-                    ProviderType.openAI -> "OpenAI / Compatible API"
-                    ProviderType.anthropic -> "Anthropic / Compatible API"
-                    ProviderType.gemini -> "Google Gemini"
-                    ProviderType.openRouter -> "OpenRouter"
-                    ProviderType.xAI -> "xAI (Grok)"
-                    ProviderType.kimiCode -> "Kimi Code"
-                    ProviderType.poolside -> "Poolside"
-                    ProviderType.inception -> "Inception"
-                }
-                // Describe which vendors each protocol supports, rather than a
-                // raw built-in model count.
-                val subtitleRes = when (type) {
-                    ProviderType.openAI -> R.string.add_provider_subtitle_openai
-                    ProviderType.anthropic -> R.string.add_provider_subtitle_anthropic
-                    ProviderType.gemini -> R.string.add_provider_subtitle_gemini
-                    ProviderType.openRouter -> R.string.add_provider_subtitle_openrouter
-                    ProviderType.xAI -> R.string.add_provider_subtitle_xai
-                    ProviderType.kimiCode -> R.string.add_provider_subtitle_kimi
-                    ProviderType.poolside, ProviderType.inception -> R.string.add_provider_subtitle_openai
-                }
-                val (icon, iconColor) = providerIcon(type)
+            ProviderCatalog.builtIn.forEachIndexed { index, preset ->
+                val (icon, iconColor) = providerIcon(preset.providerType())
                 SettingsRow(
-                    title = displayTitle,
-                    subtitle = stringResource(subtitleRes),
+                    title = preset.displayName,
+                    subtitle = when (preset.protocol) {
+                        ProviderProtocol.OPENAI_COMPATIBLE -> "OpenAI 兼容 API · API Key"
+                        ProviderProtocol.ANTHROPIC -> "Anthropic API · API Key"
+                        ProviderProtocol.GEMINI -> "Gemini API · API Key"
+                        ProviderProtocol.OLLAMA -> "本地模型 · 无需 API Key"
+                        ProviderProtocol.AZURE_OPENAI -> "Azure OpenAI · API Key"
+                        ProviderProtocol.BEDROCK -> "Amazon Bedrock · AWS"
+                        ProviderProtocol.GITHUB_COPILOT -> "GitHub Models · OAuth / Token"
+                        ProviderProtocol.UNVERIFIED -> "需要单独验证"
+                    },
                     icon = icon,
                     iconColor = iconColor,
-                    onClick = { onSelect(type) },
-                    showDivider = index < providerDisplayOrder.size - 1,
+                    onClick = { onSelectPreset(preset) },
+                    showDivider = index < ProviderCatalog.builtIn.size - 1,
                 )
             }
         }
@@ -380,6 +393,7 @@ private fun ConfigureProviderScreen(
     providerType: ProviderType,
     credentialType: ProviderCredential,
     providerRepository: ProviderRepository,
+    preset: ProviderSpec? = null,
     voiceTemplate: com.i.app.data.model.VoiceProviderTemplate? = null,
     onBack: () -> Unit,
     onSaved: () -> Unit,
@@ -387,8 +401,8 @@ private fun ConfigureProviderScreen(
     // Compute default label with auto-increment (e.g. "OpenAI", "OpenAI 2", ...)
     // A voice template preseeds its vendor name instead of the protocol name.
     val config by providerRepository.config.collectAsState()
-    val defaultLabel = remember(config) {
-        val baseName = voiceTemplate?.name ?: providerType.displayName
+    val defaultLabel = remember(config, preset) {
+        val baseName = voiceTemplate?.name ?: preset?.displayName ?: providerType.displayName
         val existingLabels = config.instances.map { it.label }.toSet()
         if (baseName !in existingLabels) baseName
         else {
@@ -416,7 +430,7 @@ private fun ConfigureProviderScreen(
         if (!labelEdited) label = defaultLabel
     }
     var apiKey by remember { mutableStateOf("") }
-    var customBaseURL by remember { mutableStateOf(voiceTemplate?.baseURL ?: "") }
+    var customBaseURL by remember { mutableStateOf(voiceTemplate?.baseURL ?: preset?.defaultBaseUrl ?: "") }
 
     SettingsScaffold(
         title = stringResource(R.string.add_provider_configure_provider, providerType.displayName),
