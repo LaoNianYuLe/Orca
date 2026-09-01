@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
@@ -123,6 +124,8 @@ fun AppShell(
                     onClick = { settle(SidebarTarget.Open) },
                     modifier = Modifier
                         .align(Alignment.TopStart)
+                        .statusBarsPadding()
+                        .background(MaterialTheme.colorScheme.background)
                         .zIndex(2f)
                         .semantics { contentDescription = "Open sidebar" },
                 ) {
