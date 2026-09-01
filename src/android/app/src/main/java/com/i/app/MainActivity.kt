@@ -580,15 +580,13 @@ class MainActivity : ComponentActivity() {
                         navController.safeNavigate(Routes.STORAGE)
                     },
                     onProjects = {
-                        navController.safeNavigate(Routes.SESSION_LIST)
+                        navController.safeNavigate(Routes.PROJECTS)
                     },
                     onSkills = {
                         navController.safeNavigate(Routes.SKILLS)
                     },
                     onCopywriting = {
-                        navController.safeNavigate(
-                            Routes.chat("__new__${java.util.UUID.randomUUID()}"),
-                        )
+                        navController.safeNavigate(Routes.COPYWRITING)
                     },
                     onSessionClick = { sessionId ->
                         navController.safeNavigate(Routes.chat(sessionId))

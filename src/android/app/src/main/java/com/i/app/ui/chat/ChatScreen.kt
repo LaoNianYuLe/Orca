@@ -416,6 +416,7 @@ fun ChatScreen(
      *  management screen — wired to the "Edit" button on the model picker's
      *  Model Groups section header. */
     onModelGroupsClick: () -> Unit = {},
+    initialInputText: String? = null,
 ) {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -508,6 +509,12 @@ fun ChatScreen(
     // pop back) doesn't wipe what the user has typed. Mirrors iOS
     // `AIChatView` which binds the composer against `vm.inputText`.
     val inputText by viewModel.inputText.collectAsState()
+
+    LaunchedEffect(initialInputText, sessionId) {
+        if (!initialInputText.isNullOrBlank() && viewModel.inputText.value.isBlank()) {
+            viewModel.setInputText(initialInputText)
+        }
+    }
 
     // ─── T51: Share Injection + Move-to capsule ───────────────────────
     // Drain any pending share buffered by ShareCoordinator (cold start =
