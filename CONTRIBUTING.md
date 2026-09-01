@@ -1,48 +1,32 @@
-# Contributing
+# Contributing to Orca
 
-Thanks for your interest in I.
+Thanks for helping improve Orca. Orca is an independent community derivative
+of [OpenMinis](https://github.com/OpenMinis/OpenMinis). Please keep the
+upstream attribution and the applicable third-party notices when contributing.
 
-## We do not accept pull requests
+## Issues and pull requests
 
-This repository is a **mirror**. Development happens in a private tree and is
-published here on each release, so a pull request opened against this
-repository has nowhere to land — merging it would be overwritten by the next
-sync, and we cannot merge it upstream either.
+Open an issue for bugs, crashes, feature requests, or questions. Include the
+platform, app version, steps to reproduce, selected provider/model, and logs
+when available.
 
-Please do not spend your time preparing one. If you have already opened a PR,
-we will close it with a pointer back to this document; that is not a judgement
-on the work.
+Pull requests are welcome when they include a clear description, keep secrets
+and generated build output out of the repository, and do not remove upstream
+license notices.
 
-## What we do want
+## Source and licensing
 
-Everything else. The product is shaped by what people report:
+The project is distributed under GPLv3. Changes included in a distributed
+Orca build must remain available in source form under the applicable license.
+See [BUILDING.md](BUILDING.md) for the reproducible build steps and
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for bundled dependencies.
 
-- **[Open an issue](https://github.com/OpenMinis/OpenMinis/issues)** — bugs,
-  crashes, papercuts, feature requests, questions about behaviour. A clear
-  report is worth more to us than a patch, because it tells us what to build.
-- **Share what you have built** — real workflows and use cases go in
-  **[AwesomeI](https://github.com/OpenMinis/AwesomeMinis)**, which does
-  take contributions.
-- **Write a skill** — **[ISkills](https://github.com/OpenMinis/MinisSkills)**
-  also takes contributions, and skills are how most people extend I
-  without touching the app at all.
-- **Talk to us** — the [Telegram group](https://t.me/+2NzhOJuzRyI1YmM1) is
-  where most day-to-day discussion happens.
+Do not commit API keys, OAuth tokens, signing keys, `local.properties`,
+generated `build/` directories, APK/AAB files, or personal configuration.
 
-## Filing a good issue
+## What to include in a change
 
-The more of this you can give us, the faster it gets fixed:
-
-- Platform and version (Settings → About shows both)
-- What you expected, what happened instead
-- Steps to reproduce, or the prompt that triggered it
-- Which model / provider was selected, if relevant
-- Logs, if the app produced any (Settings → Logs)
-
-## Using the source
-
-The code is GPLv3. You are free to fork it, modify it and run your own build —
-see [BUILDING.md](BUILDING.md). The licence obliges you to publish the source
-of anything you distribute, and to keep it under GPLv3.
-
-We simply do not merge changes back through this repository.
+- Source code and tests needed to reproduce the behavior.
+- Updated documentation when build steps or user-facing behavior changes.
+- A short note about compatibility and any known limitations.
+- License and attribution notices for new third-party code or assets.

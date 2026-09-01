@@ -1,6 +1,6 @@
-# Building I
+# Building Orca
 
-I ships a full Linux sandbox inside the app, so a first build is not just
+Orca ships a full Linux sandbox inside the app, so a first build is not just
 "open the project and press Run": the native dependencies (iSH on iOS, PRoot on
 Android, FFmpeg, LAME) and the Alpine rootfs are **built from source by the
 scripts in `deps/`**, not committed as binaries. Budget ~30–60 minutes for the
@@ -14,12 +14,12 @@ ordered by dependency, and skipping one produces confusing link errors later.
 
 ## Common setup
 
-Clone with submodules — the iSH and PRoot forks are submodules, and a clone
+Clone Orca with submodules — the iSH and PRoot forks are submodules, and a clone
 without them will fail at the native build step:
 
 ```sh
-git clone --recurse-submodules https://github.com/OpenMinis/OpenMinis.git
-cd I
+git clone --recurse-submodules https://github.com/jamesleeopenclaw-source/Orca.git
+cd Orca
 
 # Already cloned without --recurse-submodules?
 git submodule update --init --recursive
@@ -119,6 +119,10 @@ open src/ios/I.xcodeproj
 Select the **I** scheme and build. For a device build, set your own team
 under *Signing & Capabilities* — the project ships with an empty
 `DEVELOPMENT_TEAM`.
+
+The iOS target still contains upstream internal target names in some paths;
+these are build identifiers and do not change the user-facing app name, which
+is Orca.
 
 From the command line:
 

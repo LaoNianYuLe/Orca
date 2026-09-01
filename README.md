@@ -33,6 +33,23 @@ The debug APK is generated at:
 src/android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## Source and distribution
+
+This repository contains the source used to build Orca, including the Android
+and iOS code, build scripts, submodule references, tests, and required license
+notices. Generated build directories, APK/AAB packages, local SDK settings,
+signing keys, API keys, OAuth tokens, and other personal configuration are not
+part of the source release.
+
+Anyone building Orca must provide their own provider credentials in the app or
+in the ignored local customization files. The repository does not contain a
+shared API account or a bundled API key. The `models-dev-api.json` file is
+public model metadata, not an authentication credential.
+
+If an APK is distributed, the corresponding modified source must remain
+available from this repository under GPLv3. An APK is optional; the source
+repository is the required part of the release.
+
 ## License and attribution
 
 Orca is distributed under the [GNU General Public License v3.0](LICENSE).
