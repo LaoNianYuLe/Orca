@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">I</string>
     <string name="new_chat">New Chat</string>
+    <string name="chat_empty_welcome">有什么可以帮你？</string>
     <string name="sidebar_new_chat">新会话</string>
     <string name="sidebar_phone_library">手机库</string>
     <string name="sidebar_projects">项目</string>
