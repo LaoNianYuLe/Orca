@@ -26,9 +26,8 @@ object ProviderCatalog {
         ProviderSpec("minimax", "MiniMax", 18, ProviderProtocol.OPENAI_COMPATIBLE, ProviderCredentialMode.API_KEY, null, null),
         ProviderSpec("xiaomi-mimo", "小米 MiMo", 19, ProviderProtocol.OPENAI_COMPATIBLE, ProviderCredentialMode.API_KEY, null, null),
         ProviderSpec("ollama", "Ollama", 20, ProviderProtocol.OLLAMA, ProviderCredentialMode.LOCAL, "http://localhost:11434", ModelFetcherSpec("/api/tags", requiresApiKey = false)),
-        ProviderSpec("stealth", "Stealth", 21, ProviderProtocol.UNVERIFIED, ProviderCredentialMode.API_KEY, null, null),
-        ProviderSpec("poolside", "Poolside", 22, ProviderProtocol.UNVERIFIED, ProviderCredentialMode.API_KEY, null, null),
-        ProviderSpec("inception", "Inception", 23, ProviderProtocol.UNVERIFIED, ProviderCredentialMode.API_KEY, null, null),
+        ProviderSpec("poolside", "Poolside", 21, ProviderProtocol.OPENAI_COMPATIBLE, ProviderCredentialMode.API_KEY, "https://inference.poolside.ai/openai/v1", ModelFetcherSpec("/models")),
+        ProviderSpec("inception", "Inception", 22, ProviderProtocol.OPENAI_COMPATIBLE, ProviderCredentialMode.API_KEY, "https://api.inceptionlabs.ai/v1", ModelFetcherSpec("/models")),
     )
 
     private val byId = builtIn.associateBy { it.id }

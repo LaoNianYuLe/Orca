@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rebuild Orca's Android provider and model management around the confirmed LobeHub-style structure for 23 ordered providers, while preserving existing chat, encrypted credentials, model groups, and navigation.
+**Goal:** Rebuild Orca's Android provider and model management around the confirmed LobeHub-style structure for 22 ordered providers, while preserving existing chat, encrypted credentials, model groups, and navigation.
 
 **Architecture:** Add a Kotlin provider catalog with one specification per provider, one model catalog per provider, and protocol-level runtime adapters. Keep `ProviderRepository` as the persistence boundary, extend the existing provider database instead of replacing it, and let the settings flow expose `Provider List → Provider Detail → Config | Models`. Use shared OpenAI-compatible, Anthropic-compatible, Gemini, and Ollama paths, with provider-specific rules only where the official API requires them.
 
@@ -12,7 +12,7 @@
 
 ## Fixed provider scope and display order
 
-The built-in catalog must contain exactly these 23 display entries in this order:
+The built-in catalog must contain exactly these 22 display entries in this order:
 
 ```text
 OpenAI
@@ -35,7 +35,6 @@ NVIDIA
 MiniMax
 小米 MiMo
 Ollama
-Stealth
 Poolside
 Inception
 ```
@@ -52,7 +51,7 @@ Slash-separated names are one display entry. Their internal connection routes ma
 
 - [ ] **Step 1: Write the failing catalog tests**
 
-Test that the catalog contains 23 unique stable IDs, that `displayOrder` is contiguous from 1 to 23, and that the ordered display names exactly match the fixed list above. Test that OpenAI, Anthropic, Gemini, Ollama, and the three unverified providers map to the expected protocol/auth categories.
+Test that the catalog contains 22 unique stable IDs, that `displayOrder` is contiguous from 1 to 22, and that the ordered display names exactly match the fixed list above. Test that OpenAI, Anthropic, Gemini, Ollama, Poolside, and Inception map to the expected protocol/auth categories.
 
 - [ ] **Step 2: Run the catalog test and verify the expected failure**
 
@@ -124,7 +123,7 @@ Run the focused merge tests and commit the normalized metadata layer.
 
 - [ ] **Step 1: Write failing routing tests**
 
-Assert that each of the 23 catalog entries resolves to a runtime category, that OpenAI-compatible providers do not create duplicate protocol implementations, and that unverified providers fail safely with a configuration-required result instead of sending a guessed request.
+Assert that each of the 22 catalog entries resolves to a runtime category and that OpenAI-compatible providers do not create duplicate protocol implementations. Do not treat StealthGPT as a normal model provider: it is a separate text-transformation integration if it is ever added.
 
 - [ ] **Step 2: Verify routing tests fail**
 
@@ -138,7 +137,7 @@ The interface must expose chat streaming, connection testing, model listing, req
 
 Wrap current OpenAI, Anthropic, Gemini, xAI, OpenRouter, and model-fetch implementations. Add common OpenAI-compatible behavior for providers whose official API is OpenAI-compatible. Keep special handling for Azure, Bedrock, GitHub Copilot, and Ollama explicit.
 
-- [ ] **Step 5: Add safe handling for Stealth, Poolside, and Inception**
+- [ ] **Step 5: Add verified handling for Poolside and Inception**
 
 Register the three providers in the UI and persistence layer. Enable a real runtime only after an official API base URL, auth method, model endpoint, and request format are verified. Until then, show configuration-required status and allow manual model entries without making network calls to an invented endpoint.
 
@@ -190,7 +189,7 @@ Commit the refresh and persistence changes after the tests pass.
 
 - [ ] **Step 1: Write failing UI tests**
 
-Assert the 23 providers render in the fixed order; provider detail shows the top provider switch; Config and Models tabs switch without losing state; Models shows search, available count, fetch button, enabled count, capability badges, and row switches; Config shows API key, proxy URL, test model selector, and test button; the test model selector opens as a bottom sheet.
+Assert the 22 providers render in the fixed order; provider detail shows the top provider switch; Config and Models tabs switch without losing state; Models shows search, available count, fetch button, enabled count, capability badges, and row switches; Config shows API key, proxy URL, test model selector, and test button; the test model selector opens as a bottom sheet.
 
 - [ ] **Step 2: Verify the UI tests fail**
 
@@ -268,4 +267,4 @@ Confirm no API keys are committed, no LobeHub logo or copied UI assets were adde
 
 - [ ] **Step 5: Update documentation and commit**
 
-Document the 23 built-in providers, required user-owned credentials, unverified-provider behavior, and the fact that model availability depends on each provider. Commit the final documentation and verification notes.
+Document the 22 built-in providers, required user-owned credentials, the exclusion of StealthGPT from the normal model-provider list, and the fact that model availability depends on each provider. Commit the final documentation and verification notes.

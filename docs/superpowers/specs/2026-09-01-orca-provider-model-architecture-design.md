@@ -6,7 +6,7 @@
 
 ## 范围
 
-第一阶段固定纳入以下 23 个服务商入口，并按该顺序显示：
+第一阶段固定纳入以下 22 个服务商入口，并按该顺序显示：
 
 1. OpenAI
 2. Google
@@ -28,9 +28,8 @@
 18. MiniMax
 19. 小米 MiMo
 20. Ollama
-21. Stealth
-22. Poolside
-23. Inception
+21. Poolside
+22. Inception
 
 服务商列表是固定的初始目录；后续可以继续支持用户自定义服务商，但不扩大本阶段的内置目录。
 
@@ -78,7 +77,7 @@
 - Google Gemini 使用 Google 专用 adapter
 - Ollama 使用本地 Ollama adapter
 - Azure、Bedrock、GitHub Copilot、Coding Plan 等特殊认证或请求格式使用独立 adapter/规则
-- Stealth、Poolside、Inception 先注册为独立服务商；只有在核对官方 API 后才启用对应的真实请求实现，不猜测接口
+- Poolside、Inception 已核对官方 API，注册为 OpenAI 兼容服务商；StealthGPT 属于文本改写工具，不纳入普通模型服务商目录
 
 每个服务商规格可以声明模型 ID 映射、请求参数转换、错误转换、模型列表转换和响应流转换规则。
 
@@ -132,7 +131,7 @@ ProviderFactory
 
 需要覆盖：
 
-- 23 个服务商的目录顺序和唯一 ID
+- 22 个服务商的目录顺序和唯一 ID
 - 服务商规格到协议适配器的映射
 - 模型内置、远程和自定义来源的合并规则
 - 模型启用/禁用和排序持久化
