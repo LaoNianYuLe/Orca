@@ -17,8 +17,8 @@ enum ThinkingWireFormat: Equatable {
 
     /// Send nothing at all. Not "send off" — send NO thinking key whatsoever.
     ///
-    /// Mistral (OpenMinis#87): `AssistantMessage` is a closed schema and the request
-    /// rejects `reasoning` with `422 extra_forbidden`. Venice (OpenMinis#86) is the same
+    /// Mistral (I#87): `AssistantMessage` is a closed schema and the request
+    /// rejects `reasoning` with `422 extra_forbidden`. Venice (I#86) is the same
     /// class at the request level: `additionalProperties:false` means an unknown ROOT key
     /// is rejected during schema validation, before model dispatch — which is why every
     /// model failed there and why turning thinking off did not help, since the disabled
@@ -84,8 +84,8 @@ enum ThinkingWireFormat: Equatable {
 
     /// Nested boolean under `extra_body`, e.g. `extra_body.thinking.enabled`.
     /// DeepSeek's official endpoint reasons by default and its real switch lives here;
-    /// Minis never sent it, which is why the official endpoint always ran its default
-    /// configuration (OpenMinis#171).
+    /// I never sent it, which is why the official endpoint always ran its default
+    /// configuration (I#171).
     case extraBodyToggle(path: String)
 
     /// ESCAPE HATCH — reserved, deliberately inert in Phase 1.

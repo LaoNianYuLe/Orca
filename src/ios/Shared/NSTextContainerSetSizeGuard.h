@@ -1,6 +1,6 @@
 //
 //  NSTextContainerSetSizeGuard.h
-//  Minis
+//  I
 //
 //  Reentrancy guard for -[NSTextContainer setSize:].
 //

@@ -1,6 +1,6 @@
 //
 //  AlarmOffloadBridge.swift
-//  MinisApp
+//  IApp
 //
 //  Swift bridge for AlarmKit, called from AlarmOffload.m.
 //  AlarmKit is Swift-only; this class exposes alarm operations as
@@ -15,7 +15,7 @@ import AlarmKit
 
 /// Empty metadata conforming to AlarmMetadata for our alarms.
 @available(iOS 26.0, *)
-nonisolated struct MinisAlarmMetadata: AlarmMetadata {}
+nonisolated struct IAlarmMetadata: AlarmMetadata {}
 
 @available(iOS 26.0, *)
 @objc public class AlarmOffloadBridge: NSObject {
@@ -27,10 +27,10 @@ nonisolated struct MinisAlarmMetadata: AlarmMetadata {}
     // recover the label the user/AI set at schedule time. We therefore persist
     // an id -> label map and look it up when listing. The store is kept in sync
     // on cancel / cancel-all so it doesn't grow unbounded. This is what makes
-    // the label visible in the Minis AlarmListView (AlarmRowView already renders
+    // the label visible in the I AlarmListView (AlarmRowView already renders
     // `alarm.label` when non-empty).
     //
-    // Backed by a tiny SQLite table (AlarmLabelStore) in the same MinisChat/
+    // Backed by a tiny SQLite table (AlarmLabelStore) in the same IChat/
     // folder as the other native DBs — O(1) keyed reads/writes instead of
     // (de)serializing a whole UserDefaults dictionary on every mutate.
 
@@ -100,7 +100,7 @@ nonisolated struct MinisAlarmMetadata: AlarmMetadata {}
                     title: LocalizedStringResource(stringLiteral: label),
                     stopButton: stopButton
                 )
-                let attributes = AlarmAttributes<MinisAlarmMetadata>(
+                let attributes = AlarmAttributes<IAlarmMetadata>(
                     presentation: AlarmPresentation(alert: alert),
                     tintColor: .blue
                 )
@@ -181,7 +181,7 @@ nonisolated struct MinisAlarmMetadata: AlarmMetadata {}
                     title: LocalizedStringResource(stringLiteral: label),
                     stopButton: stopButton
                 )
-                let attributes = AlarmAttributes<MinisAlarmMetadata>(
+                let attributes = AlarmAttributes<IAlarmMetadata>(
                     presentation: AlarmPresentation(alert: alert),
                     tintColor: .orange
                 )
@@ -361,7 +361,7 @@ nonisolated struct MinisAlarmMetadata: AlarmMetadata {}
 ///
 /// Mirrors the native-SQLite style used by `ProviderConfigDB` / `ChatStore`:
 /// raw `SQLite3` (no ORM), WAL journal, `synchronous = NORMAL`, in the shared
-/// `Library/MinisChat/` folder. The connection is opened once with FULLMUTEX
+/// `Library/IChat/` folder. The connection is opened once with FULLMUTEX
 /// (serialized threading) and reused; an `NSLock` additionally guards the
 /// multi-statement prune transaction. Callers reach it via the process-wide
 /// `shared` singleton.
@@ -377,7 +377,7 @@ private final class AlarmLabelStore {
     private static func defaultURL() -> URL {
         let library = FileManager.default
             .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-        let base = library.appendingPathComponent("MinisChat", isDirectory: true)
+        let base = library.appendingPathComponent("IChat", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base.appendingPathComponent("alarm-labels.db")
     }

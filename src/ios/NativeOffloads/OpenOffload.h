@@ -1,6 +1,6 @@
 //
 //  OpenOffload.h
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-open` — open URLs via UIApplication.
 //

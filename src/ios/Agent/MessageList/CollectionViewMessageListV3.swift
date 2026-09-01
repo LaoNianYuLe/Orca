@@ -24,7 +24,7 @@ extension Notification.Name {
     /// stale height for the rest of the turn — the bubble truncates to one
     /// line with the tile seemingly detached above it. The Coordinator's
     /// handler breaks the chain with a TARGETED invalidation of that one cell.
-    static let minisUserAttachmentsMounted = Notification.Name("minisUserAttachmentsMounted")
+    static let iUserAttachmentsMounted = Notification.Name("iUserAttachmentsMounted")
 }
 
 // MARK: - CollectionViewMessageListV3
@@ -198,7 +198,7 @@ struct CollectionViewMessageListV3: UIViewControllerRepresentable {
 
 // MARK: - V3 Bridged Cell Views (no GeometryReader)
 
-/// Header: "✦ Minis" label at the top of each assistant turn.
+/// Header: "✦ I" label at the top of each assistant turn.
 /// Name comes from SOUL.md (user-editable in Soul Settings); the
 /// sparkles glyph is fixed — custom emoji is no longer supported,
 /// matching the Soul Settings UI.
@@ -218,7 +218,7 @@ private struct BridgedAssistantHeaderV3: View {
                         endPoint: .bottomTrailing
                     )
                 )
-            Text(soulMeta.name.isEmpty ? "Minis" : soulMeta.name)
+            Text(soulMeta.name.isEmpty ? "I" : soulMeta.name)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(ChatColors.primaryText)
         }
@@ -270,7 +270,7 @@ private struct BridgedAssistantBlockV3: View {
                 toggleUsage()
             },
             onCopyScreenshot: { bridge.onCopyScreenshot?() },
-            // [T-selection-menu-minis-tts] Selection-menu TTS: whole-reply
+            // [T-selection-menu-i-tts] Selection-menu TTS: whole-reply
             // replay is suppressed while this reply is still streaming (same
             // rule as the overlay context menu); Read Selection stays available.
             onReadAloud: bridge.isStreaming ? nil : bridge.onReadAloud,
@@ -769,7 +769,7 @@ extension CollectionViewMessageListV3 {
 
         // === Attachment mount invalidation ===
         // [T-ios-user-attach-mount-invalidate] Drain mounts attachments onto an
-        // already-inserted user message; see .minisUserAttachmentsMounted.
+        // already-inserted user message; see .iUserAttachmentsMounted.
         private var attachMountSub: AnyCancellable?
 
         // === Async attachment size invalidate ===
@@ -1330,8 +1330,8 @@ extension CollectionViewMessageListV3 {
             bridge.onReadAloud = (message.role == .assistant)
                 ? { [weak vm] in vm?.readReplyFromStart(message) }
                 : nil
-            // [T-selection-menu-minis-tts] "Read Selection" from the text
-            // selection menu — speaks the selected snippet via the Minis TTS
+            // [T-selection-menu-i-tts] "Read Selection" from the text
+            // selection menu — speaks the selected snippet via the I TTS
             // stack (sanitizer + provider voices + fail-over).
             bridge.onSpeakText = { [weak vm] text in vm?.speakText(text) }
             bridge.onCopyScreenshot = { [weak self, weak vm] in
@@ -2251,7 +2251,7 @@ extension CollectionViewMessageListV3 {
 
             // Subscribe to thinking block toggle notifications (once)
             if attachmentSizeChangedSub == nil {
-                attachmentSizeChangedSub = NotificationCenter.default.publisher(for: .minisAttachmentSizeChanged)
+                attachmentSizeChangedSub = NotificationCenter.default.publisher(for: .iAttachmentSizeChanged)
                     .receive(on: DispatchQueue.main)
                     .sink { [weak self] notification in
                         let alog = AppLogger(category: "AttachmentSize")
@@ -2332,7 +2332,7 @@ extension CollectionViewMessageListV3 {
             }
 
             if attachMountSub == nil {
-                attachMountSub = NotificationCenter.default.publisher(for: .minisUserAttachmentsMounted)
+                attachMountSub = NotificationCenter.default.publisher(for: .iUserAttachmentsMounted)
                     .receive(on: DispatchQueue.main)
                     .sink { [weak self] notification in
                         let alog = AppLogger(category: "AttachMount")
@@ -2654,7 +2654,7 @@ extension CollectionViewMessageListV3 {
 
                     switch item {
                     case .assistantHeader:
-                        // Header is always a fixed "sparkles Minis" label row (measured: 28pt)
+                        // Header is always a fixed "sparkles I" label row (measured: 28pt)
                         layout.setEstimatedHeight(28, at: i)
 
                     case .assistantFooter:
@@ -3053,7 +3053,7 @@ extension CollectionViewMessageListV3 {
                 // which does not change when a block is appended, so the diff is
                 // empty for it and UIKit never re-configures the cell (same
                 // mechanism as gap 1 in cd50865c). The footer therefore keeps the
-                // TALLER height it measured while "Minis is thinking…" was
+                // TALLER height it measured while "I is thinking…" was
                 // showing, and once the first tool block lands the indicator
                 // disappears but the reserved space does not — the blank strip
                 // above the tool row that the user reported. It healed only on
@@ -3150,7 +3150,7 @@ extension CollectionViewMessageListV3 {
         /// calling attachmentBounds() during layout, unlike boundingRect() which
         /// uses the attachment's 1×1px placeholder image.
         /// [T-ios-decel-inv-estimate-calibration] Measure with the REAL render
-        /// engine: an offscreen SelectableMarkdownTextView (MinisLayoutManager +
+        /// engine: an offscreen SelectableMarkdownTextView (ILayoutManager +
         /// 4/4 textContainerInset), exactly what the live cell hosts. The
         /// previous bare-NSLayoutManager measure drifted +4..+21pt on ~30% of
         /// blocks (multi-paragraph / emoji-heading content) — debug.measureCompare

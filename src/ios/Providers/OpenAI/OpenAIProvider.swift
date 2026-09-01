@@ -70,7 +70,7 @@ final class OpenAIProvider: LLMProvider {
     var extraHeaders: [String: String] = [:]
 
     /// [T-model-use-image-passthrough GH#62] Arbitrary extra fields merged into the
-    /// /images/generations JSON body, so `minis-model-use` can pass provider-specific
+    /// /images/generations JSON body, so `i-model-use` can pass provider-specific
     /// params our fixed schema never modeled (e.g. Volcengine Seedream's `image` for
     /// image-to-image, `watermark`, `tools`). User keys WIN over our defaults
     /// (response_format) but never replace the resolved `model`. Empty = no passthrough.
@@ -79,7 +79,7 @@ final class OpenAIProvider: LLMProvider {
     /// [T-model-use-chat-passthrough GH#72] Arbitrary extra fields merged into
     /// the chat/completions and responses request bodies, mirroring
     /// `imageExtraBody` on the image path. Populated per-call by the
-    /// minis-model-use bridge from the input JSON's explicit `extra_body`
+    /// i-model-use bridge from the input JSON's explicit `extra_body`
     /// envelope (never from implicit top-level keys — the chat schema owns
     /// its top level). User keys WIN over our defaults (e.g. `plugins`,
     /// `web_search_options`, provider-specific knobs) but `model` is
@@ -180,7 +180,7 @@ final class OpenAIProvider: LLMProvider {
     ///     honored, so a GLM/DeepSeek id must NOT take its native branch here.
     ///   • Azure OpenAI (`isAzure`) — reasoning is `reasoning_effort` for every
     ///     model surfaced through the deployment.
-    ///   • Venice.ai (`api.venice.ai`) — [OpenMinis#86] resells deepseek /
+    ///   • Venice.ai (`api.venice.ai`) — [I#86] resells deepseek /
     ///     claude / aion behind one OpenAI-compatible surface. Its
     ///     `ChatCompletionRequest` schema is `additionalProperties: false`, so an
     ///     unknown root key is rejected at validation time — BEFORE model
@@ -203,7 +203,7 @@ final class OpenAIProvider: LLMProvider {
             || base.contains("api.venice.ai")
     }
 
-    /// [OpenMinis#163] Talking to xAI's own API (api.x.ai), as opposed to a
+    /// [I#163] Talking to xAI's own API (api.x.ai), as opposed to a
     /// relay that merely serves grok-named models.
     ///
     /// Scopes the "catalog declares no effort tiers → omit `reasoning_effort`"
@@ -275,7 +275,7 @@ final class OpenAIProvider: LLMProvider {
     /// where `deployment` is the model id and `path` is e.g. `chat/completions`.
     /// The user pastes the resource/endpoint as the custom base — typically the
     /// bare `azure_endpoint` (`https://x.openai.azure.com`), optionally already
-    /// including `/openai`, and Minis instructs them to put `?api-version=…` on
+    /// including `/openai`, and I instructs them to put `?api-version=…` on
     /// the base. We:
     ///   1. split off the `?api-version=…` query,
     ///   2. strip a trailing `/`, and a trailing `/openai` (we re-add it) and any
@@ -353,7 +353,7 @@ final class OpenAIProvider: LLMProvider {
         // (line ~132), so every caller that hits a Codex-OAuth instance
         // got that 400 before the model was ever invoked. Concrete
         // breakage observed in the wild:
-        //   • `minis-model-use run --model gpt-5.5 --input X.json`
+        //   • `i-model-use run --model gpt-5.5 --input X.json`
         //     without `--stream` — ModelUseOffloadBridge picks
         //     sendMessage vs streamMessage based on streamFd; the
         //     non-streaming default failed every time. User reported
@@ -979,7 +979,7 @@ final class OpenAIProvider: LLMProvider {
     /// `input_text`, and image blocks must be `input_image` with `image_url`
     /// as a string (not `{url: ...}`). Mirrors the shape emitted by
     /// `OpenAIAgentProvider.convertMessagesResponsesAPI` for the agent path,
-    /// so plain `streamMessage` calls (minis-model-use, title gen, etc.)
+    /// so plain `streamMessage` calls (i-model-use, title gen, etc.)
     /// land the same Codex backend without a 400 on `image_url`.
     static func responsesAPIMessageDict(_ msg: LLMMessage) -> [String: Any] {
         if msg.images.isEmpty && msg.audios.isEmpty {

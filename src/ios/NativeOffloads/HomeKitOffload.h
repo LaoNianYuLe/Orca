@@ -1,6 +1,6 @@
 //
 //  HomeKitOffload.h
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-homekit` — HomeKit.
 //

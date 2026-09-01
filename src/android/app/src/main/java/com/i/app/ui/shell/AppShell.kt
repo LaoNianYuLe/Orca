@@ -51,7 +51,9 @@ fun AppShell(
     onProjects: () -> Unit,
     onSkills: () -> Unit,
     onCopywriting: () -> Unit,
+    onSettings: () -> Unit,
     onSessionClick: (String) -> Unit,
+    showMenuButton: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val recentSessions by sessions.collectAsState(initial = emptyList())
@@ -121,7 +123,7 @@ fun AppShell(
                 },
         ) {
             content()
-            if (!drawerIsOpen) {
+            if (!drawerIsOpen && showMenuButton) {
                 IconButton(
                     onClick = { settle(SidebarTarget.Open) },
                     modifier = Modifier
@@ -188,6 +190,7 @@ fun AppShell(
                 onProjects = { settle(SidebarTarget.Closed); onProjects() },
                 onSkills = { settle(SidebarTarget.Closed); onSkills() },
                 onCopywriting = { settle(SidebarTarget.Closed); onCopywriting() },
+                onSettings = { settle(SidebarTarget.Closed); onSettings() },
                 onSessionClick = { id -> settle(SidebarTarget.Closed); onSessionClick(id) },
             )
         }

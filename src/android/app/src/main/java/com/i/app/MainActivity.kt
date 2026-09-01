@@ -10,6 +10,7 @@ import android.os.LocaleList
 import android.provider.Settings
 import com.i.app.accessibility.AccessibilityRecoveryManager
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.i.app.deeplink.DeepLinkAction
 import com.i.app.deeplink.DeepLinkCoordinator
 import com.i.app.deeplink.DeepLinkHandler
@@ -51,6 +53,7 @@ import com.i.app.ui.settings.getAppearancePrefs
 import com.i.app.ui.settings.fontScaleForLevel
 import com.i.app.ui.settings.keepScreenAwakeEnabled
 import com.i.app.ui.theme.ITheme
+import com.i.app.ui.theme.windowBackgroundColor
 
 private const val KEY_CURRENT_CHAT_SESSION_ID = "i.current_chat_session_id"
 
@@ -518,6 +521,14 @@ class MainActivity : ComponentActivity() {
             }
             val fontScale = fontScaleForLevel(appBaseLevel)
 
+            // The in-app theme preference does not change Android's night
+            // resource qualifier. Keep the OS-painted window background in
+            // sync so NavHost transitions cannot reveal a white strip while
+            // switching to dark mode.
+            SideEffect {
+                window.setBackgroundDrawable(ColorDrawable(windowBackgroundColor(darkTheme)))
+            }
+
             SideEffect {
                 val barStyle = if (darkTheme) {
                     SystemBarStyle.dark(Color.TRANSPARENT)
@@ -540,6 +551,7 @@ class MainActivity : ComponentActivity() {
 
             ITheme(darkTheme = darkTheme, fontScale = fontScale) {
                 val navController = rememberNavController().also { this.navController = it }
+                val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
                 // T166: drive `SessionActivityTracker.setPresent` /
                 // `setAbsent` from the nav back-stack so the foreground
@@ -588,9 +600,13 @@ class MainActivity : ComponentActivity() {
                     onCopywriting = {
                         navController.safeNavigate(Routes.COPYWRITING)
                     },
+                    onSettings = {
+                        navController.safeNavigate(Routes.SETTINGS)
+                    },
                     onSessionClick = { sessionId ->
                         navController.safeNavigate(Routes.chat(sessionId))
                     },
+                    showMenuButton = !com.i.app.ui.navigation.Routes.isSettingsRoute(currentRoute),
                 ) {
                     AppNavigation(
                         chatRepository = app.chatRepository,

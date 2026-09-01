@@ -2,7 +2,7 @@
 
 ## Overview
 
-MinisApp uses a customized fork of [iSH](https://github.com/OpenMinis/ish-arm64) (OpenMinis/ish-arm64) to provide a full Linux sandbox execution environment on iOS. The iSH kernel runs an Alpine Linux (aarch64) guest inside the app process, giving the AI agent a real shell with networking, filesystem, and process management — while native offloads bridge guest commands to iOS frameworks for hardware and system access.
+IApp uses a customized fork of [iSH](https://github.com/OpenMinis/ish-arm64) (I/ish-arm64) to provide a full Linux sandbox execution environment on iOS. The iSH kernel runs an Alpine Linux (aarch64) guest inside the app process, giving the AI agent a real shell with networking, filesystem, and process management — while native offloads bridge guest commands to iOS frameworks for hardware and system access.
 
 ---
 
@@ -15,7 +15,7 @@ MinisApp uses a customized fork of [iSH](https://github.com/OpenMinis/ish-arm64)
 | Guest Architecture | ARM64 (aarch64) |
 | Engine | Asbestos (threaded-code JIT interpreter) |
 | Guest OS | Alpine Linux aarch64 |
-| Upstream Fork | `OpenMinis/ish-arm64`, branch `feature-arm64` |
+| Upstream Fork | `I/ish-arm64`, branch `feature-arm64` |
 | Build System | Meson (cross-compile for iOS arm64) |
 | iOS Deployment Target | 14.0+ |
 
@@ -63,7 +63,7 @@ Manages the Alpine Linux rootfs lifecycle:
 - Extracts bundled rootfs to `~/Documents/alpine-rootfs/`
 - Architecture tag tracking and mismatch handling
 - Rootfs reset with optional user data backup
-- Pre-creates `/var/minis/` subdirectories
+- Pre-creates `/var/i/` subdirectories
 - Registers metadata in fakefs `meta.db` for bind-mount visibility
 - Default environment: `TERM=xterm-256color`, standard `PATH`
 
@@ -82,7 +82,7 @@ Process-level execution wrapper:
 Serialized, session-aware command dispatcher:
 
 - **One command at a time** across all sessions (FIFO queue)
-- Automatic session-based mount/remount of `/var/minis/` directories
+- Automatic session-based mount/remount of `/var/i/` directories
 - Prompt detection (regex-based: `$ `, `# `, `user@host:path$ `, etc.)
 - Preemption if command exceeds 10 minutes with waiters
 - Buffer limit: 100KB max output without prompt
@@ -96,37 +96,37 @@ Serialized, session-aware command dispatcher:
 
 Uses `fakefs_bind_mount(linux_path, host_path)` — creates a symlink in fakefs `data/` pointing to host persistent storage. Parent directories must exist in `meta.db` (`ensureFakefsMetadata` + `ensureParentDirsInMetaDB`).
 
-### 3.2 Per-Session Mounts (`/var/minis/`)
+### 3.2 Per-Session Mounts (`/var/i/`)
 
 Each agent session mounts its own persistent directories:
 
 | Guest Path | Host Path | Purpose |
 |---|---|---|
-| `/var/minis/attachments/` | `Library/MinisChat/minis/{sessionId}/attachments/` | Input files for commands |
-| `/var/minis/offloads/` | `Library/MinisChat/minis/{sessionId}/offloads/` | Output from native offloads |
-| `/var/minis/workspace/` | `Library/MinisChat/minis/{sessionId}/workspace/` | Session working directory |
-| `/var/minis/browser/` | `Library/MinisChat/minis/{sessionId}/browser/` | Web browsing files |
+| `/var/i/attachments/` | `Library/IChat/i/{sessionId}/attachments/` | Input files for commands |
+| `/var/i/offloads/` | `Library/IChat/i/{sessionId}/offloads/` | Output from native offloads |
+| `/var/i/workspace/` | `Library/IChat/i/{sessionId}/workspace/` | Session working directory |
+| `/var/i/browser/` | `Library/IChat/i/{sessionId}/browser/` | Web browsing files |
 
 ### 3.3 Global Mounts
 
 | Guest Path | Host Path | Purpose |
 |---|---|---|
-| `/var/minis/memory/` | `Library/MinisChat/minis/memory/` | Shared memory across sessions |
-| `/var/minis/skills/` | `Library/MinisChat/minis/skills/` | Stored skill definitions |
+| `/var/i/memory/` | `Library/IChat/i/memory/` | Shared memory across sessions |
+| `/var/i/skills/` | `Library/IChat/i/skills/` | Stored skill definitions |
 
 ### 3.4 DNS Mount
 
 | Guest Path | Host Path |
 |---|---|
-| `/etc/resolv.conf` | `Library/MinisChat/dns/resolv.conf` |
+| `/etc/resolv.conf` | `Library/IChat/dns/resolv.conf` |
 
 Updated in real-time from iOS system resolver (falls back to `8.8.8.8`, `8.8.4.4`).
 
 ### 3.5 Path Resolution
 
 - **Guest → Host**: Linux path `/foo/bar` → `~/Documents/alpine-rootfs/data/foo/bar`
-- **Host → Guest**: Bind mounts make host files appear at `/var/minis/...`
-- **minis:// URL scheme**: Resolved by `MinisImageProvider` to local images
+- **Host → Guest**: Bind mounts make host files appear at `/var/i/...`
+- **i:// URL scheme**: Resolved by `IImageProvider` to local images
 
 ---
 
@@ -198,7 +198,7 @@ Guest process calls execve("/usr/local/bin/apple-calendar", args)
 - JSON envelope construction
 - Async dispatch to main thread
 - Guest stub creation
-- Host path resolution (`/var/minis/...` → host path)
+- Host path resolution (`/var/i/...` → host path)
 - stdin reading
 
 ---
@@ -215,7 +215,7 @@ Guest process calls execve("/usr/local/bin/apple-calendar", args)
 ┌─────────────────────────────────────────────────────┐
 │  ISHExecutionCoordinator                            │
 │  ├─ Serialize (FIFO queue, one-at-a-time)           │
-│  ├─ Mount session dirs to /var/minis/               │
+│  ├─ Mount session dirs to /var/i/               │
 │  └─ Inject env vars from EnvVarStore (Keychain)     │
 └──────────────────┬──────────────────────────────────┘
                    ▼
@@ -256,7 +256,7 @@ Guest process calls execve("/usr/local/bin/apple-calendar", args)
 - Main thread communication via `dispatch_async`
 - JIT exception handler prevents guest crashes from crashing the app
 - Fakefs provides filesystem isolation from host (SQLite metadata layer)
-- Bind mounts are explicit and scoped to `/var/minis/`
+- Bind mounts are explicit and scoped to `/var/i/`
 - Environment variables stored in Keychain (SecureEnclave)
 - Guest processes cannot access arbitrary host paths — only bind-mounted directories
 - 100KB output buffer limit prevents memory exhaustion

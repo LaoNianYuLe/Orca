@@ -408,7 +408,7 @@ void talloc_lib_init(void)
 		/*
 		 * We get 16 bytes from getauxval.  By calling rand(),
 		 * a totally insecure PRNG, but one that will
-		 * deterministically have a different value when called
+		 * deteritically have a different value when called
 		 * twice, we ensure that if two talloc-like libraries
 		 * are somehow loaded in the same address space, that
 		 * because we choose different bytes, we will keep the

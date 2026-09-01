@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 
 private let pasteLog = AppLogger(category: "PastableTV")
 
-private let minisLogger = AppLogger(category: "MinisURL")
+private let iLogger = AppLogger(category: "IURL")
 struct SwipeToSendHint: View {
     let progress: CGFloat
     let armFraction: CGFloat
@@ -408,7 +408,7 @@ private struct AttachmentChip: View {
 
     private func loadThumbnailIfNeeded() {
         let key = attachment.cacheURL.path
-        if let cached = MinisMediaCache.shared.thumbnail(for: key) {
+        if let cached = IMediaCache.shared.thumbnail(for: key) {
             cachedImage = cached
             return
         }
@@ -420,7 +420,7 @@ private struct AttachmentChip: View {
                 image = Self.downsampleImage(fileURL: attachment.cacheURL, maxPixelSize: 256)
             }
             if let image {
-                MinisMediaCache.shared.setThumbnail(image, for: key)
+                IMediaCache.shared.setThumbnail(image, for: key)
                 await MainActor.run { cachedImage = image }
             }
         }
@@ -527,12 +527,12 @@ struct CameraPicker: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let cameraAvailable = UIImagePickerController.isSourceTypeAvailable(.camera)
         let authStatus = AVCaptureDevice.authorizationStatus(for: .video)
-        minisLogger.info("[QuickAction] CameraPicker.makeUIViewController cameraAvailable=\(cameraAvailable) authStatus=\(authStatus.rawValue)")
+        iLogger.info("[QuickAction] CameraPicker.makeUIViewController cameraAvailable=\(cameraAvailable) authStatus=\(authStatus.rawValue)")
         let picker = UIImagePickerController()
         if cameraAvailable {
             picker.sourceType = .camera
         } else {
-            minisLogger.warning("[QuickAction] CameraPicker — .camera source unavailable, falling back to .photoLibrary")
+            iLogger.warning("[QuickAction] CameraPicker — .camera source unavailable, falling back to .photoLibrary")
             picker.sourceType = .photoLibrary
         }
         picker.delegate = context.coordinator
@@ -651,14 +651,14 @@ struct UserAttachmentList: View {
     /// present it with `tapped` as the starting page.
     private func openGallery(startingAt tapped: AttachmentMeta) {
         let all = imageAttachments
-        guard let start = all.firstIndex(where: { $0.minisURL == tapped.minisURL }) else {
+        guard let start = all.firstIndex(where: { $0.iURL == tapped.iURL }) else {
             return
         }
         let items: [GalleryItem] = all.map { meta in
             // Fingerprint-keyed id so if the underlying file is rewritten
             // between two opens of the gallery, TabView treats it as a
             // different page and doesn't reuse the cached state/bitmap.
-            let fpKey = minisMediaCacheKey(for: meta.minisURL)
+            let fpKey = iMediaCacheKey(for: meta.iURL)
             return GalleryItem(
                 id: fpKey,
                 title: meta.fileName,
@@ -670,8 +670,8 @@ struct UserAttachmentList: View {
                     if let cached = NativeMediaImageCache.shared.image(for: cacheKey) {
                         return cached
                     }
-                    guard let url = URL(string: meta.minisURL),
-                          let fileURL = resolveMinisFileURLCached(url: url),
+                    guard let url = URL(string: meta.iURL),
+                          let fileURL = resolveIFileURLCached(url: url),
                           let data = try? Data(contentsOf: fileURL),
                           let img = downsampleImageData(data, maxPixelSize: 2048)
                     else { return nil }
@@ -685,7 +685,7 @@ struct UserAttachmentList: View {
 
     private func fileTile(_ meta: AttachmentMeta) -> some View {
         Button {
-            if let url = URL(string: meta.minisURL) { openURL(url) }
+            if let url = URL(string: meta.iURL) { openURL(url) }
         } label: {
             VStack(spacing: 2) {
                 Image(systemName: fileIconName(for: meta.fileName))
@@ -709,8 +709,8 @@ struct UserAttachmentList: View {
         }
         .buttonStyle(.plain)
         // WebApp entry point — only for .html / .htm. Long-press → context
-        // menu → "Add to Home Screen". The sheet resolves the minis://
-        // URL to a host URL via resolveMinisFileURLCached and hands off
+        // menu → "Add to Home Screen". The sheet resolves the i://
+        // URL to a host URL via resolveIFileURLCached and hands off
         // to WebAppAddToHomeSheet for classification, icon extraction, and
         // persistence.
         .modifier(WebAppAddToHomeMenuModifier(meta: meta))
@@ -730,7 +730,7 @@ struct UserAttachmentList: View {
 
 /// Adds the WebApp "Add to Home Screen" long-press menu to a chat-rendered
 /// attachment file tile. Inert for non-HTML attachments. Resolves the
-/// minis:// URL to a host URL on tap and presents `WebAppAddToHomeSheet`.
+/// i:// URL to a host URL on tap and presents `WebAppAddToHomeSheet`.
 private struct WebAppAddToHomeMenuModifier: ViewModifier {
     let meta: AttachmentMeta
     @State private var showAddSheet = false
@@ -746,8 +746,8 @@ private struct WebAppAddToHomeMenuModifier: ViewModifier {
             content
                 .contextMenu {
                     Button {
-                        guard let url = URL(string: meta.minisURL),
-                              let host = resolveMinisFileURLCached(url: url) else {
+                        guard let url = URL(string: meta.iURL),
+                              let host = resolveIFileURLCached(url: url) else {
                             return
                         }
                         resolvedHostURL = host

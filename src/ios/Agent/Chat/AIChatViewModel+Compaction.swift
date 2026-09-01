@@ -967,7 +967,7 @@ extension AIChatViewModel {
             // substring match over nine hand-collected phrases ("token limit",
             // "prompt is too long", …). That list is a guess about how each
             // provider words an over-length refusal, and it is provably
-            // incomplete — OpenMinis#133 reports
+            // incomplete — I#133 reports
             // `[context_length_exceeded] Your input exceeds the context window
             // of this model`, whose only matching substring is "context window",
             // and which several providers emit with different wording again.
@@ -1039,7 +1039,7 @@ extension AIChatViewModel {
     /// This deliberately REPLACES the old `isContextTooLargeError` substring
     /// allow-list ("token limit", "prompt is too long", …). That list tried to
     /// enumerate how every provider words an over-length refusal and was
-    /// provably incomplete — OpenMinis#133's `context_length_exceeded` wording
+    /// provably incomplete — I#133's `context_length_exceeded` wording
     /// slipped past several of its variants — and each miss silently disabled
     /// the split path. A server-side 4xx/5xx we cannot classify is exactly the
     /// case where trying a smaller payload is worth one attempt.

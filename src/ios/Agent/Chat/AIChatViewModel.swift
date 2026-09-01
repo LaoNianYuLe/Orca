@@ -299,7 +299,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             // [T-deferred-sync-reload] If a send is in flight, don't
             // reload mid-stream — that would re-snapshot messages and
             // could clobber the streaming assistant block / hide the
-            // "Minis is thinking" indicator. Flip a flag instead; the
+            // "I is thinking" indicator. Flip a flag instead; the
             // $isProcessing observer below picks it up and replays one
             // reload as soon as the send completes. This avoids waiting
             // the full sync-timer cycle (~60s) for the next refresh.
@@ -1166,7 +1166,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
     /// for the [SuspendState] transition trace.
     private static func shortFrame(_ raw: String) -> String {
         // Raw frame looks like:
-        // "3   Minis   0x0000000104abcd12 $s5Minis... mangled ... + 40"
+        // "3   I   0x0000000104abcd12 $s5I... mangled ... + 40"
         // Prefer the human name after the mangled symbol if present, else the
         // whitespace-collapsed tail.
         let parts = raw.split(separator: " ", omittingEmptySubsequences: true)
@@ -1185,7 +1185,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
     /// A concurrent mutation on the outgoing vm here can cause
     /// AG::Subgraph::NodeCache::~NodeCache to deref a dangling pointer
     /// (FB13213926, recurring), evidenced by build-48 crash
-    /// Minis-2026-06-01-134710.ips: user switched sessions while both vms had
+    /// I-2026-06-01-134710.ips: user switched sessions while both vms had
     /// `isProcessing=true`, EXC_BAD_ACCESS in
     /// `_UIHostingView.isHiddenForReuse.setter → ViewGraphHost.updateRemovedState
     /// → AG::Subgraph::invalidate_now → AG::Subgraph::NodeCache::~NodeCache`.
@@ -1647,7 +1647,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
     // MARK: - Auto-Play Audio
 
     /// Regex to find Markdown image syntax with audio extensions and ?auto_play=true query.
-    /// Matches: ![...](minis://attachments/file.mp3?auto_play=true)
+    /// Matches: ![...](i://attachments/file.mp3?auto_play=true)
     private static let autoPlayAudioPattern: NSRegularExpression? = {
         // Match ![alt](url) where url ends with audio extension and has auto_play=true/1
         try? NSRegularExpression(
@@ -1672,10 +1672,10 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
         components.queryItems = nil
         guard let cleanURL = components.url else { return }
 
-        // Resolve minis:// to file URL
+        // Resolve i:// to file URL
         let fileURL: URL?
-        if cleanURL.scheme == "minis" {
-            fileURL = resolveMinisFileURLForAutoPlay(url: cleanURL)
+        if cleanURL.scheme == "i" {
+            fileURL = resolveIFileURLForAutoPlay(url: cleanURL)
         } else {
             fileURL = cleanURL
         }
@@ -1691,12 +1691,12 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
         GlobalAudioPlayer.shared.play(url: resolved)
     }
 
-    /// Resolve minis:// URL to local file URL (standalone, no UI dependency).
-    private static func resolveMinisFileURLForAutoPlay(url: URL) -> URL? {
-        guard url.scheme == "minis", let host = url.host else { return nil }
+    /// Resolve i:// URL to local file URL (standalone, no UI dependency).
+    private static func resolveIFileURLForAutoPlay(url: URL) -> URL? {
+        guard url.scheme == "i", let host = url.host else { return nil }
         // Tolerate double-encoded links alongside single-encoded.
         // [T-fix-double-encoding]
-        let subPaths = MinisURLPathDecoding.subPathCandidates(for: url)
+        let subPaths = IURLPathDecoding.subPathCandidates(for: url)
         let fm = FileManager.default
 
         // Global directories resolve without session ID
@@ -1704,7 +1704,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
         if globalDirs.contains(host) {
             let library = fm.urls(for: .libraryDirectory, in: .userDomainMask).first!
             for subPath in subPaths {
-                let globalURL = library.appendingPathComponent("MinisChat/\(host)", isDirectory: true)
+                let globalURL = library.appendingPathComponent("IChat/\(host)", isDirectory: true)
                     .appendingPathComponent(subPath)
                 if fm.fileExists(atPath: globalURL.path) { return globalURL }
             }
@@ -1712,7 +1712,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
 
         if let sid = activeSessionId {
             for subPath in subPaths {
-                let persistURL = minisPersistentBase
+                let persistURL = iPersistentBase
                     .appendingPathComponent(sid, isDirectory: true)
                     .appendingPathComponent(host, isDirectory: true)
                     .appendingPathComponent(subPath)
@@ -1720,10 +1720,10 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             }
         }
 
-        // [T-ios-minisurl-cross-session-isolation] Fallback to the iSH-visible
-        // /var/minis data dir ONLY for the global, non-session-scoped
+        // [T-ios-iurl-cross-session-isolation] Fallback to the iSH-visible
+        // /var/i data dir ONLY for the global, non-session-scoped
         // namespaces (memory/skills/shared). For a session-scoped host like
-        // `attachments`, /var/minis/<host> binds to whichever session is
+        // `attachments`, /var/i/<host> binds to whichever session is
         // currently MOUNTED — which may not be the session whose message is
         // being rendered — so reaching it here would be a cross-session leak.
         // Session-scoped resolution already happened above against
@@ -1731,7 +1731,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
         if globalDirs.contains(host) {
             let dataPath = RootfsManager.shared.dataPath
             for subPath in subPaths {
-                let linuxPath = "/var/minis/\(host)/\(subPath)"
+                let linuxPath = "/var/i/\(host)/\(subPath)"
                 let hostPath = dataPath.appendingPathComponent(linuxPath.hasPrefix("/") ? String(linuxPath.dropFirst()) : linuxPath)
                 if fm.fileExists(atPath: hostPath.path) { return hostPath }
             }
@@ -1794,7 +1794,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             // Hermes Agent's execution-discipline phrasing (act immediately instead
             // of describing intentions / keep working until complete / never end a
             // turn with a promise of future action), plus an HONEST off-ramp —
-            // Minis has no in-app scheduler (see 'Scheduled tasks'), so the only
+            // I has no in-app scheduler (see 'Scheduled tasks'), so the only
             // truthful alternatives are poll-now or tell-the-user-nothing-runs.
             + "Execution discipline for long-running or dispatched work: make tool calls immediately instead of describing intentions, and keep working until the task is complete. "
             + "Without a scheduler or timed-callback tool, `delay` is your ONLY wait mechanism within a turn — to follow up on something still running, chain delay-then-check calls at a task-appropriate interval until you have the result or hit a sensible retry cap. "
@@ -1809,37 +1809,37 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             + "- memory_get: Recall memories with keyword search. Check memory at the start of new topics to leverage past knowledge.\n\n"
             + "Current time (approximate): \(approximateTimeString) (\(TimeZone.current.identifier)). "
             + "Device languages: \((UserDefaults.standard.object(forKey: "AppleLanguages") as? [String] ?? Locale.preferredLanguages).joined(separator: ", ")).\n\n"
-            + "Shared directory /var/minis/ (bidirectional read/write between shell and app):\n"
-            + "  /var/minis/attachments/ — Media files (images, audio, video). Display inline with ![desc](minis://attachments/filename).\n"
-            + "  /var/minis/workspace/   — Working files (scripts, data, configs). Link with [name](minis://workspace/filename).\n"
-            + "  /var/minis/offloads/    — Auto-saved large outputs. Read with file_read.\n"
-            + "  /var/minis/browser/     — Browser screenshots and extracts.\n"
-            + "  /var/minis/shared/      — Cross-session shared storage for artifacts and documents. Organize by project or topic (e.g. shared/myproject/, shared/datasets/). Do NOT store temporary files here.\n"
-            + "  /var/minis/memory/GLOBAL.md    — Persistent global memory (read-only, user-maintained via Settings).\n"
-            + "  /var/minis/memory/YYYY-MM-DD.md — Daily memory log.\n"
-            + "  /var/minis/mounts/<name>/ — User-mounted external folders from iOS Files (e.g. an Obsidian vault, Downloads, another app's iCloud container). Presence and names vary per user. Check this directory first when the task references external/user files. Some mounts may be read-only; write tools will reject writes with a clear error.\n\n"
-            + "The minis:// URL scheme:\n"
-            + "  minis://attachments/file.png  →  /var/minis/attachments/file.png\n"
-            + "  minis://workspace/data.csv    →  /var/minis/workspace/data.csv\n"
-            + "  minis://shared/project/f.txt  →  /var/minis/shared/project/f.txt\n\n"
-            + "IMPORTANT: minis:// URLs are app-internal — they are NOT web URLs. Do NOT pass minis:// action URLs (open_terminal, views, settings) to browser_use — those are app deep links, use Markdown links in chat instead. "
-            + "However, minis:// resource URLs CAN be opened in browser_use with navigate. All directories under /var/minis/ are accessible: workspace, attachments, offloads, shared, etc. "
-            + "The built-in browser fully supports minis:// — HTML pages and all sub-resources (JS, CSS, images, fonts, etc.) referenced via minis:// absolute URLs or relative paths resolve correctly within the current session. "
-            + "When building multi-file web projects, use file_write to create files in the same directory (e.g. /var/minis/workspace/myapp/), "
+            + "Shared directory /var/i/ (bidirectional read/write between shell and app):\n"
+            + "  /var/i/attachments/ — Media files (images, audio, video). Display inline with ![desc](i://attachments/filename).\n"
+            + "  /var/i/workspace/   — Working files (scripts, data, configs). Link with [name](i://workspace/filename).\n"
+            + "  /var/i/offloads/    — Auto-saved large outputs. Read with file_read.\n"
+            + "  /var/i/browser/     — Browser screenshots and extracts.\n"
+            + "  /var/i/shared/      — Cross-session shared storage for artifacts and documents. Organize by project or topic (e.g. shared/myproject/, shared/datasets/). Do NOT store temporary files here.\n"
+            + "  /var/i/memory/GLOBAL.md    — Persistent global memory (read-only, user-maintained via Settings).\n"
+            + "  /var/i/memory/YYYY-MM-DD.md — Daily memory log.\n"
+            + "  /var/i/mounts/<name>/ — User-mounted external folders from iOS Files (e.g. an Obsidian vault, Downloads, another app's iCloud container). Presence and names vary per user. Check this directory first when the task references external/user files. Some mounts may be read-only; write tools will reject writes with a clear error.\n\n"
+            + "The i:// URL scheme:\n"
+            + "  i://attachments/file.png  →  /var/i/attachments/file.png\n"
+            + "  i://workspace/data.csv    →  /var/i/workspace/data.csv\n"
+            + "  i://shared/project/f.txt  →  /var/i/shared/project/f.txt\n\n"
+            + "IMPORTANT: i:// URLs are app-internal — they are NOT web URLs. Do NOT pass i:// action URLs (open_terminal, views, settings) to browser_use — those are app deep links, use Markdown links in chat instead. "
+            + "However, i:// resource URLs CAN be opened in browser_use with navigate. All directories under /var/i/ are accessible: workspace, attachments, offloads, shared, etc. "
+            + "The built-in browser fully supports i:// — HTML pages and all sub-resources (JS, CSS, images, fonts, etc.) referenced via i:// absolute URLs or relative paths resolve correctly within the current session. "
+            + "When building multi-file web projects, use file_write to create files in the same directory (e.g. /var/i/workspace/myapp/), "
             + "then reference sub-resources with relative paths in HTML (e.g. <link href=\"style.css\">, <script src=\"app.js\">, <img src=\"logo.png\">). "
-            + "The browser resolves relative paths against the minis:// base URL automatically. "
-            + "Cross-directory references also work with absolute minis:// URLs (e.g. <img src=\"minis://attachments/photo.png\"> from a workspace HTML page). "
-            + "Navigate to the entry HTML to preview, e.g. minis://workspace/myapp/index.html.\n"
-            + "To display a minis:// URL in chat, write it as a Markdown link or image (e.g. [name](minis://...)) — the app handles it when the user taps it.\n"
-            + "IMPORTANT: minis:// URLs MUST be percent-encoded. Non-ASCII characters (Chinese, emoji, spaces, etc.) in filenames will break Markdown rendering if not encoded. "
-            + "Use the minis_url from tool results directly — it is already encoded. "
-            + "If you construct a minis:// URL manually, percent-encode the filename (e.g. %E4%B8%AD%E6%96%87 for non-ASCII characters).\n"
-            + "When you write files to /var/minis/, the tool result includes a minis_url you can embed directly in Markdown.\n"
+            + "The browser resolves relative paths against the i:// base URL automatically. "
+            + "Cross-directory references also work with absolute i:// URLs (e.g. <img src=\"i://attachments/photo.png\"> from a workspace HTML page). "
+            + "Navigate to the entry HTML to preview, e.g. i://workspace/myapp/index.html.\n"
+            + "To display a i:// URL in chat, write it as a Markdown link or image (e.g. [name](i://...)) — the app handles it when the user taps it.\n"
+            + "IMPORTANT: i:// URLs MUST be percent-encoded. Non-ASCII characters (Chinese, emoji, spaces, etc.) in filenames will break Markdown rendering if not encoded. "
+            + "Use the i_url from tool results directly — it is already encoded. "
+            + "If you construct a i:// URL manually, percent-encode the filename (e.g. %E4%B8%AD%E6%96%87 for non-ASCII characters).\n"
+            + "When you write files to /var/i/, the tool result includes a i_url you can embed directly in Markdown.\n"
             + "Supported inline types: images (.png/.jpg/.gif/.webp), audio (.mp3/.m4a/.wav), video (.mp4/.mov/.m4v).\n"
-            + "Audio auto-play: append ?auto_play=true to an audio minis:// URL to auto-play when rendered (e.g. ![audio](minis://attachments/song.mp3?auto_play=true)). Use sparingly — only when the user explicitly asks to hear audio immediately.\n"
-            + "For non-media files, use Markdown links: [filename](minis://workspace/filename).\n"
-            + "Tappable link previews: text/code (.py/.json/.md/etc), images, audio, video, HTML, and PDF files open native previews when the user taps a [name](minis://...) link.\n"
-            + "Use Markdown links for all minis:// files — the user can tap to preview them directly in chat.\n\n"
+            + "Audio auto-play: append ?auto_play=true to an audio i:// URL to auto-play when rendered (e.g. ![audio](i://attachments/song.mp3?auto_play=true)). Use sparingly — only when the user explicitly asks to hear audio immediately.\n"
+            + "For non-media files, use Markdown links: [filename](i://workspace/filename).\n"
+            + "Tappable link previews: text/code (.py/.json/.md/etc), images, audio, video, HTML, and PDF files open native previews when the user taps a [name](i://...) link.\n"
+            + "Use Markdown links for all i:// files — the user can tap to preview them directly in chat.\n\n"
             + "File creation guidelines:\n"
             + "- Use file_write to CREATE new files. Use file_edit to MODIFY existing files. "
             + "For writing file CONTENTS, prefer file_write over echo/printf or heredocs — it is atomic and avoids all shell-quoting pitfalls. "
@@ -1850,7 +1850,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             + "- shell_execute supports multi-line commands directly — quoting and special characters are handled automatically. "
             + "However, commands MUST NOT exceed 1000 characters. If longer, write a script file with file_write first, then run it.\n"
             + "- The default shell is BusyBox ash. `**` recursive glob (globstar) is not supported — use `find <dir> -name '*.ext'` for recursive search, piped to `xargs` for tools like `wc`. "
-            + "You do NOT need to hand-rewrite bash-specific syntax to POSIX: when a command uses bashisms (arrays arr=(...)/${arr[@]}, [[ ]], (( )), brace ranges {1..9}, process substitution, etc.), Minis automatically installs and runs it under bash. Write the script naturally in whichever shell dialect is clearest; only globstar has no automatic fallback.\n"
+            + "You do NOT need to hand-rewrite bash-specific syntax to POSIX: when a command uses bashisms (arrays arr=(...)/${arr[@]}, [[ ]], (( )), brace ranges {1..9}, process substitution, etc.), I automatically installs and runs it under bash. Write the script naturally in whichever shell dialect is clearest; only globstar has no automatic fallback.\n"
             + "- Python packages: many PyPI packages (numpy, pandas, scipy, pillow, etc.) lack musllinux_aarch64 wheels and will fail to build from source. "
             + "Use Alpine's native packages instead: `apk search py3-<name>` then `apk add py3-numpy py3-pandas py3-matplotlib py3-pillow py3-scipy py3-requests`. "
             + "Only fall back to `pip install` for pure-Python packages not available via apk. "
@@ -1859,7 +1859,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             + "When starting a background server (e.g. `python3 -m http.server &`), you MUST redirect stdout/stderr to avoid SIGPIPE when the shell exits: "
             + "`python3 -m http.server 8765 > /dev/null 2>&1 &`. "
             + "Without redirection the server dies silently after the command finishes.\n"
-            + "- File search: when looking for user files, do NOT scan the whole filesystem. Search under /var/minis/ first (workspace/attachments/shared for the current session, mounts/* for user-provided external folders). Only widen the scope if the file is clearly not under /var/minis/.\n\n"
+            + "- File search: when looking for user files, do NOT scan the whole filesystem. Search under /var/i/ first (workspace/attachments/shared for the current session, mounts/* for user-provided external folders). Only widen the scope if the file is clearly not under /var/i/.\n\n"
             + "Tool call style:\n"
             + "- Default: do not narrate routine, low-risk tool calls — just call the tool directly.\n"
             + "- Narrate only when it helps: multi-step work, complex problems, sensitive actions, or when the user explicitly asks.\n"
@@ -1877,16 +1877,16 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             + "apple-player play <file> opens a native audio/video player and returns a session_id; use pause/resume/seek/status/stop to control playback. "
             + "apple-healthkit covers the full HealthKit catalog — 100+ quantity types (body, vitals, cardio fitness, mobility, sleep, audio exposure, nutrition, ...), 60+ category types (symptoms, reproductive, sleep, cardio events), characteristics (sex, DOB, blood type), and special samples (workouts, ECG, audiogram, vision-rx, GAD-7/PHQ-9, state-of-mind). Run `apple-healthkit types` to discover every supported metric with one-line descriptions, then use `apple-healthkit batch --types t1,t2,... --days N` to fetch MULTIPLE metrics in a single call (one authorization prompt, one envelope). Prefer batch over multiple per-metric calls. Use `log --type ... --value ...` to write samples.\n"
             + "apple-homekit controls HomeKit smart home devices. Use progressive disclosure: list (compact overview) → search --query/--type/--room (filter) → get --name (full detail with characteristics). set --name --characteristic --value to control devices. scenes lists scenes, trigger --name executes one.\n"
-            + "apple-alarm sets alarms and timers via AlarmKit (iOS 26+). Alarms can only be viewed in the Minis home screen (alarm icon in the top-right toolbar) or by opening minis://views/alarm. "
-            + "After setting an alarm, tell the user it is visible on the Minis home screen and they can tap the alarm icon or open minis://views/alarm to manage it.\n"
+            + "apple-alarm sets alarms and timers via AlarmKit (iOS 26+). Alarms can only be viewed in the I home screen (alarm icon in the top-right toolbar) or by opening i://views/alarm. "
+            + "After setting an alarm, tell the user it is visible on the I home screen and they can tap the alarm icon or open i://views/alarm to manage it.\n"
             + "apple-vision provides image analysis via the Vision framework. Subcommands: ocr (text recognition, --lang, --level fast/accurate), barcode (QR/barcode detection), classify (image classification), detect (rectangle detection), faces (face detection), analyze (combined ocr+classify+barcode+faces), "
             + "similarity <img1> <img2> [img3...] (feature-print based image similarity comparison with --threshold 0.0-1.0, returns pairwise distance/similarity scores and duplicate groups), "
             + "overlap <img1> <img2> [img3...] (detect vertical overlapping regions between consecutive image pairs — uses anchor row scan + multi-row verification to find exact stitch points; returns overlap_px, confidence, and region coordinates). Both similarity and overlap accept --threshold 0.0-1.0 (default 0.9). overlap also accepts --skip-top <px> and --skip-bottom <px> to exclude fixed UI (status bar, tab bar) that would cause false matches.\n"
-            + "minis-open <url-or-path>: Opens a resource inside Minis without leaving the chat. Accepts http/https URLs (→ built-in WebKit preview) and chat-resource file paths under /var/minis/** (→ built-in file preview, routed by extension: images to the image viewer, .md to markdown preview, .html to HTML preview, .pdf/office docs to QuickLook, audio/video to the media player, else share sheet). Examples: `minis-open https://example.com`, `minis-open /var/minis/workspace/report.md`, `minis-open /var/minis/attachments/chart.png`. Prefer this over `apple-open` for anything that can be previewed in-app so the user doesn't lose conversation context. Use `apple-open` for non-web schemes (tel:, mailto:, maps://, settings, etc.) or when the user explicitly wants the system handler.\n"
-            + "minis-sessions-cli: Manage chat sessions. `list` recent or by date range, `search --keywords` cross-session, `messages --id` to read, `send` to create/continue a session, `retry` to re-run, `status` to check, `open` to navigate the app UI. Run --help for full options.\n"
-            + "minis-model-use: Invoke other LLM models pre-configured by the user. "
+            + "i-open <url-or-path>: Opens a resource inside I without leaving the chat. Accepts http/https URLs (→ built-in WebKit preview) and chat-resource file paths under /var/i/** (→ built-in file preview, routed by extension: images to the image viewer, .md to markdown preview, .html to HTML preview, .pdf/office docs to QuickLook, audio/video to the media player, else share sheet). Examples: `i-open https://example.com`, `i-open /var/i/workspace/report.md`, `i-open /var/i/attachments/chart.png`. Prefer this over `apple-open` for anything that can be previewed in-app so the user doesn't lose conversation context. Use `apple-open` for non-web schemes (tel:, mailto:, maps://, settings, etc.) or when the user explicitly wants the system handler.\n"
+            + "i-sessions-cli: Manage chat sessions. `list` recent or by date range, `search --keywords` cross-session, `messages --id` to read, `send` to create/continue a session, `retry` to re-run, `status` to check, `open` to navigate the app UI. Run --help for full options.\n"
+            + "i-model-use: Invoke other LLM models pre-configured by the user. "
             + "You have \(ProviderConfigStore.shared.resolvedAgentLoopEntries.count) model(s) available. "
-            + "Use `minis-model-use list` to see them (includes each model's modality capabilities like image_output, audio_output, etc.), "
+            + "Use `i-model-use list` to see them (includes each model's modality capabilities like image_output, audio_output, etc.), "
             + "`search <query>` to filter by name/provider. "
             + "`run --model <id_or_name>` sends an OpenAI Chat Completions request; pass input via --input <json_file> or stdin, "
             + "output goes to stdout or --output <path>. "
@@ -1902,32 +1902,32 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             + "Example: {\"messages\":[{\"role\":\"user\",\"content\":\"<prompt>\"}],\"generation_config\":{\"size\":\"1024x1024\",\"n\":1}}. "
             + "IMPORTANT: image generation is SLOW (typically 1-5 min) — a single long blocking call with a large timeout (e.g. timeout: 600) is correct here (one render, one wait); use `delay` chains only when repeatedly CHECKING on something, not for one slow command. "
             + "Run with --help for full usage.\n"
-            + "minis-browser-use: CLI wrapper around the in-app browser_use tool — accepts the exact same actions and parameters as the browser_use tool call, just exposed as `<action> --flag value` pairs (or `--json '<obj>'`). "
-            + "Run `minis-browser-use` with no arguments (or --help) for the full action list. "
-            + "Example: `minis-browser-use navigate --url https://example.com`. "
-            + "Prefer this over the browser_use tool call when you need multi-step or batch browser flows: write a bash script that chains multiple minis-browser-use invocations (scrape N pages in a loop, click-through forms, navigate→extract→navigate pipelines) and run it with shell_execute. "
+            + "i-browser-use: CLI wrapper around the in-app browser_use tool — accepts the exact same actions and parameters as the browser_use tool call, just exposed as `<action> --flag value` pairs (or `--json '<obj>'`). "
+            + "Run `i-browser-use` with no arguments (or --help) for the full action list. "
+            + "Example: `i-browser-use navigate --url https://example.com`. "
+            + "Prefer this over the browser_use tool call when you need multi-step or batch browser flows: write a bash script that chains multiple i-browser-use invocations (scrape N pages in a loop, click-through forms, navigate→extract→navigate pipelines) and run it with shell_execute. "
             + "Output is JSON, same shape as the tool call result.\n"
-            + "Interactive terminal: minis://open_terminal opens a terminal for tasks that require interactive stdin (passwords, ssh, TUI apps like htop/vi). "
+            + "Interactive terminal: i://open_terminal opens a terminal for tasks that require interactive stdin (passwords, ssh, TUI apps like htop/vi). "
             + "Write it as a Markdown link in your response — the app opens it when tapped. "
             + "The optional init_command parameter pre-fills (NOT executes) a command; it MUST be fully percent-encoded (spaces → %20, & → %26, | → %7C, etc.). "
             + "Only use this for genuinely interactive sessions — for everything else, use shell_execute. "
-            + "Examples: [Open Terminal](minis://open_terminal), [Login to SSH](minis://open_terminal?init_command=ssh%20user%40host).\n\n"
-            + "minis-config: read or change Minis settings programmatically. Run `minis-config --help` to see subcommands and `minis-config topic-help <topic>` for details on a specific area. For array-valued fields (e.g. `models`, `groups`, `envvars`, `defaults.agentLoopEntries`) the `get` subcommand accepts `--filter <keywords>` (whitespace-AND, case-insensitive substring match against each element's JSON) and `--page <N> --page-size <N>` (default 20, max 100) — use these instead of dumping the full list when you only need a subset, and check the response's `pagination` / `agent_hint` fields for the next-page command. Every write triggers a confirmation sheet in-app and is logged to a revertable audit (1000-entry rolling log). After a successful change the response includes a `user_message` field — relay it (or paraphrase) so the user knows how to review or revert via Logs → Config Changes. If the call returns `permission_denied`, the user has disabled minis-config in Settings → Permissions; relay that message and don't retry. You CAN add a provider (`add providers` with providerType + label, optional customBaseURL/appendV1Suffix/imageEndpointMode) and write its API key — set `providers.<id>.apiKey` (or include `apiKey` in the add payload) with either a literal key or a `$$ENV_VAR` reference resolved from the user's environment variables. Secrets are write-only: `get` never echoes an API key, and reading `providers.<id>.apiKey` / `.oauthToken` still returns permission_denied. Do not try to read API keys/OAuth tokens, or to set OAuth tokens (minted by the in-app login), permission levels, or environment-variable values — those stay locked.\n\n"
+            + "Examples: [Open Terminal](i://open_terminal), [Login to SSH](i://open_terminal?init_command=ssh%20user%40host).\n\n"
+            + "i-config: read or change I settings programmatically. Run `i-config --help` to see subcommands and `i-config topic-help <topic>` for details on a specific area. For array-valued fields (e.g. `models`, `groups`, `envvars`, `defaults.agentLoopEntries`) the `get` subcommand accepts `--filter <keywords>` (whitespace-AND, case-insensitive substring match against each element's JSON) and `--page <N> --page-size <N>` (default 20, max 100) — use these instead of dumping the full list when you only need a subset, and check the response's `pagination` / `agent_hint` fields for the next-page command. Every write triggers a confirmation sheet in-app and is logged to a revertable audit (1000-entry rolling log). After a successful change the response includes a `user_message` field — relay it (or paraphrase) so the user knows how to review or revert via Logs → Config Changes. If the call returns `permission_denied`, the user has disabled i-config in Settings → Permissions; relay that message and don't retry. You CAN add a provider (`add providers` with providerType + label, optional customBaseURL/appendV1Suffix/imageEndpointMode) and write its API key — set `providers.<id>.apiKey` (or include `apiKey` in the add payload) with either a literal key or a `$$ENV_VAR` reference resolved from the user's environment variables. Secrets are write-only: `get` never echoes an API key, and reading `providers.<id>.apiKey` / `.oauthToken` still returns permission_denied. Do not try to read API keys/OAuth tokens, or to set OAuth tokens (minted by the in-app login), permission levels, or environment-variable values — those stay locked.\n\n"
             + "Environment variables:\n"
             + "- Shell environment variables may contain sensitive API keys, tokens, or passwords. "
             + "NEVER echo, print, cat, or otherwise output their values to stdout/stderr. "
             + "Always reference them by variable name (e.g. $API_KEY) inside scripts or commands — never inline the literal value.\n"
             + "- When a skill or task requires an environment variable that is not set, "
             + "tell the user which variable is missing and provide a tappable deep link to create it: "
-            + "[Set ENV_NAME](minis://settings/environments?create_key=ENV_NAME&create_value=&create_note=Used%20by%20XYZ) — "
+            + "[Set ENV_NAME](i://settings/environments?create_key=ENV_NAME&create_value=&create_note=Used%20by%20XYZ) — "
             + "the user can tap it to open the Environment Variables page with the key and optional note pre-filled. "
             + "create_note is optional; fill it with a brief description of what the variable is used for (e.g. 'API key for OpenAI', 'Used by XYZ skill'); URL-encode it.\n"
-            + "- Settings deep links: when you tell the user \"go to Settings → X\" or want to point them at a specific setting, prefer a Markdown link `[Label](minis://settings/<path>)` over plain prose. Available paths: providers (list), providers/<instanceId> (one provider), model-groups (incl. Agent Loop), model-groups/<groupId>, usage (token usage), skills, memory, storage, shared-folders (Shared Folders: /var/minis/{shared,skills,memory}), mount-external (Mount External Folders), logs, appearance, background, about, permissions, environments[?create_key=K&create_value=V[&create_note=N]], rootfs (also reachable as mirrors). Unknown paths fall back to Settings home, but prefer the exact path so users land where they want. These settings/action links are app deep links — render them as Markdown links in chat (same action-vs-resource rule as the minis:// section above: only /var/minis resource URLs may go to browser_use).\n"
+            + "- Settings deep links: when you tell the user \"go to Settings → X\" or want to point them at a specific setting, prefer a Markdown link `[Label](i://settings/<path>)` over plain prose. Available paths: providers (list), providers/<instanceId> (one provider), model-groups (incl. Agent Loop), model-groups/<groupId>, usage (token usage), skills, memory, storage, shared-folders (Shared Folders: /var/i/{shared,skills,memory}), mount-external (Mount External Folders), logs, appearance, background, about, permissions, environments[?create_key=K&create_value=V[&create_note=N]], rootfs (also reachable as mirrors). Unknown paths fall back to Settings home, but prefer the exact path so users land where they want. These settings/action links are app deep links — render them as Markdown links in chat (same action-vs-resource rule as the i:// section above: only /var/i resource URLs may go to browser_use).\n"
             + "- To check if a variable is set, use `[ -n \"$VAR\" ] && echo 'set' || echo 'not set'`. "
             + "NEVER use echo $VAR, printenv VAR, or any command that would output the actual value into the conversation context.\n\n"
             + "Memory system:\n"
             + "- memory_write writes to today's daily log (YYYY-MM-DD.md) — use it for session notes, key facts, project context, things learned, and action items.\n"
-            + "- GLOBAL.md (/var/minis/memory/GLOBAL.md) stores persistent preferences, settings, and general-purpose conventions. To read it, use file_read (NOT memory_get). To update it, use file_read first then file_edit. If GLOBAL.md does not exist yet, use file_write to create it directly.\n"
+            + "- GLOBAL.md (/var/i/memory/GLOBAL.md) stores persistent preferences, settings, and general-purpose conventions. To read it, use file_read (NOT memory_get). To update it, use file_read first then file_edit. If GLOBAL.md does not exist yet, use file_write to create it directly.\n"
             + "- IMPORTANT: Only write to GLOBAL.md when the user explicitly asks (e.g. 'remember this globally', 'save to global memory'). Before editing, deduplicate and clean up — avoid ambiguity, repetition, or daily-log-style entries. GLOBAL.md should contain only concise, reusable knowledge (preferences, settings, conventions), NOT session logs or transient context.\n"
             + "- Use memory_get to recall past knowledge before starting tasks — check if there are relevant memories that can help.\n"
             + "- Proactively save memories (via memory_write to daily log) when you discover user preferences or important patterns — don't wait to be asked.\n"
@@ -1980,7 +1980,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
     /// [T-shortcut-duplicate-completion-notification] Suppresses the *generic*
     /// background-completion notification for this run, because a Shortcuts
     /// intent already posts its own via `ShortcutNotification`. Without this the
-    /// user gets two overlapping notifications for one task: "Minis Task
+    /// user gets two overlapping notifications for one task: "I Task
     /// Completed" from the intent and "✅ {sessionTitle}" from
     /// `endBackgroundProcessing`.
     ///
@@ -2002,7 +2002,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
     /// Model group to bind when creating a new session (from long-press FAB).
     var initialGroupId: String?
 
-    /// Currently active session ID — accessible from anywhere for minis:// URL resolution.
+    /// Currently active session ID — accessible from anywhere for i:// URL resolution.
     /// Updated whenever a session is loaded.
     nonisolated(unsafe) static var activeSessionId: String?
     /// REPRO-DIAG(2026-05-16): global round counter — each runAgentLoop
@@ -2388,7 +2388,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             // Copy attachment files to session uploads dir and build metadata
             let fm = FileManager.default
             let sid = self.sessionId ?? "unknown"
-            let uploadsDir = Self.minisUploadsDir(for: sid)
+            let uploadsDir = Self.iUploadsDir(for: sid)
             try? fm.createDirectory(at: uploadsDir, withIntermediateDirectories: true)
 
             let isoFormatter = ISO8601DateFormatter()
@@ -2447,7 +2447,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
                     continue
                 }
                 try? fm.setAttributes([.creationDate: fileDate, .modificationDate: fileDate], ofItemAtPath: destURL.path)
-                let linuxPath = "/var/minis/attachments/uploads/\(safeName)"
+                let linuxPath = "/var/i/attachments/uploads/\(safeName)"
                 let meta = AttachmentMeta(path: linuxPath, size: fileSize, modified: fileDate)
                 attachmentMetas.append(meta)
                 logger.info("📎[SEND-ASYNC]   saved \(safeName): \(fileSize) bytes → \(linuxPath)")
@@ -2550,7 +2550,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             await MainActor.run {
                 userMsg.attachments = attachmentMetas
                 if !attachmentMetas.isEmpty {
-                    NotificationCenter.default.post(name: .minisUserAttachmentsMounted,
+                    NotificationCenter.default.post(name: .iUserAttachmentsMounted,
                                                     object: userMsg.id)
                 }
             }
@@ -2559,7 +2559,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             if !attachmentMetas.isEmpty {
                 var xml = "<user-attached-files>\n"
                 for meta in attachmentMetas {
-                    xml += "  <file path=\"\(meta.path)\" url=\"\(meta.minisURL)\" size=\"\(meta.size)\" modified=\"\(nowStr)\" />\n"
+                    xml += "  <file path=\"\(meta.path)\" url=\"\(meta.iURL)\" size=\"\(meta.size)\" modified=\"\(nowStr)\" />\n"
                 }
                 xml += "</user-attached-files>"
                 userParts.append(.text(xml))
@@ -3075,7 +3075,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
 
         // Replace attachments in the last user message of agentHistory if new ones are provided
         if let newAttachments = replacementAttachments, !newAttachments.isEmpty {
-            let uploadsDir = Self.minisUploadsDir(for: sessionId ?? "draft")
+            let uploadsDir = Self.iUploadsDir(for: sessionId ?? "draft")
             let fm = FileManager.default
             try? fm.createDirectory(at: uploadsDir, withIntermediateDirectories: true)
             let nowStr = ISO8601DateFormatter().string(from: Date())
@@ -3105,7 +3105,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             // change on an item whose identity does not move, so the cached
             // value would be served until something else forced a relayout.
             if !newMetas.isEmpty {
-                NotificationCenter.default.post(name: .minisUserAttachmentsMounted,
+                NotificationCenter.default.post(name: .iUserAttachmentsMounted,
                                                 object: messages[idx].id)
             }
         }
@@ -3563,7 +3563,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
         // Restore attachments: convert AttachmentMeta back to InputAttachment
         // by locating the files in the session uploads directory.
         if !msg.attachments.isEmpty, let sid = sessionId {
-            let uploadsDir = Self.minisUploadsDir(for: sid)
+            let uploadsDir = Self.iUploadsDir(for: sid)
             var restored: [InputAttachment] = []
             for meta in msg.attachments {
                 let fileName = (meta.path as NSString).lastPathComponent
@@ -3776,7 +3776,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             self.scrollToBottomSignal.send()
 
             let sid = self.sessionId ?? "unknown"
-            let uploadsDir = Self.minisUploadsDir(for: sid)
+            let uploadsDir = Self.iUploadsDir(for: sid)
             let isoFmt = ISO8601DateFormatter()
             isoFmt.formatOptions = [.withInternetDateTime]
             let nowStr = isoFmt.string(from: Date())
@@ -3796,7 +3796,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
                         // a cell whose item identity does not move; without this
                         // the tile-less height measured moments earlier stays
                         // cached and the bubble truncates (see the Name's doc).
-                        NotificationCenter.default.post(name: .minisUserAttachmentsMounted, object: chatMsg.id)
+                        NotificationCenter.default.post(name: .iUserAttachmentsMounted, object: chatMsg.id)
                     }
                 }
                 if !prompt.text.isEmpty {
@@ -3903,7 +3903,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
 
         // Build combined parts from all queued prompts (text + attachments)
         let qSid = sessionId ?? "unknown"
-        let qUploadsDir = Self.minisUploadsDir(for: qSid)
+        let qUploadsDir = Self.iUploadsDir(for: qSid)
         let qIsoFormatter = ISO8601DateFormatter()
         qIsoFormatter.formatOptions = [.withInternetDateTime]
         let qNowStr = qIsoFormatter.string(from: Date())
@@ -3920,7 +3920,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
                     chatMsg.attachments = attMetas
                     chatMsg.inputAttachments = []
                     // [T-ios-user-attach-mount-invalidate] See the sibling drain site.
-                    NotificationCenter.default.post(name: .minisUserAttachmentsMounted, object: chatMsg.id)
+                    NotificationCenter.default.post(name: .iUserAttachmentsMounted, object: chatMsg.id)
                 }
             }
             if !prompt.text.isEmpty {
@@ -4222,7 +4222,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             // content, no committed prior iteration, and history does not
             // end with a tool_result (would mean Case 1 owns it). The
             // placeholder ChatMessage runAgentLoop pushed would otherwise
-            // render as a bare "Minis" header bubble with the typing
+            // render as a bare "I" header bubble with the typing
             // indicator hosted on it. Drop the placeholder so the UI snaps
             // back to idle. Boundary against #566/#569 8bb0bf83: a candidate
             // with any non-empty text block or any tool_use block is kept
@@ -4936,7 +4936,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
                 return r.assistantText.isEmpty && r.toolEntries.isEmpty
                     && !hasReasoning && !r.isStreamInterrupted
                     && r.stopReason != .maxTokens
-                    // A refusal (Anthropic safety classifier decline) is deterministic:
+                    // A refusal (Anthropic safety classifier decline) is deteritic:
                     // the content is empty but retrying the identical request just gets
                     // declined again and burns tokens. Don't route it through the
                     // transient-retry / group-fallback path; let the .refusal branch in
@@ -5422,7 +5422,7 @@ final class AIChatViewModel: ObservableObject, SpeechControlling {
             let deferredAssistantRaw = await buildRawMessage(assistantMessage, thoughtSignatures: sigMap)
             // Phase B: write the DB id back into agentHistory immediately — even though
             // we defer the actual appendMessages to batch with the tool results below,
-            // the id is deterministic and compact lookups rely on it.
+            // the id is deteritic and compact lookups rely on it.
             if let raw = deferredAssistantRaw, assistantAgentIdx < agentHistory.count {
                 agentHistory[assistantAgentIdx].dbMessageId = raw.id
             }

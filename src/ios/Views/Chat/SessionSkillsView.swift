@@ -1,6 +1,6 @@
 //
 //  SessionSkillsView.swift
-//  MinisApp
+//  IApp
 //
 //  Per-session skill toggle sheet: override which skills are active in a chat.
 //

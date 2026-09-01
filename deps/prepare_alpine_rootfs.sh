@@ -213,8 +213,8 @@ configure_rootfs() {
     # Configure /etc/profile for better shell experience
     cat >> "$ROOTFS_DATA/etc/profile" << 'EOF'
 
-# MinisApp iSH Configuration
-export PS1='\u@minis:\w\$ '
+# IApp iSH Configuration
+export PS1='\u@i:\w\$ '
 export TERM=xterm-256color
 export HOME=/root
 export LANG=C.UTF-8
@@ -239,7 +239,7 @@ EOF
  | |  | | | | | | \__ \  | |__| | ||  __/
  |_|  |_|_|_| |_|_|___/  |____|_|\__\___|
 
- Welcome to MinisApp Linux Shell
+ Welcome to IApp Linux Shell
  Alpine Linux aarch64 on iSH-ARM64 Emulator
 
 EOF
@@ -317,7 +317,7 @@ print_summary() {
     echo "  Database: $(du -h "$ROOTFS_DIR/meta.db" | cut -f1)"
     echo "  ZIP:      $(du -h "$ZIP_FILE" | cut -f1)"
     echo ""
-    echo "To use in MinisApp:"
+    echo "To use in IApp:"
     echo "  1. Add alpine-rootfs.zip to Xcode project resources"
     echo "  2. Extract to Documents on first launch"
     echo "  3. Use mount_root(&fakefs, path_to_data)"

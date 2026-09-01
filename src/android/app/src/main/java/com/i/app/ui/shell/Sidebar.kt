@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.LibraryBooks
 import androidx.compose.material.icons.outlined.NoteAdd
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +43,26 @@ private data class SidebarAction(
     val onClick: () -> Unit,
 )
 
+internal const val SIDEBAR_SETTINGS_BOTTOM_INSET_DP = 20
+
+internal enum class SidebarActionId {
+    NEW_CHAT,
+    STORAGE,
+    PROJECTS,
+    SKILLS,
+    COPYWRITING,
+    SETTINGS,
+}
+
+internal fun sidebarActionIds(): List<SidebarActionId> = listOf(
+    SidebarActionId.NEW_CHAT,
+    SidebarActionId.STORAGE,
+    SidebarActionId.PROJECTS,
+    SidebarActionId.SKILLS,
+    SidebarActionId.COPYWRITING,
+    SidebarActionId.SETTINGS,
+)
+
 @Composable
 fun Sidebar(
     sessions: List<ChatSessionEntity>,
@@ -50,6 +71,7 @@ fun Sidebar(
     onProjects: () -> Unit,
     onSkills: () -> Unit,
     onCopywriting: () -> Unit,
+    onSettings: () -> Unit,
     onSessionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -88,20 +110,27 @@ fun Sidebar(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             items(recentSessions, key = { it.id }) { session ->
                 SidebarSessionItem(session = session, onClick = onSessionClick)
             }
         }
+        Divider(modifier = Modifier.padding(horizontal = 16.dp))
+        SidebarActionRow(
+            SidebarAction(stringResource(R.string.sidebar_settings), Icons.Outlined.Settings, onSettings),
+            modifier = Modifier.padding(bottom = SIDEBAR_SETTINGS_BOTTOM_INSET_DP.dp),
+        )
     }
 }
 
 @Composable
-private fun SidebarActionRow(action: SidebarAction) {
+private fun SidebarActionRow(action: SidebarAction, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 52.dp)
             .clickable(onClick = action.onClick)

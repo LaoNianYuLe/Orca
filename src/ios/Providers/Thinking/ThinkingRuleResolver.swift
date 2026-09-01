@@ -8,7 +8,7 @@ struct ThinkingResolveContext {
     var modelId: String
     var supportsReasoning: Bool?
     var declaredEffortValues: [String]?
-    /// [OpenMinis#163] The catalog affirmatively declares this model has NO
+    /// [I#163] The catalog affirmatively declares this model has NO
     /// effort tiers (reasons, but takes no `reasoning_effort`). Distinct from
     /// `declaredEffortValues == nil`, which also means "catalog never heard of
     /// it" — only the affirmative case suppresses the field. Defaults false so
@@ -34,7 +34,7 @@ struct ThinkingResolveContext {
     /// capability, with no error to explain why the toggle did nothing. Unknown endpoints
     /// default to pass-through and let the vendor answer for itself.
     var effortDeclarationIsAuthoritative: Bool = false
-    /// [OpenMinis#163] Endpoint is xAI's own API (api.x.ai), not a relay that
+    /// [I#163] Endpoint is xAI's own API (api.x.ai), not a relay that
     /// merely serves grok-named models. Scopes the empty-tier skip to the
     /// vendor where the 400 was actually observed.
     var isXAI: Bool = false
@@ -97,7 +97,7 @@ struct ThinkingGateEvent {
     var logFragment: String { "\(id)/\(evidence.rawValue):\(verdict)" }
 }
 
-/// Why a particular wire shape was chosen. Design §8 / OpenMinis#100: the resolved
+/// Why a particular wire shape was chosen. Design §8 / I#100: the resolved
 /// outcome must be inspectable, otherwise a user-editable rule layer just replaces one
 /// hidden variable with a more complicated one.
 struct ThinkingResolveTrace {
@@ -206,7 +206,7 @@ enum ThinkingRuleResolver {
     static func builtInRules(for ctx: ThinkingResolveContext) -> [ThinkingRule] {
         var rules: [ThinkingRule] = []
 
-        // Mistral — OpenMinis#87 / 4592ca9b / 29065ca0. Total prohibition: the request
+        // Mistral — I#87 / 4592ca9b / 29065ca0. Total prohibition: the request
         // rejects `reasoning` (422 extra_forbidden) and AssistantMessage is a closed
         // schema that rejects `reasoning_content`. Must outrank everything.
         if ctx.isMistral {
@@ -506,7 +506,7 @@ enum ThinkingRuleResolver {
                     id: "self-reasoning-family", evidence: .modelFamily, verdict: "emitNothing"))
                 return (nil, nil)
             }
-            // [OpenMinis#163] xAI-scoped skip. grok-build-0.1 answers
+            // [I#163] xAI-scoped skip. grok-build-0.1 answers
             // `reasoning_effort` with "HTTP 400: Model grok-build-0.1 does not
             // support parameter reasoningEffort"; the catalog describes exactly
             // that state as `"reasoning": true` with `"reasoning_options": []`
@@ -610,8 +610,8 @@ enum ThinkingRuleResolver {
 
         case .extraBodyToggle(let path):
             // Same shape, but conventionally nested under extra_body. Kept as its own case
-            // because that is how users think about it (GH OpenMinis#171: DeepSeek's real
-            // switch is extra_body.thinking.enabled and Minis never sent it).
+            // because that is how users think about it (GH I#171: DeepSeek's real
+            // switch is extra_body.thinking.enabled and I never sent it).
             setValue(true, at: path, in: &body, when: ctx.level.isEnabled, otherwiseWrite: false)
             return (nil, nil)
 

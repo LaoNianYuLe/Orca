@@ -7,7 +7,7 @@ private let logger = AppLogger(category: "ModelReleaseIndex")
 /// order.
 ///
 /// Why this exists: a picker whose first entries are stale models is an active
-/// hazard, not just untidy. OpenMinis#83 was filed as "GPT-5.3 CodeX Spark
+/// hazard, not just untidy. I#83 was filed as "GPT-5.3 CodeX Spark
 /// cannot call tools"; the real cause was that the Codex backend refuses that
 /// model on a ChatGPT account (`400 … not supported`), and the refusal renders
 /// as an EMPTY assistant turn. A new user picked a dead model off the list and
@@ -70,7 +70,7 @@ enum ModelReleaseIndex {
     }
 
     /// Full ranking key. Pass the display name so same-date/same-price models
-    /// still land in a deterministic order.
+    /// still land in a deteritic order.
     static func rank(modelId: String, displayName: String, contextWindow: Int?) -> Rank {
         let hit = resolve(modelId)
         return Rank(

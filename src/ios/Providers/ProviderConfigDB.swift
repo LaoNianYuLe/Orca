@@ -24,11 +24,11 @@ actor ProviderConfigDB {
 
     // MARK: - File locations
 
-    /// Default DB path: same MinisChat folder as `provider-config.json`.
+    /// Default DB path: same IChat folder as `provider-config.json`.
     static func defaultURL() -> URL {
         let library = FileManager.default
             .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-        let base = library.appendingPathComponent("MinisChat", isDirectory: true)
+        let base = library.appendingPathComponent("IChat", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base.appendingPathComponent("provider-config.db")
     }
@@ -43,7 +43,7 @@ actor ProviderConfigDB {
     /// config then carries `[]` for those fields, which is indistinguishable
     /// from a genuine empty selection — so any caller about to write that
     /// config back (notably the inbound-sync replace path) must check this and
-    /// skip, or it will erase the user's agent-loop choice. (OpenMinis#98.)
+    /// skip, or it will erase the user's agent-loop choice. (I#98.)
     private(set) var agentLoopReadFailed = false
 
     // MARK: - Init / schema
@@ -61,7 +61,7 @@ actor ProviderConfigDB {
         }
         self.db = handle
 
-        // WAL mode: same as minis.db. Tolerates concurrent reads while we
+        // WAL mode: same as i.db. Tolerates concurrent reads while we
         // upsert per-row from the sync inbound path.
         Self.exec(db: handle, "PRAGMA journal_mode = WAL")
         Self.exec(db: handle, "PRAGMA foreign_keys = ON")
@@ -561,7 +561,7 @@ actor ProviderConfigDB {
         // rewritten by every whole-config replace — including the one that
         // fires on each inbound V3 provider record. Wiping it whenever the
         // incoming config happens to carry an empty list is how a peer's sync
-        // silently erased the user's agent-loop selection (OpenMinis#98).
+        // silently erased the user's agent-loop selection (I#98).
         //
         // CRITICAL: this guard is gated on `preserveLocalOnlyStateIfEmpty`, i.e.
         // the inbound-sync caller ONLY. A user-initiated save() also reaches
@@ -1460,7 +1460,7 @@ actor ProviderConfigDB {
     ///      inbound sync payload. This table is deliberately NOT in that list, so a
     ///      provider-config sync from another device cannot wipe rules the peer's build
     ///      does not know about — the failure mode that erased agent-loop selections in
-    ///      OpenMinis#98 and cost days to characterise.
+    ///      I#98 and cost days to characterise.
     ///   3. Adding a column would have to be written into BOTH the `CREATE TABLE` DDL and
     ///      an idempotent ensure*, and forgetting either half is precisely how
     ///      `custom_user_agent` made every provider vanish. A new table has one
@@ -1509,7 +1509,7 @@ actor ProviderConfigDB {
     /// prepare failure as `[]`, that empty list round-tripped into the DELETE
     /// and silently erased the user's agent-loop selection — indistinguishable
     /// from "the user really had none". Callers now preserve their in-memory
-    /// state on nil instead. (OpenMinis#98 defect 2.)
+    /// state on nil instead. (I#98 defect 2.)
     private func loadAgentLoopIds(kind: String) -> [String]? {
         guard let db else {
             logger.error("[AgentLoopIds] read FAILED (db not open) kind=\(kind) — preserving in-memory state")
@@ -1623,7 +1623,7 @@ extension ProviderConfigDB {
     /// behaviour", which is exactly the pre-Phase-2 behaviour, so a failed read can
     /// never erase anything or change a request shape. Nothing writes back what it read,
     /// so there is no round-trip that could turn an empty read into a deletion — the
-    /// mechanism behind OpenMinis#98.
+    /// mechanism behind I#98.
     func loadThinkingRules(instanceId: String) -> [ThinkingRule] {
         guard let db else { return [] }
         var stmt: OpaquePointer?

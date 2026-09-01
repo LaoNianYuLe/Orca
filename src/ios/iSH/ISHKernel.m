@@ -1,6 +1,6 @@
 //
 //  ISHKernel.m
-//  MinisApp
+//  IApp
 //
 //  Objective-C wrapper for iSH kernel initialization and control
 //
@@ -85,7 +85,7 @@ extern const char *sock_tmp_prefix;
 
 // [fork-guard] Stall guest fork() while the app's memory footprint is too high.
 //
-// Every guest process lives inside Minis.app's own address space, so a burst
+// Every guest process lives inside I.app's own address space, so a burst
 // like `xargs -P 15` running 32MB Go binaries adds ~480MB to the app's iOS
 // footprint and gets the whole app SIGKILLed by Jetsam.
 //
@@ -159,11 +159,11 @@ extern const char *sock_tmp_prefix;
 // The lower clamp keeps a small device from setting a ceiling so low that
 // ordinary operation trips it; the upper clamp keeps a large device from
 // setting one so high the guard can never engage before Jetsam does.
-#define MINIS_FORK_GUARD_FOOTPRINT_FRACTION 4          // 1/4 of physical RAM
-#define MINIS_FORK_GUARD_FLOOR_BYTES   (500ULL * 1024 * 1024)
-#define MINIS_FORK_GUARD_CEIL_BYTES    (2048ULL * 1024 * 1024)
-#define MINIS_FORK_GUARD_POLL_US       (50 * 1000)     // 50ms between checks
-#define MINIS_FORK_GUARD_MAX_WAIT_US   (2 * 1000000)   // give up after 2s
+#define I_FORK_GUARD_FOOTPRINT_FRACTION 4          // 1/4 of physical RAM
+#define I_FORK_GUARD_FLOOR_BYTES   (500ULL * 1024 * 1024)
+#define I_FORK_GUARD_CEIL_BYTES    (2048ULL * 1024 * 1024)
+#define I_FORK_GUARD_POLL_US       (50 * 1000)     // 50ms between checks
+#define I_FORK_GUARD_MAX_WAIT_US   (2 * 1000000)   // give up after 2s
 
 static atomic_ullong g_fork_guard_stalls = 0;
 
@@ -175,21 +175,21 @@ static atomic_uint_fast32_t g_fork_guard_pressure = ATOMIC_VAR_INIT(0);
 static dispatch_source_t g_fork_guard_pressure_source = nil;
 
 // Footprint ceiling for this device, computed once at install.
-static uint64_t g_fork_guard_max_footprint = MINIS_FORK_GUARD_FLOOR_BYTES;
+static uint64_t g_fork_guard_max_footprint = I_FORK_GUARD_FLOOR_BYTES;
 
-static uint64_t minis_fork_guard_compute_ceiling(void) {
+static uint64_t i_fork_guard_compute_ceiling(void) {
     uint64_t ram = [NSProcessInfo processInfo].physicalMemory;
     if (ram == 0)
-        return MINIS_FORK_GUARD_FLOOR_BYTES;
-    uint64_t ceiling = ram / MINIS_FORK_GUARD_FOOTPRINT_FRACTION;
-    if (ceiling < MINIS_FORK_GUARD_FLOOR_BYTES)
-        ceiling = MINIS_FORK_GUARD_FLOOR_BYTES;
-    if (ceiling > MINIS_FORK_GUARD_CEIL_BYTES)
-        ceiling = MINIS_FORK_GUARD_CEIL_BYTES;
+        return I_FORK_GUARD_FLOOR_BYTES;
+    uint64_t ceiling = ram / I_FORK_GUARD_FOOTPRINT_FRACTION;
+    if (ceiling < I_FORK_GUARD_FLOOR_BYTES)
+        ceiling = I_FORK_GUARD_FLOOR_BYTES;
+    if (ceiling > I_FORK_GUARD_CEIL_BYTES)
+        ceiling = I_FORK_GUARD_CEIL_BYTES;
     return ceiling;
 }
 
-static void minis_fork_guard_start_pressure_source(void) {
+static void i_fork_guard_start_pressure_source(void) {
     if (g_fork_guard_pressure_source != nil)
         return;
     g_fork_guard_pressure_source = dispatch_source_create(
@@ -211,7 +211,7 @@ static void minis_fork_guard_start_pressure_source(void) {
 
 // Current phys_footprint in bytes, or 0 if unavailable. Matches the TASK_VM_INFO
 // pattern already used by HangDetector.m and BrowserResourceMonitor.swift.
-static uint64_t minis_current_phys_footprint(void) {
+static uint64_t i_current_phys_footprint(void) {
     task_vm_info_data_t info;
     mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
     kern_return_t kr = task_info(mach_task_self(), TASK_VM_INFO,
@@ -221,10 +221,10 @@ static uint64_t minis_current_phys_footprint(void) {
     return (uint64_t) info.phys_footprint;
 }
 
-static int minis_fork_memory_guard(void) {
+static int i_fork_memory_guard(void) {
     // A 0 reading means task_info failed; treat that as "no information" and
     // allow the fork rather than stalling every process spawn.
-    uint64_t footprint = minis_current_phys_footprint();
+    uint64_t footprint = i_current_phys_footprint();
     if (footprint == 0 || footprint < g_fork_guard_max_footprint)
         return 0;
 
@@ -256,11 +256,11 @@ static int minis_fork_memory_guard(void) {
 
     // Wait for the footprint to fall as earlier guest processes exit. Bounded so
     // a workload whose memory never comes back stalls briefly instead of hanging.
-    while (waited_us < MINIS_FORK_GUARD_MAX_WAIT_US) {
-        usleep(MINIS_FORK_GUARD_POLL_US);
-        waited_us += MINIS_FORK_GUARD_POLL_US;
+    while (waited_us < I_FORK_GUARD_MAX_WAIT_US) {
+        usleep(I_FORK_GUARD_POLL_US);
+        waited_us += I_FORK_GUARD_POLL_US;
 
-        footprint = minis_current_phys_footprint();
+        footprint = i_current_phys_footprint();
 
         // Pressure clearing is the signal we were waiting for, so stop waiting
         // even if our own footprint is unchanged. Guarded by the same 1.5x
@@ -521,7 +521,7 @@ static void handle_process_exit(struct task *task, int code) {
     struct tty *_consoleTTY;
     NSString *_rootPath;    // Host filesystem path to fakefs root (contains data/ + meta.db)
     NSString *_dataPath;    // Host filesystem path to fakefs data/ directory
-    NSString *_dnsHostPath; // Host path to resolv.conf (Library/MinisChat/dns/resolv.conf)
+    NSString *_dnsHostPath; // Host path to resolv.conf (Library/IChat/dns/resolv.conf)
 
     // Command execution state
     NSMutableString *_commandOutputBuffer;
@@ -546,7 +546,7 @@ static void handle_process_exit(struct task *task, int code) {
         _isBooted = NO;
         _consoleTTY = NULL;
         _commandOutputBuffer = [NSMutableString new];
-        _commandQueue = dispatch_queue_create("com.minisapp.ish.command", DISPATCH_QUEUE_SERIAL);
+        _commandQueue = dispatch_queue_create("com.iapp.ish.command", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -626,18 +626,18 @@ static void handle_process_exit(struct task *task, int code) {
     [self setUpUnixSocketPrefix];
 
     // 6.5. Install the fork memory guard so guest process bursts can't drive
-    // the app's footprint into the Jetsam limit (see minis_fork_memory_guard).
+    // the app's footprint into the Jetsam limit (see i_fork_memory_guard).
     // [T-ish-forkguard-stall] Compute the device-scaled ceiling and start the
     // pressure source BEFORE installing the guard, so the very first fork sees
     // real values rather than the conservative defaults.
-    g_fork_guard_max_footprint = minis_fork_guard_compute_ceiling();
-    minis_fork_guard_start_pressure_source();
-    ish_set_fork_guard(minis_fork_memory_guard);
+    g_fork_guard_max_footprint = i_fork_guard_compute_ceiling();
+    i_fork_guard_start_pressure_source();
+    ish_set_fork_guard(i_fork_memory_guard);
     NSLog(@"ISHKernel: [ForkGuard] installed — max footprint %.0fMB "
           @"(device RAM %.0fMB), waits only under system memory pressure, cap %ums",
           (double) g_fork_guard_max_footprint / (1024.0 * 1024.0),
           (double) [NSProcessInfo processInfo].physicalMemory / (1024.0 * 1024.0),
-          MINIS_FORK_GUARD_MAX_WAIT_US / 1000);
+          I_FORK_GUARD_MAX_WAIT_US / 1000);
 
     // 7. Register TTY driver and set up console device
     tty_drivers[TTY_CONSOLE_MAJOR] = &ish_console_driver;
@@ -679,9 +679,9 @@ static void handle_process_exit(struct task *task, int code) {
     sessions_offload_register();
     browser_use_offload_register();
     config_offload_register();
-    // Registered in every build: the `minis-debug logs` subcommand reads the
+    // Registered in every build: the `i-debug logs` subcommand reads the
     // app's own runtime log in-process (OSLogStore + LoggingManager) and must
-    // work on Release devices (T-ios-minis-debug-logs-oslogstore). The
+    // work on Release devices (T-ios-i-debug-logs-oslogstore). The
     // RPC-backed subcommands inside the handler stay DEBUG-gated and
     // self-report as unavailable in Release.
     debug_offload_register();
@@ -832,11 +832,11 @@ static void handle_process_exit(struct task *task, int code) {
 /// that (`deps/ish/fs/sock.c:280`). The compiled-in default is `/tmp/ishsock`
 /// (`fs/sock.c:229`), i.e. the iOS host `/tmp`, which no sandboxed app may
 /// write. Every guest `bind()` therefore failed with EPERM: Terraform/OpenTofu
-/// provider handshakes could never start (GH#175), and the minis-mcp-cli daemon
+/// provider handshakes could never start (GH#175), and the i-mcp-cli daemon
 /// had to fall back to loopback TCP.
 ///
 /// Upstream iSH fixed this in 2019 (`7704024a`) inside `app/AppDelegate.m`.
-/// Minis does not compile that file — this class is its equivalent, and it
+/// I does not compile that file — this class is its equivalent, and it
 /// mirrors every other init from it (do_mount, DNS, exit_hook, tty_drivers,
 /// create_stdio) EXCEPT this one line. So this is a re-alignment with upstream,
 /// not a new mechanism, which is also why the fix belongs here rather than in
@@ -906,14 +906,14 @@ static void handle_process_exit(struct task *task, int code) {
 
 /// Set up /etc/resolv.conf as a file-level bind mount pointing to a host file.
 /// Called once during boot, after the root filesystem and init process are ready.
-/// The host file lives in Library/MinisChat/dns/resolv.conf and can be freely
+/// The host file lives in Library/IChat/dns/resolv.conf and can be freely
 /// updated by the app at any time — changes are instantly visible inside iSH.
 - (void)mountDnsConfig {
     NSFileManager *fm = [NSFileManager defaultManager];
 
-    // Determine host path: Library/MinisChat/dns/resolv.conf
+    // Determine host path: Library/IChat/dns/resolv.conf
     NSString *library = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) firstObject];
-    NSString *dnsDir = [library stringByAppendingPathComponent:@"MinisChat/dns"];
+    NSString *dnsDir = [library stringByAppendingPathComponent:@"IChat/dns"];
     _dnsHostPath = [dnsDir stringByAppendingPathComponent:@"resolv.conf"];
 
     // Ensure directory and seed file exist before bind mount
@@ -927,7 +927,7 @@ static void handle_process_exit(struct task *task, int code) {
         NSLog(@"ISHKernel: [DNS] seeded host resolv.conf at %@", _dnsHostPath);
     }
 
-    // Bind mount: /etc/resolv.conf -> Library/MinisChat/dns/resolv.conf
+    // Bind mount: /etc/resolv.conf -> Library/IChat/dns/resolv.conf
     int err = fakefs_bind_mount("/etc/resolv.conf", _dnsHostPath.fileSystemRepresentation, false);
     if (err < 0) {
         NSLog(@"ISHKernel: [DNS] bind mount FAILED (%d) — writing via VFS fallback", err);
@@ -1079,7 +1079,7 @@ static void handle_process_exit(struct task *task, int code) {
         // Mirrors ISHShellExecutor: route browser-open calls to the in-app
         // preview shim. Needed for interactive terminal sessions too, where
         // Python's webbrowser module picks $BROWSER before $DISPLAY probing.
-        KERNEL_ENVP_APPEND("BROWSER=/usr/local/bin/minis-open");
+        KERNEL_ENVP_APPEND("BROWSER=/usr/local/bin/i-open");
 
         // Inject device timezone so iSH userspace sees local time.
         // Use POSIX TZ format with a fixed name to avoid abbreviations like "GMT+8"
@@ -1257,7 +1257,7 @@ static void handle_process_exit(struct task *task, int code) {
     [_commandOutputBuffer appendString:output];
 
     // Check if we've received a shell prompt (indicating command completion)
-    // Common prompt patterns: "$ ", "# ", "root@minis:", etc.
+    // Common prompt patterns: "$ ", "# ", "root@i:", etc.
     NSString *buffer = _commandOutputBuffer;
 
     // Look for prompt patterns at the end of the buffer
@@ -1823,7 +1823,7 @@ static void gov_tick(void) {
 - (void)beginBackgroundCPUGovernor {
     if (g_gov_timer) return;  // idempotent
     if (!g_gov_queue)
-        g_gov_queue = dispatch_queue_create("com.openminis.ish.cpugovernor",
+        g_gov_queue = dispatch_queue_create("com.i.ish.cpugovernor",
             dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_UTILITY, 0));
 
     g_gov_head = 0;

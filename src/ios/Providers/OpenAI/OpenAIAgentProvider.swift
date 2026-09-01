@@ -441,7 +441,7 @@ final class OpenAIAgentProvider: AgentProvider {
         // Responses-API provider types silently ignored thinking settings.
         var reasoningRequested = false
         // [T-ios-mistral-reasoning-422] Mistral rejects the reasoning request
-        // parameter outright (`422 extra_forbidden body.reasoning`, OpenMinis#87),
+        // parameter outright (`422 extra_forbidden body.reasoning`, I#87),
         // and its ChatCompletionRequest-era guard only ever covered the Chat
         // Completions path (the `if !provider.isMistral` around
         // injectThinkingParams). This builder is a SECOND, independent injection
@@ -847,7 +847,7 @@ final class OpenAIAgentProvider: AgentProvider {
             }
         }
         // No user text anywhere — derive from the first message's shape so the
-        // key is still deterministic across turns.
+        // key is still deteritic across turns.
         if let first = messages.first {
             let shape = first.parts.map { part -> String in
                 switch part {
@@ -865,15 +865,15 @@ final class OpenAIAgentProvider: AgentProvider {
         // random UUID: with no content there is no prefix to collide over, and a
         // fixed value at least lets consecutive such requests share a cache
         // entry instead of guaranteeing a miss.
-        return cacheKey(hashing: "minis-empty-conversation")
+        return cacheKey(hashing: "i-empty-conversation")
     }
 
-    /// `minis-<first 32 hex of SHA256>` — the shared shape for every cache key
+    /// `i-<first 32 hex of SHA256>` — the shared shape for every cache key
     /// this type derives.
     private static func cacheKey(hashing input: String) -> String {
         let digest = SHA256.hash(data: Data(input.utf8))
         let hex = digest.map { String(format: "%02x", $0) }.joined()
-        return "minis-\(hex.prefix(32))"
+        return "i-\(hex.prefix(32))"
     }
 
     // MARK: - Thinking Config
@@ -1004,9 +1004,9 @@ final class OpenAIAgentProvider: AgentProvider {
             + " userRules=\(userRules.count)"
         )
         let trace = ThinkingRuleResolver.apply(to: &body, ctx: ctx)
-        // [T-thinking-rules-observability] Design §8 / OpenMinis#100: which rule actually
+        // [T-thinking-rules-observability] Design §8 / I#100: which rule actually
         // won must be inspectable, or a rule layer just replaces one hidden variable with
-        // a more complicated one. minis-config exposure is Phase 2.
+        // a more complicated one. i-config exposure is Phase 2.
         //
         // [T-thinking-vision-diag] `trace.logLine` now also carries `gates=[…]` whenever a
         // gate intervened, so this single INFO line answers both "which rule won" and
@@ -1505,7 +1505,7 @@ final class OpenAIAgentProvider: AgentProvider {
         //   - → previously the gate dropped the captured rc → 400
         //
         // [T-ios-mistral-reasoning-422] …and why the OPPOSITE holds for
-        // Mistral (issue OpenMinis#87): Mistral's OpenAPI declares
+        // Mistral (issue I#87): Mistral's OpenAPI declares
         // AssistantMessage with `additionalProperties: false` (only
         // role/content/tool_calls/prefix) — `reasoning_content` is
         // categorically forbidden and 422s the whole request the moment a
@@ -1658,7 +1658,7 @@ final class OpenAIAgentProvider: AgentProvider {
                     // the `call_id` itself remains valid because it is how
                     // `function_call_output` links back. Sanitize: reuse the
                     // captured fcId only when it has the `fc_` prefix,
-                    // otherwise synthesize a deterministic `fc_syn_` id from
+                    // otherwise synthesize a deteritic `fc_syn_` id from
                     // the call_id so the API accepts the replay.
                     let safeFcId = fcId.map { Self.capResponsesId($0) }
                     if let safeFcId, safeFcId.hasPrefix("fc_") {

@@ -1,6 +1,6 @@
 //
 //  OpenOffload.m
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-open`.
 //  Opens URLs, URL schemes, and system settings via UIApplication.

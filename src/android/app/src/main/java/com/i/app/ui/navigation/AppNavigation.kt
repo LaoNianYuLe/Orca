@@ -169,6 +169,21 @@ object Routes {
     const val BACKGROUND = "background"
     const val ABOUT = "about"
     const val ONBOARDING_MODELS = "onboarding_models"
+
+    /** Screens with their own top-bar back button must not be covered by the global drawer button. */
+    fun isSettingsRoute(route: String?): Boolean {
+        val root = route?.substringBefore('/').orEmpty().substringBefore('?')
+        return root in setOf(
+            SETTINGS, PROVIDER_LIST, ADD_PROVIDER, PROVIDER_DETAIL, SHADOW_VOICE_DETAIL,
+            MODEL_GROUPS, MODEL_GROUP_DETAIL, ADD_MODELS_TO_GROUP,
+            ADD_MODELS_TO_AGENT_LOOP, ADD_GROUPS_TO_AGENT_LOOP, MODEL_ENTRY_DETAIL,
+            ADD_CUSTOM_MODEL, ENV_VARS, SKILLS, SKILL_DETAIL, SKILL_FILE,
+            I_SKILLS_BROWSER, MEMORY, MCP, SOUL, MEMORY_FILE_EDIT, PERMISSIONS,
+            SHIZUKU, SYSTEM_PERMISSIONS, USAGE_STATS, LOGS, LOG_DETAIL, APPEARANCE,
+            BACKGROUND, ABOUT, MOUNTED_FOLDERS, MOUNTED_FOLDERS_DETAIL,
+            SHARED_FOLDERS, SHARED_FOLDERS_DETAIL, ROOTFS_MANAGEMENT,
+        )
+    }
     /** T219-2: Mount external folders settings + detail. */
     const val MOUNTED_FOLDERS = "mounted_folders"
     const val MOUNTED_FOLDERS_DETAIL = "mounted_folders_detail/{mountId}"
@@ -342,27 +357,24 @@ fun AppNavigation(
         // SharedPreferences counter increments. Resets automatically the
         // moment the user has ANY non-crash_or_stall cycle (clean_exit /
         // silent_kill / first_launch) — see LaunchCycleBeacon.lastRestartCount.
-        val mode = if (
+        val forceHome =
             com.i.app.diagnostics.HangDetector.shouldForceHomeOnLaunch(context) ||
             com.i.app.crash.CrashFrequencyDetector.shouldForceHomeOnLaunch(context) ||
             com.i.app.diagnostics.LaunchCycleBeacon.shouldForceHomeOnLaunch()
-        ) 3 else rawMode
         val autoThresholdMs = 15L * 60 * 1000
-        val target: String? = when {
-            // T185: if a system share is buffered and the configured launch
-            // mode would leave us on the session list (mode 3 = Home), the
-            // ChatScreen consumer never mounts and the buffer expires —
-            // exactly the symptom from the bug report. Force a new draft
-            // chat so the share lands in a composer.
-            hasPendingShare && mode == 3 -> Routes.chat("__new__${java.util.UUID.randomUUID()}")
-            mode == 1 -> chatRepository.dao.listSessions().firstOrNull()?.let { Routes.chat(it.id) }
-            mode == 2 -> Routes.chat("__new__${java.util.UUID.randomUUID()}")
-            mode == 3 -> null
-            else -> {
-                val latest = chatRepository.dao.listSessions().firstOrNull()
-                val fresh = latest != null && System.currentTimeMillis() - latest.updatedAt < autoThresholdMs
-                if (fresh) Routes.chat(latest!!.id) else Routes.chat("__new__${java.util.UUID.randomUUID()}")
-            }
+        val latestSession = chatRepository.dao.listSessions().firstOrNull()
+        val destination = resolveColdStartDestination(
+            mode = rawMode,
+            hasSessions = latestSession != null,
+            latestSessionIsFresh = latestSession != null &&
+                System.currentTimeMillis() - latestSession.updatedAt < autoThresholdMs,
+            hasPendingShare = hasPendingShare,
+            forceHome = forceHome,
+        )
+        val target: String? = when (destination) {
+            ColdStartDestination.LAST_SESSION -> latestSession?.let { Routes.chat(it.id) }
+            ColdStartDestination.NEW_CHAT -> Routes.chat("__new__${java.util.UUID.randomUUID()}")
+            ColdStartDestination.SESSION_LIST -> null
         }
         if (target != null) {
             // T314: navigate directly without the safeNavigate guard.
@@ -784,7 +796,15 @@ fun AppNavigation(
         composable(Routes.MODEL_GROUPS) {
             ModelGroupsScreen(
                 providerRepository = providerRepository,
-                onBack = { navController.safePopBackStack() },
+                // Model Groups is a child of Settings. Always return to the
+                // Settings home, even when this screen was opened from a
+                // deep link or another entry point without a normal parent.
+                onBack = {
+                    navController.navigate(Routes.SETTINGS) {
+                        popUpTo(Routes.SETTINGS) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
                 onGroupClick = { groupId ->
                     navController.safeNavigate(Routes.modelGroupDetail(groupId))
                 },

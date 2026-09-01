@@ -77,7 +77,7 @@ struct LLMModel: Equatable, Hashable, Identifiable, Sendable, Codable {
     /// nil = catalog says nothing; fall back to the legacy heuristics.
     var reasoningEffortValues: [String]?
 
-    /// [OpenMinis#163] The catalog affirmatively declares NO effort tiers for
+    /// [I#163] The catalog affirmatively declares NO effort tiers for
     /// this model — it reasons, but takes no `reasoning_effort` parameter.
     ///
     /// Distinct from `reasoningEffortValues == nil`, which also covers "the

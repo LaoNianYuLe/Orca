@@ -1,6 +1,6 @@
 //
 //  NativeOffloadUtils.m
-//  MinisApp
+//  IApp
 //
 //  Shared utilities for native offload CLI tools.
 //

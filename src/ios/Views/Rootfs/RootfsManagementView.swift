@@ -1,6 +1,6 @@
 //
 //  RootfsManagementView.swift
-//  MinisApp
+//  IApp
 //
 //  UI for managing rootfs (reset, backup, restore)
 //

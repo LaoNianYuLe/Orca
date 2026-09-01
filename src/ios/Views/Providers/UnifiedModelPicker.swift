@@ -367,7 +367,7 @@ struct UnifiedModelPicker: View {
                     // section renders `entries.prefix(1)`: the one model on
                     // screen was the alphabetically-first, which is exactly the
                     // "first entry is a stale/dead model" hazard
-                    // T-model-release-ranking exists to prevent (OpenMinis#83 —
+                    // T-model-release-ranking exists to prevent (I#83 —
                     // the unusable model's 400 renders as an empty reply and
                     // reads as "the app is broken").
                     result.append((instance, entries.sorted(by: ProviderConfigStore.releaseRankOrder)))
@@ -700,7 +700,7 @@ struct UnifiedModelPicker: View {
         .contextMenu {
             Button {
                 UIPasteboard.general.string = "group:\(group.id)"
-                MinisToast.show(String(localized: "Copied: \(group.name)"))
+                IToast.show(String(localized: "Copied: \(group.name)"))
             } label: {
                 Label(String(localized: "Copy Shortcut Model ID"), systemImage: "link")
             }
@@ -937,7 +937,7 @@ struct UnifiedModelPicker: View {
         .contextMenu {
             Button {
                 UIPasteboard.general.string = "entry:\(entry.compositeKey)"
-                MinisToast.show(String(localized: "Copied: \(entry.model.displayName)"))
+                IToast.show(String(localized: "Copied: \(entry.model.displayName)"))
             } label: {
                 Label(String(localized: "Copy Shortcut Model ID"), systemImage: "link")
             }
@@ -1152,7 +1152,7 @@ struct UnifiedModelPicker: View {
         .contextMenu {
             Button {
                 UIPasteboard.general.string = "entry:\(entry.compositeKey)"
-                MinisToast.show(String(localized: "Copied: \(entry.model.displayName)"))
+                IToast.show(String(localized: "Copied: \(entry.model.displayName)"))
             } label: {
                 Label(String(localized: "Copy Shortcut Model ID"), systemImage: "link")
             }

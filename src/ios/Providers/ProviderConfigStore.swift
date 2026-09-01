@@ -25,9 +25,9 @@ struct ProviderConfig: Codable, Equatable {
     var defaultSubGroupId: String?
     /// Stores per-session model bindings keyed by sessionId.
     var sessionBindings: [String: SessionModelBinding]
-    /// ModelEntry IDs for individual models available in agent loop (minis-model-use).
+    /// ModelEntry IDs for individual models available in agent loop (i-model-use).
     var agentLoopModelEntryIds: [String]
-    /// ModelGroup IDs whose members are available in agent loop (minis-model-use).
+    /// ModelGroup IDs whose members are available in agent loop (i-model-use).
     var agentLoopGroupIds: [String]
     /// Model group used for voice INPUT (speech-to-text), parallel to the
     /// Default Primary/Sub group selectors. Per-device (local-only, not synced).
@@ -192,7 +192,7 @@ final class ProviderConfigStore: ObservableObject {
 
     init() {
         let libraryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let baseURL = libraryURL.appendingPathComponent("MinisChat", isDirectory: true)
+        let baseURL = libraryURL.appendingPathComponent("IChat", isDirectory: true)
         try? FileManager.default.createDirectory(at: baseURL, withIntermediateDirectories: true)
         self.fileURL = baseURL.appendingPathComponent("provider-config.json")
         // First-frame value comes from the V2 JSON so the UI has something to
@@ -283,7 +283,7 @@ final class ProviderConfigStore: ObservableObject {
                 // [T-icloud-provider-sync-consistency] Heal any cross-device
                 // duplicate entries already on disk at load time (e.g. a DB
                 // that accumulated dup rows before this fix shipped). The fold
-                // is deterministic so it converges with peers; pruned rows are
+                // is deteritic so it converges with peers; pruned rows are
                 // deleted + tombstoned so they don't resurrect.
                 let (deduped, prunedAtLoad) = Self.dedupeEntriesByModel(fresh)
                 self.config = deduped
@@ -1351,7 +1351,7 @@ final class ProviderConfigStore: ObservableObject {
     // The storage order of `config.modelEntries` is an implementation detail —
     // it drifts as a side-effect of `replaceEntries` (which removes all entries
     // for an instance and re-appends them at the end), concurrent auto-refresh
-    // finishing in non-deterministic order, and iCloud merge insertions. None
+    // finishing in non-deteritic order, and iCloud merge insertions. None
     // of that should leak into the UI.
     //
     // All UI-facing reads go through these three getters, which apply a stable
@@ -1378,7 +1378,7 @@ final class ProviderConfigStore: ObservableObject {
     /// [T-model-release-ranking] Deliberately NOT alphabetical. Sorting by
     /// `baseModel.id` puts `gpt-5` above `gpt-5.6-sol` — i.e. it surfaces the
     /// oldest model first, and in the Codex OAuth case the top of the list was
-    /// a model the account cannot even call (OpenMinis#83: the 400 renders as an
+    /// a model the account cannot even call (I#83: the 400 renders as an
     /// empty reply, so a new user reads it as "the app is broken"). Ranking by
     /// release date, then output price, then context window puts the six
     /// callable Codex models in the top six with no hand-maintained order.
@@ -1450,7 +1450,7 @@ final class ProviderConfigStore: ObservableObject {
         return nil
     }
 
-    /// [T-ios-minis-config-entry-id-composite] Normalize an entry reference in
+    /// [T-ios-i-config-entry-id-composite] Normalize an entry reference in
     /// any historical form (composite key, legacy random uuid, legacy ":"
     /// composite) to the entry's CURRENT id (the composite key). Returns the
     /// input unchanged when nothing resolves — callers validate afterwards, so
@@ -2024,11 +2024,11 @@ final class ProviderConfigStore: ObservableObject {
         // model, so two devices refreshing the same instance produce two
         // ProviderModelEntryV3 records for the same (instanceId, modelId) —
         // surfacing as the same model appearing 2-3× in the picker. Fold them
-        // to one deterministic representative (lexicographically smallest uuid,
+        // to one deteritic representative (lexicographically smallest uuid,
         // non-custom preferred) AND rewrite every group member reference from
         // the pruned uuids to the representative, so a group that pointed at a
         // now-removed duplicate doesn't become a dangling reference. Because
-        // the representative is chosen deterministically, every device
+        // the representative is chosen deteritically, every device
         // converges to the SAME survivor and the SAME group references.
         let (deduped, prunedEntryIds) = Self.dedupeEntriesByModel(newConfig)
 
@@ -2116,7 +2116,7 @@ final class ProviderConfigStore: ObservableObject {
                 // per-device state that a peer's config knows nothing about, so
                 // an inbound snapshot legitimately carries `[]` for it; without
                 // this the replace below would erase the user's agent-loop
-                // selection on every merge (OpenMinis#98 defect 2). The
+                // selection on every merge (I#98 defect 2). The
                 // user-initiated save() path deliberately does NOT set this —
                 // there, an empty list really does mean "clear it".
                 await db.bulkReplace(from: snapshot, preserveLocalOnlyStateIfEmpty: true)
@@ -2151,7 +2151,7 @@ final class ProviderConfigStore: ObservableObject {
     /// duplication caused by random per-device entry uuids — and rewrite all
     /// group member references onto the surviving representative.
     ///
-    /// Determinism (so every device converges identically):
+    /// Deterim (so every device converges identically):
     ///   representative = among entries with the same composite key, prefer
     ///   isCustom==false; tie-break by lexicographically smallest uuid.
     ///
@@ -2167,7 +2167,7 @@ final class ProviderConfigStore: ObservableObject {
         guard byKey.values.contains(where: { $0.count > 1 }) else {
             return (config, [])  // no duplicates — fast path
         }
-        // For each duplicated key pick a deterministic representative and map
+        // For each duplicated key pick a deteritic representative and map
         // every other uuid → representative uuid.
         var uuidRewrite: [String: String] = [:]  // prunedUuid → representativeUuid
         var pruned: [String] = []
@@ -2179,7 +2179,7 @@ final class ProviderConfigStore: ObservableObject {
                 return a.uuid < b.uuid                              // then smallest uuid
             }.first!
             // [T-ios-hidden-models-restored] The representative choice is
-            // deterministic by uuid, NOT by user intent — a duplicate that
+            // deteritic by uuid, NOT by user intent — a duplicate that
             // carries the user's overlay (isHidden / overrides) could be the
             // one pruned, silently unhiding the model. Fold the overlay from
             // the duplicate with the newest userModifiedAt into the survivor.
@@ -2408,7 +2408,7 @@ final class ProviderConfigStore: ObservableObject {
     /// instance that has audio models and isn't shadow-disabled, then FOLDED by
     /// normalized base URL so two instances on the same host show a single row
     /// (representative = enabled first, then most-recently-modified, then oldest
-    /// createdAt, then id — deterministic across devices).
+    /// createdAt, then id — deteritic across devices).
     func shadowVoiceProviders() -> [ShadowVoiceProvider] {
         // Candidate instances.
         let candidates = config.instances.filter { inst in
@@ -2432,7 +2432,7 @@ final class ProviderConfigStore: ObservableObject {
         }
         var result: [ShadowVoiceProvider] = []
         for (_, insts) in byKey {
-            // Representative selection — deterministic.
+            // Representative selection — deteritic.
             let rep = insts.sorted { a, b in
                 if a.isEnabled != b.isEnabled { return a.isEnabled }
                 let ma = mostRecentModified(a.id), mb = mostRecentModified(b.id)
@@ -3023,7 +3023,7 @@ enum ProviderKeychainHelper {
     }
 
     static func saveAPIKey(_ key: String, instanceId: String, caller: String = #function) {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         // Delete both legacy (non-sync) and synchronizable entries
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -3048,7 +3048,7 @@ enum ProviderKeychainHelper {
     }
 
     static func loadAPIKey(instanceId: String, caller: String = #function) -> String? {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         // Try synchronizable first, then fallback to legacy
         let syncQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -3085,7 +3085,7 @@ enum ProviderKeychainHelper {
     }
 
     static func deleteAPIKey(instanceId: String, caller: String = #function) {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -3118,7 +3118,7 @@ enum ProviderKeychainHelper {
             AppLogger(category: "Keychain").warning("write oauthToken instanceId=\(instanceId.prefix(8)) ENCODE FAILED caller=\(caller)")
             return
         }
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         let acct = "oauth-token"
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -3139,7 +3139,7 @@ enum ProviderKeychainHelper {
     }
 
     static func loadOAuthToken<T: Codable>(instanceId: String, as type: T.Type, caller: String = #function) -> T? {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         let acct = "oauth-token"
         // Try synchronizable first
         let syncQuery: [String: Any] = [
@@ -3176,7 +3176,7 @@ enum ProviderKeychainHelper {
     }
 
     static func deleteOAuthToken(instanceId: String, caller: String = #function) {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         let acct = "oauth-token"
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -3194,7 +3194,7 @@ enum ProviderKeychainHelper {
     // MARK: - OAuth Strings (per-instance, e.g. email, project ID)
 
     static func saveOAuthString(_ value: String, instanceId: String, account: String, caller: String = #function) {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -3214,7 +3214,7 @@ enum ProviderKeychainHelper {
     }
 
     static func loadOAuthString(instanceId: String, account: String, caller: String = #function) -> String? {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         // Try synchronizable first
         let syncQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -3250,7 +3250,7 @@ enum ProviderKeychainHelper {
     }
 
     static func deleteOAuthString(instanceId: String, account: String, caller: String = #function) {
-        let service = "com.openminis.app.provider.\(instanceId)"
+        let service = "com.i.app.provider.\(instanceId)"
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

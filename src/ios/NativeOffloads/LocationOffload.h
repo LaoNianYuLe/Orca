@@ -1,6 +1,6 @@
 //
 //  LocationOffload.h
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-location` — CoreLocation.
 //

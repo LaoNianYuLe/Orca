@@ -17,7 +17,7 @@ enum MigrationStatus: String, Codable {
 enum MigrationPhase: String, Codable {
     case detect            // 0: just decided to migrate
     case v1FullFetch       // 1: fetch every device-* zone via v1 fetcher
-    case v2ZonesCreate     // 2: ensure minis-shared / -devices / -secrets exist
+    case v2ZonesCreate     // 2: ensure i-shared / -devices / -secrets exist
     case v2InitialPush     // 3: push every local row to v2 zones
     case v1ZoneDelete      // 4: delete THIS device's device-<id> zone
     case lock              // 5: write completed flag
@@ -25,7 +25,7 @@ enum MigrationPhase: String, Codable {
 }
 
 /// Persisted migration state. Lives in
-/// Library/MinisChat/cloud-sync-v2/migration-state.json.
+/// Library/IChat/cloud-sync-v2/migration-state.json.
 struct MigrationState: Codable {
     var status: MigrationStatus
     var phase: MigrationPhase
@@ -59,7 +59,7 @@ final class MigrationEngine {
     private init() {
         let dir = FileManager.default
             .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("MinisChat/cloud-sync-v2", isDirectory: true)
+            .appendingPathComponent("IChat/cloud-sync-v2", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         self.stateURL = dir.appendingPathComponent("migration-state.json")
         self.statusKey = "cloudSync.v2.migrationStatus"
@@ -121,7 +121,7 @@ final class MigrationEngine {
         /// `status` alone cannot express this: a deferral deliberately leaves it
         /// `.inProgress` (it is not a failure), so the sheet rendered "in
         /// progress" over a frozen counter and an ETA that assumed active
-        /// pushing. That combination is exactly what OpenMinis#141 reported as
+        /// pushing. That combination is exactly what I#141 reported as
         /// "stuck" — the migration was suspended by design, but nothing on
         /// screen said so, and the one action that would have resumed it
         /// (relaunching the app) was the one the user had no reason to take.
@@ -188,7 +188,7 @@ final class MigrationEngine {
         // Clearing them made every Cancel→Retry re-run Phase A from scratch and
         // rewind Phase B to the start of history, re-marking the ENTIRE local
         // corpus dirty. Users watched the record count climb by thousands per
-        // round and the migration could never converge — the reason OpenMinis#154
+        // round and the migration could never converge — the reason I#154
         // was filed ("keeps adding thousands of records when cancelling ... and
         // restarting"). Under CloudKit throttling that is unwinnable: each retry
         // enqueues more than the window can drain.
@@ -221,7 +221,7 @@ final class MigrationEngine {
     }
 
     /// [T-icloud-migration-reset] Throw away all LOCAL migration progress so the
-    /// next attempt starts from a clean slate. OpenMinis#154's actual request.
+    /// next attempt starts from a clean slate. I#154's actual request.
     ///
     /// Clears: the phase/status state machine, the pushed-record ledger, both
     /// backlog staging guards, and the derived progress counters — i.e. every
@@ -363,7 +363,7 @@ final class MigrationEngine {
         // (records ever saved to iCloud, from sync_pushed_records) while the
         // denominator is a LIVE local row count. Delete conversations mid-
         // migration and the denominator collapses below the numerator —
-        // OpenMinis#154 shipped a screenshot reading "41 / 14 (100%)" after the
+        // I#154 shipped a screenshot reading "41 / 14 (100%)" after the
         // user cleared everything trying to make the migration finish.
         // Clamping keeps the readout coherent; it does not paper over a stall,
         // because the phase/status lines next to it still show where it is.
@@ -629,7 +629,7 @@ final class MigrationEngine {
     }
 
     private func phaseV2ZonesCreate(_ s: inout MigrationState) async throws {
-        logger.info("[SyncMigration] phase=v2ZonesCreate start: zones=[minis-shared,minis-devices,minis-secrets]")
+        logger.info("[SyncMigration] phase=v2ZonesCreate start: zones=[i-shared,i-devices,i-secrets]")
         // Booting the transport queues the three zones via
         // pendingDatabaseChanges; sendChanges then materializes them.
         // SyncCore must already have ICloudSharedZoneTransport registered.
@@ -712,7 +712,7 @@ final class MigrationEngine {
         // would pass. Yet the cloud-count query still runs first, and when
         // CloudKit throttles it that query fails, the guard throws, the phase
         // never advances, and the retry hits the same throttle: a permanent
-        // loop with nothing being guarded. OpenMinis#154 sat here for five
+        // loop with nothing being guarded. I#154 sat here for five
         // days — the user even deleted every conversation trying to finish the
         // migration, which made it strictly worse (localSessions → 0) because
         // the blocker was the QUERY, not the data volume.
@@ -765,7 +765,7 @@ final class MigrationEngine {
             // window, which runs minutes to hours. The migration therefore
             // flipped to .failed while the only thing wrong was a transient
             // throttle, and the user's "Retry" restarted the identical
-            // two-minute burn (OpenMinis#154: five days of exactly this).
+            // two-minute burn (I#154: five days of exactly this).
             //
             // `deferredUntilNextLaunch` suspends the state machine without
             // burning an attempt, so the next launch retries after the window
@@ -1057,7 +1057,7 @@ enum V1FetcherShim {
     }
 
     enum ZoneKind: String {
-        case v2     // minis-shared / minis-devices / minis-secrets
+        case v2     // i-shared / i-devices / i-secrets
         case v1     // device-<id>
         case system // _defaultZone
         case other  // legacy "devices", unknown

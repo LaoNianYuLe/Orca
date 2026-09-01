@@ -1,6 +1,6 @@
 //
 //  RemindersOffload.m
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-reminders`.
 //  Delegates to the shared reminder implementations in CalendarOffload.

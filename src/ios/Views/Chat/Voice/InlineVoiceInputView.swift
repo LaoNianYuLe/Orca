@@ -409,7 +409,7 @@ struct InlineVoiceInputView: View {
         // buttons, so on-device e2e voice tests (play audio at the phone, then
         // inspect debug.voiceInputs) drive the mic via this notification from
         // the debug server's `debug.voice.panel {action:"mic"}` instead.
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MinisDebugVoiceMicTap"))) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("IDebugVoiceMicTap"))) { _ in
             VoiceLog.log("[debug-bridge] mic tap via debug.voice.panel")
             if showCancelIcon {
                 viewModel.cancelTranscription()
@@ -649,7 +649,7 @@ struct InlineVoiceInputView: View {
             }
             // [voice-correction] Non-error one-off status ("No corrections
             // needed" / "Correction failed…") now shows as a window-level
-            // MinisToast instead of an inline pill here — the pill inserted a
+            // IToast instead of an inline pill here — the pill inserted a
             // row into this VStack and shifted the mic button every time it
             // appeared (user feedback: don't consume panel space).
 
@@ -940,7 +940,7 @@ struct InlineVoiceInputView: View {
                 runManualCorrection()
             }
         } message: {
-            Text("Minis can store your transcript fixes (original → corrected pairs) and accepted AI corrections in a local on-device database to make future voice corrections smarter. Nothing is uploaded. You can change this or clear the data anytime in Settings → Permissions.",
+            Text("I can store your transcript fixes (original → corrected pairs) and accepted AI corrections in a local on-device database to make future voice corrections smarter. Nothing is uploaded. You can change this or clear the data anytime in Settings → Permissions.",
                  comment: "One-time prompt body: correction data collection")
         }
     }
@@ -995,13 +995,13 @@ struct InlineVoiceInputView: View {
                         // needed". Saying "No corrections needed" here disguises
                         // an outage as a semantic verdict (exactly how the
                         // adaptive-thinking token-burn bug stayed hidden).
-                        MinisToast.show(String(localized: "Correction failed, original kept",
+                        IToast.show(String(localized: "Correction failed, original kept",
                                                comment: "Voice: AI correction call failed (timeout/error); transcript left unchanged"),
                                         systemImage: "exclamationmark.triangle.fill")
                     } else {
                         // Model genuinely found nothing to fix — tell the user so
                         // the tap doesn't read as "nothing happened".
-                        MinisToast.show(String(localized: "No corrections needed",
+                        IToast.show(String(localized: "No corrections needed",
                                                comment: "Voice: AI found nothing to fix"),
                                         systemImage: "sparkles")
                     }

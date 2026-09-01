@@ -1,4 +1,4 @@
 #!/bin/sh
-# MinisApp URL interceptor — routes sensible-browser(1) into the host-side
-# OpenOffloadHandler via minis-open. See minis-open for details.
-exec /usr/local/bin/minis-open "$@"
+# IApp URL interceptor — routes sensible-browser(1) into the host-side
+# OpenOffloadHandler via i-open. See i-open for details.
+exec /usr/local/bin/i-open "$@"

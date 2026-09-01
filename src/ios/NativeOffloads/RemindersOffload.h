@@ -1,6 +1,6 @@
 //
 //  RemindersOffload.h
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-reminders` — EventKit reminders.
 //

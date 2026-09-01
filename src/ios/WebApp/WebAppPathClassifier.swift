@@ -23,10 +23,10 @@ enum WebAppPathClassifier {
         let target = hostURL.standardizedFileURL.path
 
         // 1. Session attachments / workspace under
-        //    Library/MinisChat/minis/<sid>/{attachments,workspace}/...
-        let minisBase = AIChatViewModel.minisPersistentBase.standardizedFileURL.path
-        if target.hasPrefix(minisBase + "/") {
-            let rel = String(target.dropFirst(minisBase.count + 1))
+        //    Library/IChat/i/<sid>/{attachments,workspace}/...
+        let iBase = AIChatViewModel.iPersistentBase.standardizedFileURL.path
+        if target.hasPrefix(iBase + "/") {
+            let rel = String(target.dropFirst(iBase.count + 1))
             // <sid>/<subdir>/<rest>
             let parts = rel.split(separator: "/", maxSplits: 2, omittingEmptySubsequences: true)
             if parts.count >= 3 {
@@ -42,7 +42,7 @@ enum WebAppPathClassifier {
                     // Other session subdirs (offloads/, browser/, …) aren't
                     // exposed as WebApp scopes — refuse to classify so the
                     // user gets a clean error instead of a broken tile.
-                    classifierLogger.info("classify: minis subdir not supported sub=\(sub) rel=\(rel)")
+                    classifierLogger.info("classify: i subdir not supported sub=\(sub) rel=\(rel)")
                     return nil
                 }
             }
@@ -50,7 +50,7 @@ enum WebAppPathClassifier {
         }
 
         // 2. Shared persistent dir.
-        let sharedBase = AIChatViewModel.minisSharedPersistentDir.standardizedFileURL.path
+        let sharedBase = AIChatViewModel.iSharedPersistentDir.standardizedFileURL.path
         if target.hasPrefix(sharedBase + "/") {
             let rel = String(target.dropFirst(sharedBase.count + 1))
             return Classified(scope: .shared, scopeContext: nil, htmlPath: rel)

@@ -64,7 +64,7 @@ struct ThinkingRuleEditorView: View {
             case .qwenDual:
                 return String(localized: "Qwen/DashScope: enable_thinking and a token budget, sent at the root and in extra_body.")
             case .customPath:
-                return String(localized: "Advanced: write a value at a dotted field path. Not validated by Minis.")
+                return String(localized: "Advanced: write a value at a dotted field path. Not validated by I.")
             }
         }
     }

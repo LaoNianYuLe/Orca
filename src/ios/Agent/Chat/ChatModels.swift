@@ -8,16 +8,16 @@ import UIKit
 /// Structured metadata for a user-attached file (image, document, etc.).
 struct AttachmentMeta: Identifiable, Equatable {
     let id = UUID()
-    /// Linux path, e.g. `/var/minis/attachments/uploads/photo.jpg`
+    /// Linux path, e.g. `/var/i/attachments/uploads/photo.jpg`
     let path: String
     let size: Int
     let modified: Date
 
-    /// Derive a `minis://` URL from the Linux path.
-    var minisURL: String {
-        guard path.hasPrefix("/var/minis/") else { return path }
-        let rel = String(path.dropFirst("/var/minis/".count))
-        return "minis://\(rel)"
+    /// Derive a `i://` URL from the Linux path.
+    var iURL: String {
+        guard path.hasPrefix("/var/i/") else { return path }
+        let rel = String(path.dropFirst("/var/i/".count))
+        return "i://\(rel)"
     }
 
     var fileName: String {

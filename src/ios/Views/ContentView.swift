@@ -890,7 +890,7 @@ struct ContentView: View {
     /// the list's visible top — drives the floating mini-bar. A Set (not a
     /// single id) because "expanded" is the DEFAULT folder state: before the
     /// accordion ever runs, several folders can be expanded at once, so more
-    /// than one header can be offscreen. Display picks one deterministically.
+    /// than one header can be offscreen. Display picks one deteritically.
     @State private var offscreenFolderHeaderIds: Set<String> = []
     /// Global Y of the list's visible top edge (under the nav bar), measured
     /// by the mini-bar overlay. The header probe compares its own global
@@ -949,10 +949,10 @@ struct ContentView: View {
     /// when `sessions` changes (see .onChange below).
     @State private var sessionsByIdCache: [String: ChatSession] = [:]
     /// Soul name shown as the sidebar title. Sourced from SOUL.md, falls
-    /// back to "Minis". Refreshed whenever SoulStore posts .soulMdChanged.
+    /// back to "I". Refreshed whenever SoulStore posts .soulMdChanged.
     @State private var soulName: String = SoulStore.cachedMetadata.name.isEmpty
-        ? "Minis" : SoulStore.cachedMetadata.name
-    /// Subtitle state shown under the "Minis" sidebar title. nil hides the
+        ? "I" : SoulStore.cachedMetadata.name
+    /// Subtitle state shown under the "I" sidebar title. nil hides the
     /// row; otherwise it renders as small capsules per type or a single
     /// status string. Refreshed by a 5s timer.
     @State private var migrationSubtitle: SyncSubtitleState?
@@ -987,7 +987,7 @@ struct ContentView: View {
     // on every body transaction is a use-after-free hazard: a 5s tick delivered into
     // the sink while the graph tears down/rebuilds that attribute releases a dangling
     // sink closure (crash below). Replaced with a `.task`-driven async loop whose
-    // lifetime SwiftUI owns and cancels deterministically — no graph-bound publisher.
+    // lifetime SwiftUI owns and cancels deteritically — no graph-bound publisher.
     // See migrationSubtitleRefreshInterval / migrationSubtitleLoop.
     @State private var remoteDeviceSessions: [(device: SyncDevice, sessions: [ChatSession])] = []
     // showSettings consolidated into activeToolSheet (.settings)
@@ -1706,7 +1706,7 @@ struct ContentView: View {
             // the outgoing vm (any @Published delta, scroll signal, etc.)
             // races with `AG::Subgraph::NodeCache::~NodeCache` on the same
             // AsyncRenderer thread → EXC_BAD_ACCESS (build-48 crash
-            // Minis-2026-06-01-134710.ips). Suspend the outgoing vm here,
+            // I-2026-06-01-134710.ips). Suspend the outgoing vm here,
             // then schedule a resume on a short delay so when the user comes
             // back to that session everything catches up. Run before the
             // redirect/tracking-clear logic so we always pin the right id.
@@ -1784,7 +1784,7 @@ struct ContentView: View {
             // mitigation added for the 2026-06-01 build-48 crash simply did not
             // exist on the compact path.
             //
-            // Crash 2026-08-10 19:23 (Minis 1.12(1), iOS 26.5.2, iPhone18,1 —
+            // Crash 2026-08-10 19:23 (I 1.12(1), iOS 26.5.2, iPhone18,1 —
             // a STACK-layout device): EXC_BAD_ACCESS at 0xffffffff00000000 in
             // AG::Subgraph::~Subgraph → NodeCache::~NodeCache, reached from
             // `NavigationStackCoordinator.navigationController(_:willShow:)` →
@@ -2427,7 +2427,7 @@ struct ContentView: View {
     /// EXPANDED folder (collapse may happen while the header is culled, with
     /// no probe alive to retract the offscreen mark — this guard is what
     /// keeps the bar honest) whose header is scrolled out, outside select
-    /// mode. Deterministic pick in folder order when several qualify (only
+    /// mode. Deteritic pick in folder order when several qualify (only
     /// possible before the accordion has ever run).
     private var folderMiniBarFolder: ChatFolder? {
         guard !isSelecting else { return nil }
@@ -2620,7 +2620,7 @@ struct ContentView: View {
         // releases the dangling sink closure → use-after-free (KERN_PROTECTION_FAILURE
         // in _AppearanceActionModifier.MergedCallbacks.updateValue → swift_release_dealloc).
         // The `.task` loop has no graph-bound publisher: SwiftUI owns the Task's
-        // lifetime by view identity and cancels it deterministically on teardown, so
+        // lifetime by view identity and cancels it deteritically on teardown, so
         // there is no sink to release mid-transaction. The loop also parks while the
         // app is backgrounded (the crash reproduced with the app in the background).
         // refreshMigrationSubtitle is idempotent (Task{@MainActor} + diff-before-assign).
@@ -2633,7 +2633,7 @@ struct ContentView: View {
         // and can't drop a .soulMdChanged notification arriving during reconstruction.
         .onReceive(NotificationCenter.default.publisher(for: .soulMdChanged)) { _ in
             let n = SoulStore.cachedMetadata.name
-            soulName = n.isEmpty ? "Minis" : n
+            soulName = n.isEmpty ? "I" : n
         }
     }
 
@@ -3028,7 +3028,7 @@ struct ContentView: View {
                 if migrationSubtitle != next { migrationSubtitle = next }
             } else {
                 // No active sync work — hide the subtitle entirely so the
-                // "Minis" title sits at its normal size.
+                // "I" title sits at its normal size.
                 if migrationSubtitle != nil { migrationSubtitle = nil }
             }
         }
@@ -3057,7 +3057,7 @@ struct ContentView: View {
             .map { (label: $0.0, count: $0.1) }
     }
 
-    /// Tiny indicator next to the "Minis" title showing the sync state.
+    /// Tiny indicator next to the "I" title showing the sync state.
     @ViewBuilder
     private func titleSyncIndicator(for state: SyncSubtitleState?) -> some View {
         switch state {
@@ -3161,7 +3161,7 @@ struct ContentView: View {
                     if #available(iOS 17.0, *) { return SyncV2Bootstrap.isEnabled }
                     return false
                 }()
-                // Title text comes from SOUL.md (falls back to "Minis"). The
+                // Title text comes from SOUL.md (falls back to "I"). The
                 // leading sync indicator floats as an overlay so it doesn't
                 // take layout space — title stays perfectly centered in the
                 // navigation bar regardless of whether the indicator is visible.
@@ -3777,7 +3777,7 @@ struct ContentView: View {
                 .padding(.bottom, 4)
 
             VStack(spacing: 8) {
-                Text("Welcome to Minis")
+                Text("Welcome to I")
                     .font(.title2.bold())
                 Text("Your first On-Device Agent is almost ready.")
                     .font(.subheadline)
@@ -4944,8 +4944,8 @@ struct ContentView: View {
     private nonisolated static func computeDeleteInfo(for ids: Set<String>, totalSessions: Int) -> DeleteInfo {
         let fm = FileManager.default
         let libBase = fm.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let minisBase = libBase.appendingPathComponent("MinisChat/minis", isDirectory: true)
-        let dbPath = libBase.appendingPathComponent("MinisChat/minis.db")
+        let iBase = libBase.appendingPathComponent("IChat/i", isDirectory: true)
+        let dbPath = libBase.appendingPathComponent("IChat/i.db")
 
         var totalSize: Int64 = 0
         var allFileNames: [String] = []
@@ -4959,7 +4959,7 @@ struct ContentView: View {
         }
 
         for id in ids {
-            let sessionDir = minisBase.appendingPathComponent(id, isDirectory: true)
+            let sessionDir = iBase.appendingPathComponent(id, isDirectory: true)
             if let enumerator = fm.enumerator(at: sessionDir, includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey]) {
                 for case let fileURL as URL in enumerator {
                     let vals = try? fileURL.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
@@ -5042,11 +5042,11 @@ struct ContentView: View {
         }
     }
 
-    /// Remove persistent minis files for a session (Library/MinisChat/minis/<sessionId>/).
+    /// Remove persistent i files for a session (Library/IChat/i/<sessionId>/).
     private func deleteSessionFiles(_ sessionId: String) {
         let fm = FileManager.default
         let base = fm.urls(for: .libraryDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("MinisChat/minis", isDirectory: true)
+            .appendingPathComponent("IChat/i", isDirectory: true)
             .appendingPathComponent(sessionId, isDirectory: true)
         try? fm.removeItem(at: base)
         BrowserTabPool.deletePersistedData(for: sessionId)
@@ -5094,7 +5094,7 @@ struct ContentView: View {
 
             // Per-export workspace under tmp
             let tmpRoot = FileManager.default.temporaryDirectory
-                .appendingPathComponent("minis-export-\(UUID().uuidString)", isDirectory: true)
+                .appendingPathComponent("i-export-\(UUID().uuidString)", isDirectory: true)
             let workDir = tmpRoot.appendingPathComponent("payload", isDirectory: true)
             do {
                 try FileManager.default.createDirectory(at: workDir, withIntermediateDirectories: true)
@@ -5109,7 +5109,7 @@ struct ContentView: View {
                     .replacingOccurrences(of: "/", with: "-")
                     .replacingOccurrences(of: ":", with: "-")
             } else {
-                baseName = "minis-sessions-\(ids.count)"
+                baseName = "i-sessions-\(ids.count)"
             }
             let payloadURL = workDir.appendingPathComponent("\(baseName).\(ext)")
 
@@ -5396,7 +5396,7 @@ struct ContentView: View {
                 done += 1
                 if msg.isToolResultOnly { continue }
 
-                let role = msg.role == .user ? "User" : "Minis"
+                let role = msg.role == .user ? "User" : "I"
                 let time = timeFmt.string(from: msg.createdAt)
                 var parts: [String] = []
                 for part in msg.parts {
@@ -5801,8 +5801,8 @@ private struct ShareSheet: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIActivityViewController {
         // [T-share-sheet-uti] Defense against ShareKit's
         // UTTypeGetForIdentifier assert on Mac Catalyst — see
-        // MinisShareSheet.sanitizedShareURL for context.
-        let safeURL = MinisShareSheet.sanitizedShareURL(url) ?? url
+        // IShareSheet.sanitizedShareURL for context.
+        let safeURL = IShareSheet.sanitizedShareURL(url) ?? url
         return UIActivityViewController(activityItems: [safeURL], applicationActivities: nil)
     }
     func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
@@ -5991,7 +5991,7 @@ private struct SessionContextMenu: View, Equatable {
             let title = (key.title ?? "Untitled").prefix(60)
             let subject = "Content Report: \(title)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
             let msgBody = "Session: \(key.sid)\n\nPlease describe the issue:\n".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            if let url = URL(string: "mailto:dev@openminis.app?subject=\(subject)&body=\(msgBody)") {
+            if let url = URL(string: "mailto:dev@i.app?subject=\(subject)&body=\(msgBody)") {
                 UIApplication.shared.open(url)
             }
         } label: {
@@ -7107,7 +7107,7 @@ private struct AppearanceSettingsView: View {
                     Button {
                         // Persist a reopen-hint BEFORE flipping appLanguage —
                         // the @AppStorage write triggers the root
-                        // `.id(appLanguage)` rebuild in MinisApp.swift, which
+                        // `.id(appLanguage)` rebuild in IApp.swift, which
                         // drops the entire view tree including the Settings
                         // sheet. ContentView/SettingsSheet read this flag on
                         // re-mount and reopen the sheet + push back to the
@@ -7461,7 +7461,7 @@ private struct SettingsSheet: View {
                         AboutView()
                     } label: {
                         Label {
-                            Text("About Minis")
+                            Text("About I")
                         } icon: {
                             Image(systemName: "info")
                                 .font(.system(size: 9))
@@ -7470,7 +7470,7 @@ private struct SettingsSheet: View {
                                 .background(.indigo, in: Circle())
                         }
                     }
-                    Link(destination: URL(string: "https://openminis.github.io/privacy-policy.html")!) {
+                    Link(destination: URL(string: "https://i.github.io/privacy-policy.html")!) {
                         Label {
                             Text("Privacy Policy")
                         } icon: {
@@ -7686,9 +7686,9 @@ private struct SettingsSheet: View {
 
         var components = URLComponents()
         components.scheme = "mailto"
-        components.path = "dev@openminis.app"
+        components.path = "dev@i.app"
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "Minis Feedback"),
+            URLQueryItem(name: "subject", value: "I Feedback"),
             URLQueryItem(name: "body", value: body),
         ]
         return components.url
@@ -7716,7 +7716,7 @@ private struct SettingsSheet: View {
         |-------|-------|
         | Platform | iOS |
         | OS Version | iOS \(iosVersion) |
-        | Minis Version | \(appVersion) (build \(build)) |
+        | I Version | \(appVersion) (build \(build)) |
         | Device Model | \(device) |
 
         ## 🔁 Steps to Reproduce

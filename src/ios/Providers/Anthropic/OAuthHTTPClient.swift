@@ -33,7 +33,7 @@ final class OAuthHTTPClient: HTTPClient {
         config.timeoutIntervalForRequest = 600  // 10 min — SSE streams can be idle during large tool generation
         config.protocolClasses = [OAuthURLProtocol.self]
         config.httpAdditionalHeaders = (config.httpAdditionalHeaders ?? [:]).merging(
-            ["X-Minis-OAuth-UUID": rid]) { _, new in new }
+            ["X-I-OAuth-UUID": rid]) { _, new in new }
         let session = URLSession(configuration: config)
         self.underlying = URLSessionHTTPClientAdapter(urlSession: session)
     }
@@ -557,8 +557,8 @@ private final class OAuthURLProtocol: URLProtocol, URLSessionDataDelegate {
         logger.info("[URLProtocol] Intercepted: \(mutable.httpMethod ?? "?") \(mutable.url?.absoluteString ?? "?")")
 
         // Look up the correct TokenBox for this request via the UUID header
-        let oauthUUID = mutable.value(forHTTPHeaderField: "X-Minis-OAuth-UUID") ?? ""
-        mutable.setValue(nil, forHTTPHeaderField: "X-Minis-OAuth-UUID")  // strip before sending
+        let oauthUUID = mutable.value(forHTTPHeaderField: "X-I-OAuth-UUID") ?? ""
+        mutable.setValue(nil, forHTTPHeaderField: "X-I-OAuth-UUID")  // strip before sending
 
         guard let tokenBox = TokenBoxRegistry.shared.box(for: oauthUUID) else {
             logger.error("[URLProtocol] No TokenBox found for UUID \(oauthUUID)")
@@ -631,7 +631,7 @@ private final class OAuthURLProtocol: URLProtocol, URLSessionDataDelegate {
         AgentRequestTrace.shared.step("urlprotocol.afterMaterialize", detail: "httpBody=\(mutable.httpBody?.count ?? -1) httpBodyStream=\(mutable.httpBodyStream != nil)")
         #endif
 
-        // Normalize key ordering first so all patchers produce deterministic output
+        // Normalize key ordering first so all patchers produce deteritic output
         // (critical for Anthropic prompt cache prefix matching)
         RequestBodyPatcher.normalizeKeyOrder(in: mutable)
         // Cache: mark last tool definition for caching (stable prefix)
@@ -873,11 +873,11 @@ enum RequestBodyPatcher {
         request.httpBody = data
     }
 
-    /// Re-serialize the JSON body with `.sortedKeys` to ensure deterministic key
+    /// Re-serialize the JSON body with `.sortedKeys` to ensure deteritic key
     /// ordering across requests. This is critical for Anthropic prompt caching:
     /// the SDK encodes with `JSONEncoder` (which has its own key order), but the
     /// patchers below round-trip through `JSONSerialization`. Without `.sortedKeys`,
-    /// the key ordering is non-deterministic and can change between requests even
+    /// the key ordering is non-deteritic and can change between requests even
     /// for identical logical content, breaking cache prefix matching.
     static func normalizeKeyOrder(in request: NSMutableURLRequest) {
         guard let body = request.httpBody,

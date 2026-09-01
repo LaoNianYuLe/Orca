@@ -1,6 +1,6 @@
 //
 //  LocationOffload.m
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-location`.
 //  Subcommands: current, geocode, forward
@@ -76,7 +76,7 @@ static NSDictionary *placemark_to_dict(CLPlacemark *pm) {
     if (pm.name) addr[@"name"] = pm.name;
     if (pm.locality) addr[@"locality"] = pm.locality;
     if (pm.subLocality) addr[@"sub_locality"] = pm.subLocality;
-    if (pm.administrativeArea) addr[@"administrative_area"] = pm.administrativeArea;
+    if (pm.aditrativeArea) addr[@"aditrative_area"] = pm.aditrativeArea;
     if (pm.country) addr[@"country"] = pm.country;
     if (pm.ISOcountryCode) addr[@"country_code"] = pm.ISOcountryCode;
     if (pm.postalCode) addr[@"postal_code"] = pm.postalCode;
@@ -122,7 +122,7 @@ static int cmd_current(int argc, char **argv, int stdout_fd, BOOL compact, BOOL 
                                userInfo:@{NSLocalizedDescriptionKey:
                                    @"Location access denied. To grant access, open "
                                     "Settings > Privacy & Security > Location Services "
-                                    "and enable Minis."}];
+                                    "and enable I."}];
             dispatch_semaphore_signal(delegate.semaphore);
         }
     });

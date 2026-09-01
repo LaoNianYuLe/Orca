@@ -171,7 +171,7 @@ struct RetryRunIntent: AppIntent {
         if sendCompletionNotification {
             ShortcutNotification.post(
                 id: "shortcut-retry-\(sid)",
-                title: String(localized: "Minis: Retrying"),
+                title: String(localized: "I: Retrying"),
                 body: "\(modelName): \(promptPreview)\(targetMessage.content.count > 50 ? "…" : "")",
                 sessionId: sid
             )
@@ -192,7 +192,7 @@ struct RetryRunIntent: AppIntent {
             if sendCompletionNotification {
                 ShortcutNotification.post(
                     id: "shortcut-retry-done-\(sid)",
-                    title: String(localized: "Minis: Retry Done"),
+                    title: String(localized: "I: Retry Done"),
                     body: "\(modelName): \(String(responseText.prefix(200)))",
                     sessionId: sid
                 )
@@ -227,7 +227,7 @@ struct RetryRunIntent: AppIntent {
             if capturedSendCompletionNotification {
                 ShortcutNotification.post(
                     id: "shortcut-retry-done-\(capturedSid)",
-                    title: String(localized: "Minis: Retry Done"),
+                    title: String(localized: "I: Retry Done"),
                     body: "\(capturedModelName): \(summary)",
                     sessionId: capturedSid
                 )

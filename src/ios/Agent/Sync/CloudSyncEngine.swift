@@ -76,7 +76,7 @@ final class SyncLogStore: ObservableObject {
     /// message content is never included. Safe for sharing with developers.
     func exportSanitizedReport() -> String {
         var lines: [String] = []
-        lines.append("=== MinisApp iCloud Sync Diagnostic Log ===")
+        lines.append("=== IApp iCloud Sync Diagnostic Log ===")
         lines.append("Exported: \(ISO8601DateFormatter().string(from: Date()))")
         lines.append("Entries: \(entries.count)")
         lines.append("")
@@ -225,7 +225,7 @@ final class PendingRecordChanges: @unchecked Sendable {
 final class CloudSyncEngine: ObservableObject {
     static let shared = CloudSyncEngine()
 
-    private lazy var container = CKContainer(identifier: "iCloud.com.openminis.app")
+    private lazy var container = CKContainer(identifier: "iCloud.com.i.app")
     private let devicesZoneName = "devices"
 
     private var syncEngine: CKSyncEngine?
@@ -412,9 +412,9 @@ final class CloudSyncEngine: ObservableObject {
 
     private init() {
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        self.stateURL = library.appendingPathComponent("MinisChat/sync_state.json")
-        self.sessionCacheDir = library.appendingPathComponent("MinisChat/sync_etag_cache")
-        self.globalEtagCacheURL = library.appendingPathComponent("MinisChat/sync_etag_global.plist")
+        self.stateURL = library.appendingPathComponent("IChat/sync_state.json")
+        self.sessionCacheDir = library.appendingPathComponent("IChat/sync_etag_cache")
+        self.globalEtagCacheURL = library.appendingPathComponent("IChat/sync_etag_global.plist")
         try? FileManager.default.createDirectory(at: sessionCacheDir, withIntermediateDirectories: true)
         self.isEnabled = UserDefaults.standard.bool(forKey: "cloudSync.enabled")
 
@@ -443,7 +443,7 @@ final class CloudSyncEngine: ObservableObject {
         // Migration: remove legacy disk cache (replaced by in-memory-only cache).
         // The old cache could grow to tens of thousands of NSKeyedArchiver'd CKRecords,
         // causing multi-second main-thread blocks on load and save.
-        let legacyCacheURL = library.appendingPathComponent("MinisChat/sync_record_cache.bin")
+        let legacyCacheURL = library.appendingPathComponent("IChat/sync_record_cache.bin")
         if FileManager.default.fileExists(atPath: legacyCacheURL.path) {
             try? FileManager.default.removeItem(at: legacyCacheURL)
             logger.info("[CloudSync] Removed legacy sync_record_cache.bin")
@@ -1145,7 +1145,7 @@ final class CloudSyncEngine: ObservableObject {
             let sessionId = String(parts[0])
             let relativePath = String(parts[1])
             let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-            let fileURL = library.appendingPathComponent("MinisChat/minis/\(sessionId)/\(relativePath)")
+            let fileURL = library.appendingPathComponent("IChat/i/\(sessionId)/\(relativePath)")
             guard FileManager.default.fileExists(atPath: fileURL.path),
                   FileManager.default.isReadableFile(atPath: fileURL.path) else { return nil }
             let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
@@ -1228,7 +1228,7 @@ final class CloudSyncEngine: ObservableObject {
             // The local on-disk `provider-config.json` is left untouched; we only
             // re-serialize a filtered copy for the wire.
             let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-            let configURL = library.appendingPathComponent("MinisChat/provider-config.json")
+            let configURL = library.appendingPathComponent("IChat/provider-config.json")
             guard let rawData = try? Data(contentsOf: configURL),
                   var uploadConfig = try? JSONDecoder().decode(ProviderConfig.self, from: rawData) else {
                 return nil
@@ -1258,7 +1258,7 @@ final class CloudSyncEngine: ObservableObject {
         case "EnvVar":
             // Sync env var keys and base64-encoded values.
             let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-            let envURL = library.appendingPathComponent("MinisChat/env-vars.json")
+            let envURL = library.appendingPathComponent("IChat/env-vars.json")
             guard let data = try? Data(contentsOf: envURL) else { return nil }
             let envJson = String(data: data, encoding: .utf8) ?? "[]"
             // Record hash so we can detect our own echo on receive
@@ -1386,7 +1386,7 @@ final class CloudSyncEngine: ObservableObject {
             let relativePath = record["relativePath"] as? String ?? ""
             if let asset = record["asset"] as? CKAsset, let srcURL = asset.fileURL {
                 let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-                let destURL = library.appendingPathComponent("MinisChat/minis/\(sessionId)/\(relativePath)")
+                let destURL = library.appendingPathComponent("IChat/i/\(sessionId)/\(relativePath)")
                 let fm = FileManager.default
                 try? fm.createDirectory(at: destURL.deletingLastPathComponent(), withIntermediateDirectories: true)
                 // Overwrite if exists (last-write-wins)
@@ -1505,7 +1505,7 @@ final class CloudSyncEngine: ObservableObject {
             // V2 record types live in v2's shared zone and are handled by
             // ICloudSharedZoneTransport. CKSyncEngine still hands them to
             // v1's fetched-changes delegate when v1 fetches anything from
-            // minis-shared (e.g. when v1 is briefly active before pause
+            // i-shared (e.g. when v1 is briefly active before pause
             // takes effect). Silently ignore — warning would spam the log
             // tens of thousands of times during migration.
             if record.recordType.hasSuffix("V2") {
@@ -2071,7 +2071,7 @@ final class CloudSyncEngine: ObservableObject {
         // 3. Merge modelGroups — same-id: remote wins. Same-name different-id:
         // collapse (both devices independently created a group with the same
         // name; converge them onto a single id — prefer the smaller id string
-        // as the stable winner so both devices deterministically agree).
+        // as the stable winner so both devices deteritically agree).
         //
         // This replaces the old "(device name) suffix on name collision" logic
         // that produced permanent forks: two devices with a "Coding" group ended
@@ -2115,7 +2115,7 @@ final class CloudSyncEngine: ObservableObject {
                 groupMap[rg.id] = merged
             } else if let collidingLocalId = localGroupByName[rg.name], collidingLocalId != rg.id {
                 // Same name, different id → collapse onto the lexicographically
-                // smaller id so both devices deterministically pick the same winner.
+                // smaller id so both devices deteritically pick the same winner.
                 let canonicalId = min(collidingLocalId, rg.id)
                 let otherId = max(collidingLocalId, rg.id)
                 groupIdRewrites[otherId] = canonicalId
@@ -2272,7 +2272,7 @@ final class CloudSyncEngine: ObservableObject {
         }
 
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let localURL = library.appendingPathComponent("MinisChat/env-vars.json")
+        let localURL = library.appendingPathComponent("IChat/env-vars.json")
         let localVars: [EnvVarEntry]
         if let data = try? Data(contentsOf: localURL),
            let decoded = try? JSONDecoder().decode([EnvVarEntry].self, from: data) {
@@ -2642,7 +2642,7 @@ extension CloudSyncEngine: CKSyncEngineDelegate {
                     let deviceId = zoneName.replacingOccurrences(of: "device-", with: "")
                     let deviceName = knownDevices.first(where: { $0.id == deviceId })?.deviceName
                     // V2 record types belong to v2 transport; v1 just sees
-                    // them when fetching minis-shared. Skip logging to
+                    // them when fetching i-shared. Skip logging to
                     // avoid tens of thousands of noise lines during
                     // migration.
                     if rec.recordType.hasSuffix("V2") { continue }

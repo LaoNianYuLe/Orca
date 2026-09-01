@@ -1,6 +1,6 @@
 //
 //  RootfsResetButton.swift
-//  MinisApp
+//  IApp
 //
 //  Quick reset button component for easy integration
 //

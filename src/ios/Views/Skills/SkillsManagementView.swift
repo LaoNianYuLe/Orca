@@ -1,6 +1,6 @@
 //
 //  SkillsManagementView.swift
-//  MinisApp
+//  IApp
 //
 //  Settings-level skill management: list, import, edit, delete.
 //
@@ -139,7 +139,7 @@ struct SkillsManagementView: View {
                     Button {
                         showSkillsBrowser = true
                     } label: {
-                        Label(String(localized: "Minis Skills"), systemImage: "globe")
+                        Label(String(localized: "I Skills"), systemImage: "globe")
                     }
                     // Skill iCloud sync is wired through SyncV2; hide the
                     // force-sync entry entirely when the user has the
@@ -163,7 +163,7 @@ struct SkillsManagementView: View {
         .fullScreenCover(isPresented: $showSkillsBrowser, onDismiss: {
             store.reload()
         }) {
-            MinisSkillsBrowserView()
+            ISkillsBrowserView()
         }
         .overlay(alignment: .top) {
             if let msg = forceSyncAllToast {
@@ -903,11 +903,11 @@ private struct SkillFileDetailView: View {
     }
 }
 
-// MARK: - Minis Skills Browser
+// MARK: - I Skills Browser
 
 import WebKit
 
-struct MinisSkillsBrowserView: View {
+struct ISkillsBrowserView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var coordinator = SkillBrowserCoordinator()
 
@@ -928,7 +928,7 @@ struct MinisSkillsBrowserView: View {
                     .animation(.spring(response: 0.3), value: coordinator.hudState)
                 }
             }
-            .navigationTitle("Minis Skills")
+            .navigationTitle("I Skills")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -1091,7 +1091,7 @@ private struct SkillBrowserWebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         // Use mobile UA so GitHub serves mobile-friendly pages with standard URL routing
-        config.applicationNameForUserAgent = "MinisApp Mobile Safari"
+        config.applicationNameForUserAgent = "IApp Mobile Safari"
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.customUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
         webView.allowsBackForwardNavigationGestures = true

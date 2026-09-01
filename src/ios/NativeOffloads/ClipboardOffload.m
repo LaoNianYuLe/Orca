@@ -1,6 +1,6 @@
 //
 //  ClipboardOffload.m
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-clipboard`.
 //  Subcommands: get, set, clear, status
@@ -36,9 +36,9 @@ static NSString *const HELP_TEXT =
      "\n"
      "EXAMPLES:\n"
      "  apple-clipboard                 (same as: apple-clipboard get)\n"
-     "  apple-clipboard get --image /var/minis/attachments/clipboard_image.png\n"
+     "  apple-clipboard get --image /var/i/attachments/clipboard_image.png\n"
      "  apple-clipboard set --text \"Hello World\"\n"
-     "  apple-clipboard set --image /var/minis/attachments/chart.png\n"
+     "  apple-clipboard set --image /var/i/attachments/chart.png\n"
      "  echo \"piped text\" | apple-clipboard set\n"
      "  apple-clipboard clear\n"
      "  apple-clipboard status\n";

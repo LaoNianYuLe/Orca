@@ -10,9 +10,9 @@ private let logger = AppLogger(category: "SyncTransport")
 /// conflicts / transient errors back to SyncCore.
 ///
 /// Zones:
-///   - minis-shared   : Session/Message/CompactMarker/SessionFile/Skill records
-///   - minis-devices  : SyncDevice heartbeat records
-///   - minis-secrets  : ProviderConfig + EnvVar (separate so users can
+///   - i-shared   : Session/Message/CompactMarker/SessionFile/Skill records
+///   - i-devices  : SyncDevice heartbeat records
+///   - i-secrets  : ProviderConfig + EnvVar (separate so users can
 ///                      toggle this category off without losing chat sync)
 @available(iOS 17.0, *)
 @MainActor
@@ -27,12 +27,12 @@ final class ICloudSharedZoneTransport: NSObject, SyncTransport {
 
     // MARK: - Configuration
 
-    static let containerIdentifier = "iCloud.com.openminis.app"
+    static let containerIdentifier = "iCloud.com.i.app"
 
     /// Fixed zone names. Never include device id.
-    static let sharedZoneName  = "minis-shared"
-    static let devicesZoneName = "minis-devices"
-    static let secretsZoneName = "minis-secrets"
+    static let sharedZoneName  = "i-shared"
+    static let devicesZoneName = "i-devices"
+    static let secretsZoneName = "i-secrets"
 
     /// recordType → zone name. Drives where each type's records live.
     /// Stays consistent with §3.1 of the design.
@@ -118,7 +118,7 @@ final class ICloudSharedZoneTransport: NSObject, SyncTransport {
     }
     private var etagCacheURL: URL {
         FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("MinisChat/cloud-sync-v2/etag-cache.plist")
+            .appendingPathComponent("IChat/cloud-sync-v2/etag-cache.plist")
     }
     /// Set to true whenever serverRecordCache mutates; cleared after
     /// flush. Avoids writing on every tiny change.
@@ -326,7 +326,7 @@ final class ICloudSharedZoneTransport: NSObject, SyncTransport {
         self.container = CKContainer(identifier: Self.containerIdentifier)
         let dir = FileManager.default
             .urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("MinisChat/cloud-sync-v2", isDirectory: true)
+            .appendingPathComponent("IChat/cloud-sync-v2", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         self.stateURL = dir.appendingPathComponent("state-v2.bin")
         super.init()
@@ -439,7 +439,7 @@ final class ICloudSharedZoneTransport: NSObject, SyncTransport {
     /// Background queue used by flushEtagCacheIfDirty so the per-record
     /// NSKeyedArchive + plist serialization (can be 5–10MB at scale) does
     /// not block the main thread between sends.
-    private static let etagFlushQueue = DispatchQueue(label: "com.openminis.sync.etagFlush", qos: .utility)
+    private static let etagFlushQueue = DispatchQueue(label: "com.i.sync.etagFlush", qos: .utility)
     private var etagFlushScheduled: Bool = false
     private static let etagFlushDebounce: TimeInterval = 2.0
 
@@ -536,7 +536,7 @@ final class ICloudSharedZoneTransport: NSObject, SyncTransport {
 
     private func scheduleRecentFetchTimer() {
         recentFetchTimer?.cancel()
-        let t = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "com.openminis.sync.recentFetch", qos: .utility))
+        let t = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "com.i.sync.recentFetch", qos: .utility))
         t.schedule(deadline: .now() + Self.recentFetchInterval, repeating: Self.recentFetchInterval)
         t.setEventHandler { [weak self] in
             logger.info("[iCloudTrace] recentFetchTimer fired")
@@ -639,8 +639,8 @@ final class ICloudSharedZoneTransport: NSObject, SyncTransport {
         // [T-icloud-fetchrecent-secrets-zone] Each type is queried against
         // ITS OWN zone via zoneByRecordType, not a single hardcoded shared
         // zone. Secrets-zone types (ProviderConfigV2, EnvVarItem, the three
-        // Provider*V3 records, MCPServersV2) live in minis-secrets; the old
-        // code hardcoded minis-shared for every query, so those types always
+        // Provider*V3 records, MCPServersV2) live in i-secrets; the old
+        // code hardcoded i-shared for every query, so those types always
         // came back count=0 inbound — provider/model-entry/MCP changes from a
         // peer device never arrived (the CKSyncEngine token path did not cover
         // them either). ProviderModelEntryV3 / ProviderModelGroupV3 carry only
@@ -1404,7 +1404,7 @@ extension ICloudSharedZoneTransport: CKSyncEngineDelegate {
             // batch materializes PortableRecord payloads and reads asset files),
             // not how many records are in it. A flat 20 therefore throttles the
             // common case, which is thousands of small text records, to 1/20th
-            // of its former rate: OpenMinis#141's backlog became ~190 CKSyncEngine
+            // of its former rate: I#141's backlog became ~190 CKSyncEngine
             // round trips at ~94 records/hour, every one of them able to draw a
             // fresh retryAfter penalty and make the throttling worse.
             //
@@ -1504,7 +1504,7 @@ extension ICloudSharedZoneTransport: CKSyncEngineDelegate {
             for modification in zoneChanges.modifications {
                 let rec = modification.record
                 // Skip v1 device-* zones — CKSyncEngine fetches across the
-                // entire private database; minis-* zones belong to v2 only.
+                // entire private database; i-* zones belong to v2 only.
                 guard v2Zones.contains(rec.recordID.zoneID.zoneName) else {
                     skippedV1 += 1
                     continue

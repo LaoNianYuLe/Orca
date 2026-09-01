@@ -82,7 +82,7 @@ struct ThinkingRule: Equatable, Identifiable {
     var label: String
     /// Stable identity. User rules get a UUID at creation and keep it for the row's
     /// lifetime (it is the primary key in `provider_thinking_rules`, and what
-    /// drag-reorder rewrites positions against). Built-in rules get a deterministic id so
+    /// drag-reorder rewrites positions against). Built-in rules get a deteritic id so
     /// a trace is reproducible across launches.
     ///
     /// [T-thinking-rules-phase2] The built-in id includes the SCOPE, not just the label.
@@ -126,11 +126,11 @@ struct ThinkingRule: Equatable, Identifiable {
 /// PHASE 1: declared but not yet enforced through the resolver — the live behaviour
 /// still lives in `flattenChatCompletionsMessages`. It is modelled here because the
 /// send-side and echo-side are two halves of ONE vendor contract, and splitting them is
-/// exactly what let OpenMinis#22 be fixed on the OpenAI path while OpenMinis#70 stayed
+/// exactly what let I#22 be fixed on the OpenAI path while I#70 stayed
 /// broken on the Anthropic path.
 struct ReasoningEchoPolicy: Equatable {
     /// `reasoning_content` / `reasoning` / `reasoning_text` — the three spellings observed
-    /// in the wild, sometimes three different ones on a single gateway (OpenMinis#171).
+    /// in the wild, sometimes three different ones on a single gateway (I#171).
     var fieldName: String
     var timing: Timing
 

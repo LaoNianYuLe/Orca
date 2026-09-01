@@ -44,7 +44,7 @@ enum UploadPolicy {
                 // policy. Combined with the permissive `return true` fallthrough
                 // in `allowsRecordType`, that meant turning `sync.providers` OFF
                 // still uploaded every provider record: the user's switch did
-                // nothing. (OpenMinis#98, found while investigating that issue.)
+                // nothing. (I#98, found while investigating that issue.)
                 return ["ProviderConfig", "ProviderConfigV2",
                         "ProviderInstanceV3", "ProviderModelEntryV3", "ProviderModelGroupV3",
                         "ProviderThinkingRuleV3"]

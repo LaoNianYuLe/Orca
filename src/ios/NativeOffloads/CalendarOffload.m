@@ -1,6 +1,6 @@
 //
 //  CalendarOffload.m
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-calendar`.
 //  Subcommands: list, reminders, freebusy, calendars, create, remind
@@ -164,7 +164,7 @@ static dispatch_queue_t authQueue(void) {
     static dispatch_queue_t q = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        q = dispatch_queue_create("com.openminis.calendar.auth", DISPATCH_QUEUE_SERIAL);
+        q = dispatch_queue_create("com.i.calendar.auth", DISPATCH_QUEUE_SERIAL);
     });
     return q;
 }
@@ -200,7 +200,7 @@ static BOOL requestCalendarAccess(NSString **outError) {
         NSString *reason = authError.localizedDescription ?: @"Calendar access not granted";
         *outError = [NSString stringWithFormat:
             @"%@. To grant access, open Settings > Privacy & Security > Calendars "
-             "and enable Minis.", reason];
+             "and enable I.", reason];
     }
     return granted;
 }
@@ -235,7 +235,7 @@ static BOOL requestRemindersAccess(NSString **outError) {
         NSString *reason = authError.localizedDescription ?: @"Reminders access not granted";
         *outError = [NSString stringWithFormat:
             @"%@. To grant access, open Settings > Privacy & Security > Reminders "
-             "and enable Minis.", reason];
+             "and enable I.", reason];
     }
     return granted;
 }
@@ -1165,7 +1165,7 @@ static BOOL reminders_location_auth(NSString **errMsg) {
     if (errMsg) {
         *errMsg = @"Location access is required for location-based reminders. "
                    "To grant access, open Settings > Privacy & Security > "
-                   "Location Services and enable Minis. "
+                   "Location Services and enable I. "
                    "Time-based reminders (--due) work without location access.";
     }
     return NO;

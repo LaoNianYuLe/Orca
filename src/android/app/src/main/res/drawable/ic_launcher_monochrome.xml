@@ -44,10 +44,7 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="17"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:fillColor="#00000000"
-        android:pathData="M 36,70 L 36,38 L 54,56 L 72,38 L 72,70" />
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M 29,72 L 44,36 L 56,36 L 77,72 L 65,72 L 60,61 L 42,61 L 38,72 Z M 46,53 L 57,53 L 52,42 Z" />
 </vector>

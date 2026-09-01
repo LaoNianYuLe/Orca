@@ -1,8 +1,8 @@
 //
 //  SessionsOffload.m
-//  MinisApp
+//  IApp
 //
-//  Native offload handler for `minis-sessions-cli`.
+//  Native offload handler for `i-sessions-cli`.
 //  Subcommands: list, search
 //
 //  list   — list recent sessions with metadata
@@ -15,8 +15,8 @@
 #include <unistd.h>
 
 // Swift bridge — generated header
-#if __has_include("Minis-Swift.h")
-#import "Minis-Swift.h"
+#if __has_include("I-Swift.h")
+#import "I-Swift.h"
 #else
 @interface SessionsOffloadBridge : NSObject
 + (NSDictionary * _Nonnull)querySessionsWithSessionIds:(NSArray<NSString *> * _Nullable)sessionIds
@@ -46,13 +46,13 @@
 @end
 #endif
 
-static NSString *const TOOL_NAME = @"minis-sessions-cli";
+static NSString *const TOOL_NAME = @"i-sessions-cli";
 
 static NSString *const HELP_TEXT =
-    @"minis-sessions-cli - Query and send Minis chat sessions\n"
+    @"i-sessions-cli - Query and send I chat sessions\n"
      "\n"
      "USAGE:\n"
-     "  minis-sessions-cli <command> [options]\n"
+     "  i-sessions-cli <command> [options]\n"
      "\n"
      "COMMANDS:\n"
      "  list      List recent sessions (default: 50, max: 100)\n"
@@ -98,15 +98,15 @@ static NSString *const HELP_TEXT =
      "  -q, --quiet              Output only data field\n"
      "\n"
      "EXAMPLES:\n"
-     "  minis-sessions-cli list\n"
-     "  minis-sessions-cli search --keywords \"API error\"\n"
-     "  minis-sessions-cli messages --id <session_id> --full\n"
-     "  minis-sessions-cli send \"分析我的睡眠数据\"\n"
-     "  minis-sessions-cli send \"继续\" --session <session_id>\n"
-     "  minis-sessions-cli send \"这张图是什么?\" --attach /tmp/photo.png\n"
-     "  minis-sessions-cli retry --session <session_id>\n"
-     "  minis-sessions-cli status --id <session_id>\n"
-     "  minis-sessions-cli open <session_id>\n";
+     "  i-sessions-cli list\n"
+     "  i-sessions-cli search --keywords \"API error\"\n"
+     "  i-sessions-cli messages --id <session_id> --full\n"
+     "  i-sessions-cli send \"分析我的睡眠数据\"\n"
+     "  i-sessions-cli send \"继续\" --session <session_id>\n"
+     "  i-sessions-cli send \"这张图是什么?\" --attach /tmp/photo.png\n"
+     "  i-sessions-cli retry --session <session_id>\n"
+     "  i-sessions-cli status --id <session_id>\n"
+     "  i-sessions-cli open <session_id>\n";
 
 // ── Parse helpers ──
 
@@ -181,7 +181,7 @@ static int cmd_send(int argc, char **argv, int stdout_fd, int stderr_fd,
         NSDictionary *err = noff_json_error(TOOL_NAME, @"send",
                                              NOFF_ERR_INVALID_ARGS,
                                              @"send requires a prompt argument. "
-                                              "Example: minis-sessions-cli send \"hello\"");
+                                              "Example: i-sessions-cli send \"hello\"");
         noff_emit_json(stdout_fd, err, compact, quiet);
         return NOFF_EXIT_INVALID_ARGS;
     }
@@ -255,7 +255,7 @@ static int cmd_status(int argc, char **argv, int stdout_fd, int stderr_fd,
 static int cmd_open(int argc, char **argv, int stdout_fd, int stderr_fd,
                     BOOL compact, BOOL quiet) {
     // Accept either a positional `<session_id>` (preferred, matches the
-    // spec command shape `minis-sessions-cli open <session_id>`) or an
+    // spec command shape `i-sessions-cli open <session_id>`) or an
     // explicit `--id <session_id>` for symmetry with `messages`/`status`.
     NSString *sessionId = first_positional(argc, argv);
     if (!sessionId || sessionId.length == 0) {
@@ -266,7 +266,7 @@ static int cmd_open(int argc, char **argv, int stdout_fd, int stderr_fd,
         NSDictionary *err = noff_json_error(TOOL_NAME, @"open",
                                              NOFF_ERR_INVALID_ARGS,
                                              @"open requires a session id. "
-                                              "Example: minis-sessions-cli open <session_id>");
+                                              "Example: i-sessions-cli open <session_id>");
         noff_emit_json(stdout_fd, err, compact, quiet);
         return NOFF_EXIT_INVALID_ARGS;
     }
@@ -320,7 +320,7 @@ static int cmd_search(int argc, char **argv, int stdout_fd, int stderr_fd,
         NSDictionary *err = noff_json_error(TOOL_NAME, @"search",
                                              NOFF_ERR_INVALID_ARGS,
                                              @"--keywords is required for search. "
-                                              "Example: minis-sessions-cli search --keywords \"API error\"");
+                                              "Example: i-sessions-cli search --keywords \"API error\"");
         noff_emit_json(stdout_fd, err, compact, quiet);
         return NOFF_EXIT_INVALID_ARGS;
     }
@@ -439,11 +439,11 @@ static int sessions_handler(int argc, char **argv,
 // ── Registration ──
 
 void sessions_offload_register(void) {
-    int err = native_offload_add_handler("minis-sessions-cli", sessions_handler);
+    int err = native_offload_add_handler("i-sessions-cli", sessions_handler);
     if (err == 0) {
-        noff_ensure_guest_stub("/usr/local/bin/minis-sessions-cli");
-        NSLog(@"NativeOffloads: minis-sessions-cli handler registered");
+        noff_ensure_guest_stub("/usr/local/bin/i-sessions-cli");
+        NSLog(@"NativeOffloads: i-sessions-cli handler registered");
     } else {
-        NSLog(@"NativeOffloads: failed to register minis-sessions-cli handler (err=%d)", err);
+        NSLog(@"NativeOffloads: failed to register i-sessions-cli handler (err=%d)", err);
     }
 }

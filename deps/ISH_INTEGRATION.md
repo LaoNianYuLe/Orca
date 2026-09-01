@@ -2,7 +2,7 @@
 
 本文档说明如何将 iSH-ARM64 静态库集成到 iOS 项目中，实现在 iOS 设备上运行 Linux aarch64 (ARM64) 环境。
 
-> **仓库**: [OpenMinis/ish-arm64](https://github.com/OpenMinis/ish-arm64) (分支: `feature-arm64`)
+> **仓库**: [I/ish-arm64](https://github.com/OpenMinis/ish-arm64) (分支: `feature-arm64`)
 
 ## 目录
 
@@ -114,11 +114,11 @@ class RootfsManager {
 
 ### 3.1 创建 Bridging Header
 
-创建 `MinisApp-Bridging-Header.h`:
+创建 `IApp-Bridging-Header.h`:
 
 ```c
-#ifndef MinisApp_Bridging_Header_h
-#define MinisApp_Bridging_Header_h
+#ifndef IApp_Bridging_Header_h
+#define IApp_Bridging_Header_h
 
 // iSH Core
 #include "ish/misc.h"
@@ -148,7 +148,7 @@ class RootfsManager {
 
 **Objective-C Bridging Header**:
 ```
-$(PROJECT_DIR)/MinisApp-Bridging-Header.h
+$(PROJECT_DIR)/IApp-Bridging-Header.h
 ```
 
 ---

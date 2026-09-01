@@ -1,6 +1,6 @@
 //
 //  BluetoothOffload.m
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-bluetooth`.
 //  Subcommands: scan, connect, disconnect, services, read, write, status, notify

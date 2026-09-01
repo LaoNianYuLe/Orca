@@ -1,8 +1,8 @@
 //
 //  ModelUseOffload.m
-//  MinisApp
+//  IApp
 //
-//  Native offload handler for `minis-model-use`.
+//  Native offload handler for `i-model-use`.
 //  Subcommands: list, search, run
 //
 
@@ -11,15 +11,15 @@
 #include "kernel/native_offload.h"
 #include <unistd.h>
 
-#import "Minis-Swift.h"
+#import "I-Swift.h"
 
-static NSString *const TOOL_NAME = @"minis-model-use";
+static NSString *const TOOL_NAME = @"i-model-use";
 
 static NSString *const HELP_TEXT =
-    @"minis-model-use - List, search, and invoke LLM models\n"
+    @"i-model-use - List, search, and invoke LLM models\n"
      "\n"
      "USAGE:\n"
-     "  minis-model-use <command> [options]\n"
+     "  i-model-use <command> [options]\n"
      "\n"
      "COMMANDS:\n"
      "  list                           List models you can use\n"
@@ -155,25 +155,25 @@ static NSString *const HELP_TEXT =
      "  -q, --quiet          Output only data field\n"
      "\n"
      "EXAMPLES:\n"
-     "  minis-model-use list\n"
-     "  minis-model-use list --modality audio\n"
-     "  minis-model-use search gemini\n"
-     "  minis-model-use search gemini --modality video\n"
-     "  minis-model-use run --model GPT-5.5 --prompt 'Summarize: ...'\n"
-     "  minis-model-use run --model GPT-5.5 --prompt-file /var/minis/workspace/text.txt\n"
-     "  minis-model-use run --model claude-sonnet-4-6 --input /var/minis/workspace/prompt.json\n"
-     "  minis-model-use run --model deepseek/deepseek-v4-flash --input msgs.json   # qualified form\n"
-     "  minis-model-use run --model deepseek-v4-flash --provider deepseek --input msgs.json   # equivalent\n"
-     "  echo 'What is 2+2?' | minis-model-use run --model gpt-4o\n"
-     "  minis-model-use run --model gemini-2.5-flash --system 'You are a poet' --input msgs.json --output /var/minis/workspace/out.json\n";
+     "  i-model-use list\n"
+     "  i-model-use list --modality audio\n"
+     "  i-model-use search gemini\n"
+     "  i-model-use search gemini --modality video\n"
+     "  i-model-use run --model GPT-5.5 --prompt 'Summarize: ...'\n"
+     "  i-model-use run --model GPT-5.5 --prompt-file /var/i/workspace/text.txt\n"
+     "  i-model-use run --model claude-sonnet-4-6 --input /var/i/workspace/prompt.json\n"
+     "  i-model-use run --model deepseek/deepseek-v4-flash --input msgs.json   # qualified form\n"
+     "  i-model-use run --model deepseek-v4-flash --provider deepseek --input msgs.json   # equivalent\n"
+     "  echo 'What is 2+2?' | i-model-use run --model gpt-4o\n"
+     "  i-model-use run --model gemini-2.5-flash --system 'You are a poet' --input msgs.json --output /var/i/workspace/out.json\n";
 
 // ── Path helpers ──
 
 // Resolve a caller-supplied *input* file path to a readable host path.
 //
-// minis-model-use runs on the host, not inside the iSH guest, so guest-absolute
+// i-model-use runs on the host, not inside the iSH guest, so guest-absolute
 // paths have to be mapped into the fakefs data root. Guest paths under the
-// bind-mounted prefixes (/var/minis/, /home/, /tmp/) are tried there first;
+// bind-mounted prefixes (/var/i/, /home/, /tmp/) are tried there first;
 // every path is then also tried literally, so real host paths (and guest paths
 // whose bind mount is backed outside the data root) still resolve.
 //
@@ -184,7 +184,7 @@ static NSString *_Nullable noff_resolve_existing_input_path(NSString *path) {
     if (path.length == 0) return nil;
     NSFileManager *fm = [NSFileManager defaultManager];
 
-    if ([path hasPrefix:@"/var/minis/"] || [path hasPrefix:@"/home/"] || [path hasPrefix:@"/tmp/"]) {
+    if ([path hasPrefix:@"/var/i/"] || [path hasPrefix:@"/home/"] || [path hasPrefix:@"/tmp/"]) {
         NSString *mapped = noff_resolve_host_path(path);
         if (mapped && [fm fileExistsAtPath:mapped]) return mapped;
     }
@@ -217,7 +217,7 @@ static int cmd_search(int argc, char **argv, int stdout_fd, int stderr_fd, BOOL 
     if (positional.count < 1) {
         NSDictionary *err = noff_json_error(TOOL_NAME, @"search",
                                              NOFF_ERR_INVALID_ARGS,
-                                             @"No search query provided. Usage: minis-model-use search <query>");
+                                             @"No search query provided. Usage: i-model-use search <query>");
         noff_emit_json(stdout_fd, err, compact, quiet);
         return NOFF_EXIT_INVALID_ARGS;
     }
@@ -244,7 +244,7 @@ static int cmd_run(int argc, char **argv, int stdin_fd, int stdout_fd, int stder
     if (!modelIdOrName) {
         NSDictionary *err = noff_json_error(TOOL_NAME, @"run",
                                              NOFF_ERR_INVALID_ARGS,
-                                             @"--model is required. Usage: minis-model-use run --model <id_or_name>");
+                                             @"--model is required. Usage: i-model-use run --model <id_or_name>");
         noff_emit_json(stdout_fd, err, compact, quiet);
         return NOFF_EXIT_INVALID_ARGS;
     }
@@ -386,10 +386,10 @@ static int cmd_run(int argc, char **argv, int stdin_fd, int stdout_fd, int stder
     // preserved (no default).
     //
     // [T-modeluse-identity-pollution] This text used to open with
-    // "You are Minis, an on-device AI assistant running on iOS." — a bare
+    // "You are I, an on-device AI assistant running on iOS." — a bare
     // identity assertion. Sub-models took it literally: they answered "who are
-    // you" as Minis and invented a matching vendor (reproduced across three
-    // providers, OpenMinis#103). The damage is not limited to identity
+    // you" as I and invented a matching vendor (reproduced across three
+    // providers, I#103). The damage is not limited to identity
     // questions — anything downstream of the model's self-knowledge
     // (capability boundaries, refusal style, knowledge-cutoff claims) was
     // silently biased, and it made model identity useless as a routing sanity
@@ -400,7 +400,7 @@ static int cmd_run(int argc, char **argv, int stdin_fd, int stdout_fd, int stder
     // would regress the providers that demand a non-empty instructions block.
     BOOL systemPromptWasInjected = NO;
     if (!systemPrompt) {
-        systemPrompt = @"You are being invoked as a sub-agent inside an app called Minis. "
+        systemPrompt = @"You are being invoked as a sub-agent inside an app called I. "
                        @"This is the calling environment, not your identity — keep your own "
                        @"model identity unchanged. You are handling a focused task delegated "
                        @"by the parent agent loop: answer the request directly and concisely, "
@@ -427,7 +427,7 @@ static int cmd_run(int argc, char **argv, int stdin_fd, int stdout_fd, int stder
 
     // Resolve output host path.
     // [T-model-use-output-relative-path] --output must be an absolute guest
-    // path. minis-model-use forwards to the host, which does NOT inherit the
+    // path. i-model-use forwards to the host, which does NOT inherit the
     // iSH shell's cwd, so a relative path can't be resolved and previously
     // leaked through verbatim — the host then tried to open the bare parent
     // component (e.g. "workspace") and failed with a misleading
@@ -437,14 +437,14 @@ static int cmd_run(int argc, char **argv, int stdin_fd, int stdout_fd, int stder
     if (outputPath) {
         if (![outputPath hasPrefix:@"/"]) {
             NSString *msg = [NSString stringWithFormat:
-                @"--output must be an absolute path, got \"%@\". minis-model-use runs on the host and does not inherit the shell's current directory, so relative paths can't be resolved. Use an absolute path like /var/minis/workspace/out.jpg.",
+                @"--output must be an absolute path, got \"%@\". i-model-use runs on the host and does not inherit the shell's current directory, so relative paths can't be resolved. Use an absolute path like /var/i/workspace/out.jpg.",
                 outputPath];
             NSDictionary *err = noff_json_error(TOOL_NAME, @"run",
                                                  NOFF_ERR_INVALID_ARGS, msg);
             noff_emit_json(stdout_fd, err, compact, quiet);
             return NOFF_EXIT_INVALID_ARGS;
         }
-        if ([outputPath hasPrefix:@"/var/minis/"] || [outputPath hasPrefix:@"/home/"] || [outputPath hasPrefix:@"/tmp/"]) {
+        if ([outputPath hasPrefix:@"/var/i/"] || [outputPath hasPrefix:@"/home/"] || [outputPath hasPrefix:@"/tmp/"]) {
             outputHostPath = noff_resolve_host_path(outputPath);
         } else {
             outputHostPath = outputPath;
@@ -522,7 +522,7 @@ static int cmd_run(int argc, char **argv, int stdin_fd, int stdout_fd, int stder
 
     if (!stream) {
         // [T-modeluse-identity-pollution] Echo the injected default so the
-        // caller can SEE what was prepended (OpenMinis#103 option 3). The
+        // caller can SEE what was prepended (I#103 option 3). The
         // injection was previously invisible: a caller comparing this model's
         // behaviour against a direct API call had no way to know an extra
         // instructions block was in play. Only echoed when we supplied it —
@@ -587,11 +587,11 @@ static int model_use_handler(int argc, char **argv,
 // ── Registration ──
 
 void model_use_offload_register(void) {
-    int err = native_offload_add_handler("minis-model-use", model_use_handler);
+    int err = native_offload_add_handler("i-model-use", model_use_handler);
     if (err == 0) {
-        noff_ensure_guest_stub("/usr/local/bin/minis-model-use");
-        NSLog(@"NativeOffloads: minis-model-use handler registered");
+        noff_ensure_guest_stub("/usr/local/bin/i-model-use");
+        NSLog(@"NativeOffloads: i-model-use handler registered");
     } else {
-        NSLog(@"NativeOffloads: failed to register minis-model-use handler (err=%d)", err);
+        NSLog(@"NativeOffloads: failed to register i-model-use handler (err=%d)", err);
     }
 }

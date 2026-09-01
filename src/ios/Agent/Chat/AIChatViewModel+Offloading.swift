@@ -22,7 +22,7 @@ extension AIChatViewModel {
     private func offloadContextContent(_ content: String, toolId: String, toolName: String, ext: String = "txt") -> String {
         let fm = FileManager.default
         let sid = sessionId ?? "unknown"
-        let persistDir = Self.minisOffloadsPersistentDir(for: sid)
+        let persistDir = Self.iOffloadsPersistentDir(for: sid)
             .appendingPathComponent("tools", isDirectory: true)
         try? fm.createDirectory(at: persistDir, withIntermediateDirectories: true)
 
@@ -32,7 +32,7 @@ extension AIChatViewModel {
         let persistPath = persistDir.appendingPathComponent(fileName)
         try? content.write(to: persistPath, atomically: true, encoding: .utf8)
 
-        return "\(Self.minisOffloadsLinuxDir)/tools/\(fileName)"
+        return "\(Self.iOffloadsLinuxDir)/tools/\(fileName)"
     }
 
     /// Save context image data to disk for later retrieval.
@@ -40,7 +40,7 @@ extension AIChatViewModel {
     private func offloadContextImage(_ data: Data, toolId: String, mimeType: String) -> String {
         let fm = FileManager.default
         let sid = sessionId ?? "unknown"
-        let persistDir = Self.minisOffloadsPersistentDir(for: sid)
+        let persistDir = Self.iOffloadsPersistentDir(for: sid)
             .appendingPathComponent("tools", isDirectory: true)
         try? fm.createDirectory(at: persistDir, withIntermediateDirectories: true)
 
@@ -58,7 +58,7 @@ extension AIChatViewModel {
         let persistPath = persistDir.appendingPathComponent(fileName)
         try? data.write(to: persistPath)
 
-        return "\(Self.minisOffloadsLinuxDir)/tools/\(fileName)"
+        return "\(Self.iOffloadsLinuxDir)/tools/\(fileName)"
     }
 
     /// Decode the pixel dimensions of an image blob without fully decoding it.
@@ -109,25 +109,25 @@ extension AIChatViewModel {
         }
     }
 
-    /// Decide whether a file path (Linux view) or minis:// URL is backed by
-    /// persistent session storage under `/var/minis/*`. Paths in those
+    /// Decide whether a file path (Linux view) or i:// URL is backed by
+    /// persistent session storage under `/var/i/*`. Paths in those
     /// locations survive shell restarts, session reloads, and cross-day
     /// reopens, so we don't need to write a snapshot copy of the bytes.
     ///
     /// Anything else (`/tmp/*`, absent, unknown prefix) is considered
     /// volatile and must be snapshotted before the original is dropped from
     /// context.
-    private static func isPersistentMinisPath(_ path: String) -> Bool {
-        // Linux view: bind-mounted persistent directories under /var/minis
-        if path.hasPrefix("/var/minis/workspace/") { return true }
-        if path.hasPrefix("/var/minis/browser/") { return true }
-        if path.hasPrefix("/var/minis/attachments/") { return true }
-        if path.hasPrefix("/var/minis/offloads/") { return true }
-        // minis:// URL view maps 1:1 to the directories above
-        if path.hasPrefix("minis://workspace/") { return true }
-        if path.hasPrefix("minis://browser/") { return true }
-        if path.hasPrefix("minis://attachments/") { return true }
-        if path.hasPrefix("minis://offloads/") { return true }
+    private static func isPersistentIPath(_ path: String) -> Bool {
+        // Linux view: bind-mounted persistent directories under /var/i
+        if path.hasPrefix("/var/i/workspace/") { return true }
+        if path.hasPrefix("/var/i/browser/") { return true }
+        if path.hasPrefix("/var/i/attachments/") { return true }
+        if path.hasPrefix("/var/i/offloads/") { return true }
+        // i:// URL view maps 1:1 to the directories above
+        if path.hasPrefix("i://workspace/") { return true }
+        if path.hasPrefix("i://browser/") { return true }
+        if path.hasPrefix("i://attachments/") { return true }
+        if path.hasPrefix("i://offloads/") { return true }
         return false
     }
 
@@ -145,7 +145,7 @@ extension AIChatViewModel {
     /// - `input`: the `tool_use` input JSON for this call.
     /// - `content`: the textual `tool_result` body. Used to recover paths
     ///   that only the tool knows at runtime (e.g. browser screenshot URLs
-    ///   emitted as `minis_url: minis://...`).
+    ///   emitted as `i_url: i://...`).
     private static func originalImagePath(
         toolName: String,
         input: [String: Any]?,
@@ -155,11 +155,11 @@ extension AIChatViewModel {
         if toolName == "read_image", let path = input?["path"] as? String, !path.isEmpty {
             return path
         }
-        // browser_use (any action) appends `minis_url: minis://...` to the
+        // browser_use (any action) appends `i_url: i://...` to the
         // result content when it persists a screenshot or fetched file to
-        // /var/minis/browser/. Extract that URL.
+        // /var/i/browser/. Extract that URL.
         if toolName == "browser_use" || toolName.isEmpty {
-            if let urlRange = content.range(of: #"minis://\S+"#, options: .regularExpression) {
+            if let urlRange = content.range(of: #"i://\S+"#, options: .regularExpression) {
                 return String(content[urlRange])
             }
         }
@@ -171,7 +171,7 @@ extension AIChatViewModel {
     /// replaced with a text placeholder.
     ///
     /// Snapshot policy: an image is **not** copied to offloads when its
-    /// original path lives under `/var/minis/*` (workspace, browser,
+    /// original path lives under `/var/i/*` (workspace, browser,
     /// attachments, offloads) — those directories are persistent and the
     /// placeholder's path hint is enough for the model to re-fetch via
     /// `read_image`. Any other origin — volatile (`/tmp/*`), unknown, or a
@@ -237,9 +237,9 @@ extension AIChatViewModel {
                     )
 
                     // Decide whether to snapshot: only skip the copy when the
-                    // original path is under /var/minis/* (persistent).
+                    // original path is under /var/i/* (persistent).
                     let snapshotPath: String?
-                    if let op = originalPath, Self.isPersistentMinisPath(op) {
+                    if let op = originalPath, Self.isPersistentIPath(op) {
                         snapshotPath = nil
                     } else {
                         snapshotPath = offloadContextImage(data, toolId: id, mimeType: mime ?? "image/jpeg")
@@ -565,7 +565,7 @@ extension AIChatViewModel {
 
             // List files in offloads/tools directory (top 20 by recency)
             let sid = sessionId ?? "unknown"
-            let toolsDir = Self.minisOffloadsPersistentDir(for: sid)
+            let toolsDir = Self.iOffloadsPersistentDir(for: sid)
                 .appendingPathComponent("tools", isDirectory: true)
             if let files = try? FileManager.default.contentsOfDirectory(
                 at: toolsDir, includingPropertiesForKeys: [.fileSizeKey, .creationDateKey],
@@ -578,7 +578,7 @@ extension AIChatViewModel {
                 }
                 let top20 = sorted.prefix(20)
                 var totalSize: Int64 = 0
-                logger.info("  /var/minis/offloads/tools/ — \(files.count) files (showing top \(top20.count)):")
+                logger.info("  /var/i/offloads/tools/ — \(files.count) files (showing top \(top20.count)):")
                 for file in top20 {
                     let size = (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
                     totalSize += Int64(size)
@@ -604,23 +604,23 @@ extension AIChatViewModel {
         }
     }
 
-    /// Remove persistent minis data for a given session.
-    private func cleanupMinis(for sid: String) {
+    /// Remove persistent i data for a given session.
+    private func cleanupI(for sid: String) {
         let fm = FileManager.default
-        let persistDir = Self.minisPersistentBase.appendingPathComponent(sid, isDirectory: true)
+        let persistDir = Self.iPersistentBase.appendingPathComponent(sid, isDirectory: true)
         try? fm.removeItem(at: persistDir)
     }
 
-    /// Sync a single minis subdirectory bidirectionally between persistent storage and iSH-visible path.
-    /// One-time migration: moves old `Library/MinisChat/offloads/<sid>/` to
-    /// `Library/MinisChat/minis/<sid>/offloads/`.
+    /// Sync a single i subdirectory bidirectionally between persistent storage and iSH-visible path.
+    /// One-time migration: moves old `Library/IChat/offloads/<sid>/` to
+    /// `Library/IChat/i/<sid>/offloads/`.
     func migrateOffloadsIfNeeded(for sid: String) {
         let fm = FileManager.default
         let lib = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let oldDir = lib.appendingPathComponent("MinisChat/offloads/\(sid)", isDirectory: true)
+        let oldDir = lib.appendingPathComponent("IChat/offloads/\(sid)", isDirectory: true)
         guard fm.fileExists(atPath: oldDir.path) else { return }
 
-        let newDir = Self.minisOffloadsPersistentDir(for: sid)
+        let newDir = Self.iOffloadsPersistentDir(for: sid)
         try? fm.createDirectory(at: newDir, withIntermediateDirectories: true)
 
         // Move each file from old location to new
@@ -634,21 +634,21 @@ extension AIChatViewModel {
 
         // Remove old directory
         try? fm.removeItem(at: oldDir)
-        logger.info("Migrated offloads for session \(sid) to new minis path")
+        logger.info("Migrated offloads for session \(sid) to new i path")
     }
 
-    /// Bind-mount a session's minis directories into iSH-visible /var/minis/.
+    /// Bind-mount a session's i directories into iSH-visible /var/i/.
     /// Delegates to ISHExecutionCoordinator for serialized mount management.
-    func mountMinis(for sid: String) {
+    func mountI(for sid: String) {
         // Always ensure symlinks exist in data/ for the file browser,
         // even when the iSH kernel isn't booted yet.
-        ensureMinisSymlinks(for: sid)
+        ensureISymlinks(for: sid)
         Task { await ISHExecutionCoordinator.shared.mountForSession(sid) }
     }
 
     /// [T-ish-container-identity GH#99] One-shot per launch: detect an iOS
     /// data-container migration (the UUID rotates on EVERY app update /
-    /// reinstall; contents migrate). All /var/minis symlinks carry absolute
+    /// reinstall; contents migrate). All /var/i symlinks carry absolute
     /// paths from the previous container, so right after an update — before
     /// the first session mounts and re-points them — the shell sees dangling
     /// links / empty dirs, which users read as data loss. Log the migration
@@ -661,7 +661,7 @@ extension AIChatViewModel {
         let key = "lastKnownDataContainerUUID"
         let previous = UserDefaults.standard.string(forKey: key)
         if let previous, previous != current {
-            AppLogger(category: "MinisSymlink").warning("[MinisSymlink] Data container migrated \(previous.prefix(8))… → \(current.prefix(8))… (normal after an app update; contents were migrated by iOS). Session symlinks will be re-pointed as sessions mount.")
+            AppLogger(category: "ISymlink").warning("[ISymlink] Data container migrated \(previous.prefix(8))… → \(current.prefix(8))… (normal after an app update; contents were migrated by iOS). Session symlinks will be re-pointed as sessions mount.")
         }
         if previous != current {
             UserDefaults.standard.set(current, forKey: key)
@@ -669,25 +669,25 @@ extension AIChatViewModel {
     }
 
     /// Create symlinks in the fakefs data/ directory so the file browser
-    /// can access minis directories without requiring the iSH kernel to be booted.
-    private func ensureMinisSymlinks(for sid: String) {
+    /// can access i directories without requiring the iSH kernel to be booted.
+    private func ensureISymlinks(for sid: String) {
         let fm = FileManager.default
         let dataPath = RootfsManager.shared.dataPath
         Self.noteContainerMigrationIfNeeded()
 
-        // Ensure /var/minis/ exists in data/
-        let minisDataDir = dataPath.appendingPathComponent("var/minis")
-        try? fm.createDirectory(at: minisDataDir, withIntermediateDirectories: true)
+        // Ensure /var/i/ exists in data/
+        let iDataDir = dataPath.appendingPathComponent("var/i")
+        try? fm.createDirectory(at: iDataDir, withIntermediateDirectories: true)
 
         let mappings: [(persistDir: URL, linuxDir: String)] = [
-            (Self.minisOffloadsPersistentDir(for: sid), Self.minisOffloadsLinuxDir),
-            (Self.minisAttachmentsPersistentDir(for: sid), Self.minisAttachmentsLinuxDir),
-            (Self.minisWorkspacePersistentDir(for: sid), Self.minisWorkspaceLinuxDir),
-            (Self.minisBrowserPersistentDir(for: sid), Self.minisBrowserLinuxDir),
-            (Self.minisMemoryPersistentDir, Self.minisMemoryLinuxDir),
-            (Self.minisSkillsPersistentDir, Self.minisSkillsLinuxDir),
-            (Self.minisSharedPersistentDir, Self.minisSharedLinuxDir),
-            (Self.minisMcpServersPersistentDir, Self.minisMcpServersLinuxDir),
+            (Self.iOffloadsPersistentDir(for: sid), Self.iOffloadsLinuxDir),
+            (Self.iAttachmentsPersistentDir(for: sid), Self.iAttachmentsLinuxDir),
+            (Self.iWorkspacePersistentDir(for: sid), Self.iWorkspaceLinuxDir),
+            (Self.iBrowserPersistentDir(for: sid), Self.iBrowserLinuxDir),
+            (Self.iMemoryPersistentDir, Self.iMemoryLinuxDir),
+            (Self.iSkillsPersistentDir, Self.iSkillsLinuxDir),
+            (Self.iSharedPersistentDir, Self.iSharedLinuxDir),
+            (Self.iMcpServersPersistentDir, Self.iMcpServersLinuxDir),
         ]
 
         for (persistDir, linuxDir) in mappings {
@@ -704,7 +704,7 @@ extension AIChatViewModel {
                 let resolved = hostPath.resolvingSymlinksInPath().standardized.path
                 let expected = persistDir.resolvingSymlinksInPath().standardized.path
                 if resolved == expected { continue }
-                logger.info("[MinisSymlink] \(linuxDir): stale symlink (-> \(resolved), want \(expected)), replacing")
+                logger.info("[ISymlink] \(linuxDir): stale symlink (-> \(resolved), want \(expected)), replacing")
                 unlink(hostPath.path)
             } else if exists && (lstatBuf.st_mode & S_IFMT) == S_IFDIR {
                 // Real directory found where a symlink should be.
@@ -721,27 +721,27 @@ extension AIChatViewModel {
                                 try fm.moveItem(at: item, to: dest)
                                 moved += 1
                             } catch {
-                                logger.error("[MinisSymlink] \(linuxDir): migrate FAILED for \(item.lastPathComponent): \(error.localizedDescription)")
+                                logger.error("[ISymlink] \(linuxDir): migrate FAILED for \(item.lastPathComponent): \(error.localizedDescription)")
                             }
                         } else {
                             skipped += 1
                         }
                     }
                 }
-                logger.info("[MinisSymlink] \(linuxDir): real dir -> persistDir migration, moved=\(moved) skipped(existing)=\(skipped)")
+                logger.info("[ISymlink] \(linuxDir): real dir -> persistDir migration, moved=\(moved) skipped(existing)=\(skipped)")
                 try? fm.removeItem(at: hostPath)
             } else if exists {
                 // Regular file — unexpected, remove
-                logger.info("[MinisSymlink] \(linuxDir): unexpected regular file at \(hostPath.path), removing")
+                logger.info("[ISymlink] \(linuxDir): unexpected regular file at \(hostPath.path), removing")
                 unlink(hostPath.path)
             }
 
             // Create symlink
             do {
                 try fm.createSymbolicLink(at: hostPath, withDestinationURL: persistDir)
-                logger.info("[MinisSymlink] \(linuxDir): symlink created -> \(persistDir.path)")
+                logger.info("[ISymlink] \(linuxDir): symlink created -> \(persistDir.path)")
             } catch {
-                logger.error("[MinisSymlink] \(linuxDir): createSymbolicLink FAILED: \(error.localizedDescription)")
+                logger.error("[ISymlink] \(linuxDir): createSymbolicLink FAILED: \(error.localizedDescription)")
             }
         }
 
@@ -749,11 +749,11 @@ extension AIChatViewModel {
         Self.refreshMountedFolderSymlinks()
     }
 
-    /// Create/refresh `/var/minis/mounts/<name>` symlinks for every entry in
+    /// Create/refresh `/var/i/mounts/<name>` symlinks for every entry in
     /// `MountedFoldersManager`. Removes stale symlinks whose mounts were deleted.
     ///
     /// Called from:
-    ///   - `ensureMinisSymlinks` on each session mount
+    ///   - `ensureISymlinks` on each session mount
     ///   - `MountedFoldersManager` after add/rename/remove
     ///   - App launch after `activateAll`
     ///
@@ -807,14 +807,14 @@ extension AIChatViewModel {
         }
     }
 
-    /// Reconcile `/var/minis/mounts/<name>` against `snapshot`. Runs entirely
+    /// Reconcile `/var/i/mounts/<name>` against `snapshot`. Runs entirely
     /// off the main thread — see `refreshMountedFolderSymlinks` for why.
     nonisolated private static func performMountedFolderSymlinkRefresh(
         snapshot: [MountedFolderSymlinkSpec]
     ) {
         let fm = FileManager.default
         let dataPath = RootfsManager.shared.dataPath
-        let mountsDir = dataPath.appendingPathComponent("var/minis/mounts", isDirectory: true)
+        let mountsDir = dataPath.appendingPathComponent("var/i/mounts", isDirectory: true)
         try? fm.createDirectory(at: mountsDir, withIntermediateDirectories: true)
 
         let desiredNames = Set(snapshot.map(\.name))
@@ -869,20 +869,20 @@ extension AIChatViewModel {
 
     /// Save an attachment (image, media) to the session's persistent attachments directory.
     /// With bind mounts, writing to persistent storage is automatically visible to iSH.
-    /// Returns a `minis://attachments/<filename>` URL string, or nil on failure.
+    /// Returns a `i://attachments/<filename>` URL string, or nil on failure.
     func saveAttachment(_ data: Data, filename: String) -> String? {
         let fm = FileManager.default
         let sid = sessionId ?? "unknown"
 
         // Write to persistent storage (bind-mounted, so iSH sees it automatically)
-        let persistDir = Self.minisAttachmentsPersistentDir(for: sid)
+        let persistDir = Self.iAttachmentsPersistentDir(for: sid)
         try? fm.createDirectory(at: persistDir, withIntermediateDirectories: true)
 
         let persistPath = persistDir.appendingPathComponent(filename)
         guard (try? data.write(to: persistPath)) != nil else { return nil }
 
         let encoded = filename.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? filename
-        return "minis://attachments/\(encoded)"
+        return "i://attachments/\(encoded)"
     }
 
 }

@@ -1,6 +1,6 @@
 //
 //  DeviceOffload.h
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-device` — UIDevice + ProcessInfo.
 //

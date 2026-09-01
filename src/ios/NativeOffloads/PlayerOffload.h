@@ -1,6 +1,6 @@
 //
 //  PlayerOffload.h
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-player` — AVPlayer media playback.
 //

@@ -49,7 +49,7 @@ struct ThinkingRulesSection: View {
     /// protocols have documented, versioned shapes, so their thinking parameters are
     /// ours to maintain. The rules engine exists for the OpenAI-compatible gateway
     /// ecosystem, where an unforeseen endpoint shape otherwise means waiting for a
-    /// release (OpenMinis#86 Venice, #87 Mistral).
+    /// release (I#86 Venice, #87 Mistral).
     ///
     /// Kept deliberately parallel to `OpenAIProvider.usesChatCompletionsAPI` — if that
     /// predicate changes, this must change with it.
@@ -79,13 +79,13 @@ struct ThinkingRulesSection: View {
     /// Shown instead of the rule list when this provider's requests never consult the
     /// resolver. A notice rather than a hidden section: silently dropping the whole
     /// section reads as "the feature is missing or I can't find it", whereas one line
-    /// explains that thinking parameters here are maintained by Minis by design.
+    /// explains that thinking parameters here are maintained by I by design.
     private var unsupportedNoticeSection: some View {
         Section {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Image(systemName: "info.circle")
                     .foregroundStyle(.secondary)
-                Text("This provider uses an official protocol, so its thinking parameters are maintained by Minis. Custom rules apply to OpenAI-compatible providers on the Chat Completions API.")
+                Text("This provider uses an official protocol, so its thinking parameters are maintained by I. Custom rules apply to OpenAI-compatible providers on the Chat Completions API.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

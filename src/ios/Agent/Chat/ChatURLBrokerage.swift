@@ -18,21 +18,21 @@ final class SpeechFinishedDelegate: NSObject, AVSpeechSynthesizerDelegate {
     }
 }
 
-// MARK: - Minis URL Capture Broker
+// MARK: - I URL Capture Broker
 
 /// Shared broker for URLs captured from shell tool stdout via the OSC
-/// MinisOpenURL marker (emitted by /usr/local/bin/minis-open). Both
+/// IOpenURL marker (emitted by /usr/local/bin/i-open). Both
 /// `AIChatView` and `ToolLiveSheet` observe `pendingURL`; ToolLiveSheet
 /// wins when presented (it's topmost), otherwise AIChatView wins. Whoever
 /// handles it calls `consume()` which nils out `pendingURL` so the other
 /// observer doesn't fire a second sheet.
 @MainActor
-final class MinisOpenURLBroker: ObservableObject {
-    static let shared = MinisOpenURLBroker()
+final class IOpenURLBroker: ObservableObject {
+    static let shared = IOpenURLBroker()
     @Published var pendingURL: URL?
     /// True while `ToolLiveSheet` is on-screen. When set, `AIChatView`
     /// skips auto-presenting *web* URLs so ToolLiveSheet can show the
-    /// preview nested on top of itself instead. `minis://` resource
+    /// preview nested on top of itself instead. `i://` resource
     /// previews are still dispatched by AIChatView because ToolLiveSheet
     /// cannot host image/markdown/QuickLook sheets.
     @Published var toolSheetVisible: Bool = false
@@ -48,16 +48,16 @@ final class MinisOpenURLBroker: ObservableObject {
     func offer(_ url: URL) { pendingURL = url }
     func consume() { pendingURL = nil }
 
-    /// Schemes that `minis-open` may emit and that the host knows how to
-    /// route. `http`/`https`/`about` → WKWebView preview, `minis` → built-in
-    /// file preview via `handleMinisURLTap`.
+    /// Schemes that `i-open` may emit and that the host knows how to
+    /// route. `http`/`https`/`about` → WKWebView preview, `i` → built-in
+    /// file preview via `handleIURLTap`.
     nonisolated static func isSupportedScheme(_ scheme: String?) -> Bool {
         guard let s = scheme?.lowercased() else { return false }
-        return s == "http" || s == "https" || s == "about" || s == "minis"
+        return s == "http" || s == "https" || s == "about" || s == "i"
     }
 
     /// True for schemes that render as an in-chat WKWebView (safariURL /
-    /// ToolLiveSheet.linkPreviewURL). `minis://` resources render as
+    /// ToolLiveSheet.linkPreviewURL). `i://` resources render as
     /// full-screen file previews instead and must be dispatched by
     /// AIChatView even when a tool sheet is on top.
     nonisolated static func isWebScheme(_ scheme: String?) -> Bool {
@@ -66,25 +66,25 @@ final class MinisOpenURLBroker: ObservableObject {
     }
 }
 
-// MARK: - Minis URL Marker Parser
+// MARK: - I URL Marker Parser
 
-/// Recognises the OSC 1337 `MinisOpenURL` escape sequence emitted by the
-/// rootfs shim at `/usr/local/bin/minis-open` (see default_mount). The shim
+/// Recognises the OSC 1337 `IOpenURL` escape sequence emitted by the
+/// rootfs shim at `/usr/local/bin/i-open` (see default_mount). The shim
 /// replaces `xdg-open`, `sensible-browser`, etc. Whenever an in-sandbox
 /// command tries to open a URL, it prints:
 ///
-///     ESC ] 1337 ; MinisOpenURL = <url> BEL
+///     ESC ] 1337 ; IOpenURL = <url> BEL
 ///
 /// which this parser strips from the displayed shell output and returns
 /// as a list of URLs to present in the in-app WKWebView preview.
-enum MinisURLMarker {
-    /// ESC ] 1337 ; MinisOpenURL = ... BEL
+enum IURLMarker {
+    /// ESC ] 1337 ; IOpenURL = ... BEL
     /// Also accepts ST (ESC \) as terminator for robustness.
-    static let pattern = "\u{1B}\\]1337;MinisOpenURL=([^\u{07}\u{1B}]*)(?:\u{07}|\u{1B}\\\\)"
+    static let pattern = "\u{1B}\\]1337;IOpenURL=([^\u{07}\u{1B}]*)(?:\u{07}|\u{1B}\\\\)"
 
     /// Returns (cleaned text with markers removed, captured URL strings).
     static func extract(from text: String) -> (cleaned: String, urls: [String]) {
-        guard text.contains("MinisOpenURL="),
+        guard text.contains("IOpenURL="),
               let regex = try? NSRegularExpression(pattern: pattern) else {
             return (text, [])
         }

@@ -132,7 +132,7 @@ enum ModelsDevAPI {
     }
 
     /// [T-modelsdev-id-normalization] Find the best catalog entry for a model,
-    /// deterministically. Shared by `enrichModel` and `enrichModels` so a single
+    /// deteritically. Shared by `enrichModel` and `enrichModels` so a single
     /// model and a bulk refresh can never disagree about the same id.
     ///
     /// Resolution order, most trustworthy first:
@@ -248,7 +248,7 @@ enum ModelsDevAPI {
         index.reserveCapacity(grouped.count)
         for (normalized, candidates) in grouped {
             // Majority vote over the declared effort sets (see doc comment on
-            // `resolveDevModel`). The scan order above is deterministic, so equal
+            // `resolveDevModel`). The scan order above is deteritic, so equal
             // counts resolve to the first-seen set and the whole result is
             // reproducible across launches.
             //
@@ -289,7 +289,7 @@ enum ModelsDevAPI {
         return models.map { model in
             // [T-modelsdev-id-normalization] Same resolver as the single-model
             // path: own provider → exact id → normalized id, each stage picking
-            // deterministically and preferring an entry that declares effort
+            // deteritically and preferring an entry that declares effort
             // tiers. The fallback scan is what third-party gateways actually
             // hit, since a relay's provider name matches no catalog key.
             guard let match = resolveDevModel(for: model, in: registry) else { return model }
@@ -339,7 +339,7 @@ enum ModelsDevAPI {
             // OWN provider. Only that may suppress an explicit "thinking off".
             result.effortDeclarationIsAuthoritative = authoritative
         }
-        // [OpenMinis#163] Carry the affirmative "no effort tiers" answer too.
+        // [I#163] Carry the affirmative "no effort tiers" answer too.
         // Only set when the catalog actually says so, so enriching a model the
         // catalog is silent about cannot overwrite a prior real answer with a
         // meaningless `false`.
@@ -541,7 +541,7 @@ enum ModelsDevAPI {
 
     private static var cacheFileURL: URL {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        return caches.appendingPathComponent("com.openminis.app.models-dev-cache").appendingPathComponent("api.json")
+        return caches.appendingPathComponent("com.i.app.models-dev-cache").appendingPathComponent("api.json")
     }
 
     private static func loadDiskCache() -> (Data, Date)? {
@@ -616,7 +616,7 @@ private struct ModelsDevModel: Decodable {
         return values
     }
 
-    /// [OpenMinis#163] True when the catalog AFFIRMATIVELY says this model has
+    /// [I#163] True when the catalog AFFIRMATIVELY says this model has
     /// no effort tiers, as opposed to saying nothing at all.
     ///
     /// `effortValues` collapses both cases to nil, which loses the difference

@@ -1,6 +1,6 @@
-# Building Minis
+# Building I
 
-Minis ships a full Linux sandbox inside the app, so a first build is not just
+I ships a full Linux sandbox inside the app, so a first build is not just
 "open the project and press Run": the native dependencies (iSH on iOS, PRoot on
 Android, FFmpeg, LAME) and the Alpine rootfs are **built from source by the
 scripts in `deps/`**, not committed as binaries. Budget ~30–60 minutes for the
@@ -19,7 +19,7 @@ without them will fail at the native build step:
 
 ```sh
 git clone --recurse-submodules https://github.com/OpenMinis/OpenMinis.git
-cd OpenMinis
+cd I
 
 # Already cloned without --recurse-submodules?
 git submodule update --init --recursive
@@ -27,8 +27,8 @@ git submodule update --init --recursive
 
 | Submodule | Repository | Used by |
 |---|---|---|
-| `deps/ish` | [OpenMinis/ish-arm64](https://github.com/OpenMinis/ish-arm64) | iOS sandbox kernel |
-| `deps/proot` | [OpenMinis/proot](https://github.com/OpenMinis/proot) | Android sandbox |
+| `deps/ish` | [I/ish-arm64](https://github.com/OpenMinis/ish-arm64) | iOS sandbox kernel |
+| `deps/proot` | [I/proot](https://github.com/OpenMinis/proot) | Android sandbox |
 
 ### Build-time customization
 
@@ -113,17 +113,17 @@ by hand.
 ### 2. Build the app
 
 ```sh
-open src/ios/Minis.xcodeproj
+open src/ios/I.xcodeproj
 ```
 
-Select the **Minis** scheme and build. For a device build, set your own team
+Select the **I** scheme and build. For a device build, set your own team
 under *Signing & Capabilities* — the project ships with an empty
 `DEVELOPMENT_TEAM`.
 
 From the command line:
 
 ```sh
-xcodebuild -project src/ios/Minis.xcodeproj -scheme Minis \
+xcodebuild -project src/ios/I.xcodeproj -scheme I \
            -configuration Debug -destination 'generic/platform=iOS' \
            CODE_SIGNING_ALLOWED=NO build
 ```
@@ -136,8 +136,8 @@ xcodebuild -project src/ios/Minis.xcodeproj -scheme Minis \
 
 ### Targets
 
-`Minis` (app), `MinisShare` (share extension), `AgentWidgetExtension`,
-`MinisFileProvider`, plus `MinisTests` / `MinisUITests`.
+`I` (app), `IShare` (share extension), `AgentWidgetExtension`,
+`IFileProvider`, plus `ITests` / `IUITests`.
 
 ---
 
@@ -260,7 +260,7 @@ from the customization file; see [Build-time customization](#build-time-customiz
 
 ## Licensing note
 
-Minis is **GPLv3** because it links iSH (GPLv3) and PRoot (GPLv2). If you
+I is **GPLv3** because it links iSH (GPLv3) and PRoot (GPLv2). If you
 change how the native dependencies are built, keep FFmpeg on its LGPL
 configuration and preserve the vendored `LICENSE` files. See
 [LICENSE](LICENSE) and [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

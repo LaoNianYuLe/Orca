@@ -2,9 +2,9 @@
 set -e
 
 # ============================================================================
-# PRoot Android Build Script (OpenMinis fork)
+# PRoot Android Build Script (I fork)
 # ============================================================================
-# Cross-compiles a statically-linked libtalloc and the OpenMinis/proot fork
+# Cross-compiles a statically-linked libtalloc and the I/proot fork
 # for Android aarch64 using the Android NDK, then installs the proot binary
 # AND its two ELF loaders into the app.
 #
@@ -261,7 +261,7 @@ build_talloc() {
 # ----------------------------------------------------------------------------
 build_proot() {
     if [ ! -d "$PROOT_DIR/src" ]; then
-        log_error "PRoot source missing at $PROOT_DIR. Did you clone OpenMinis/proot?"
+        log_error "PRoot source missing at $PROOT_DIR. Did you clone I/proot?"
     fi
 
     log_info "Building proot (aarch64)..."

@@ -5,18 +5,18 @@ import Photos
 import SwiftUI
 import UIKit
 
-private let imgLogger = AppLogger(category: "MinisImage")
+private let imgLogger = AppLogger(category: "IImage")
 private let attachLogger = AppLogger(category: "AttachDebug")
 
-// MARK: - minis:// URL encoding [T-minis-url-fullwidth-pipe-ios]
+// MARK: - i:// URL encoding [T-i-url-fullwidth-pipe-ios]
 
-/// Percent-encode the path of a `minis://` destination that contains raw,
+/// Percent-encode the path of a `i://` destination that contains raw,
 /// unencoded bytes (e.g. a filename with U+FF5C `｜`, CJK, emoji the LLM emitted
-/// unencoded inside a minis:// link), returning a parseable URL (or nil if it
+/// unencoded inside a i:// link), returning a parseable URL (or nil if it
 /// still can't be formed). Used by both the link path (SelectableMarkdownTheme)
 /// and the image path (ImageAttachment), so it lives at file scope.
-func encodeRawMinisURL(_ destination: String) -> URL? {
-    let prefix = "minis://"
+func encodeRawIURL(_ destination: String) -> URL? {
+    let prefix = "i://"
     guard destination.hasPrefix(prefix) else { return URL(string: destination) }
     let rest = String(destination.dropFirst(prefix.count))
     let encoded = rest.split(separator: "/", omittingEmptySubsequences: false)
@@ -35,14 +35,14 @@ func percentEncodePathSegmentIdempotent(_ seg: String) -> String {
     return decoded.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? seg
 }
 
-// MARK: - MinisToast
+// MARK: - IToast
 
 /// [T-toast-feedback] Lightweight, self-dismissing toast for one-shot action
 /// feedback ("Saved", "Table copied", …). Window-level so it works from both
 /// SwiftUI screens and UIKit views (e.g. the markdown table copy actions,
 /// which run in a UILabel subclass with no SwiftUI context). Mirrors the
 /// capsule style FileBrowserView already uses for its "Copied" toast.
-enum MinisToast {
+enum IToast {
     /// Show a toast with an already-localized message. Safe from any thread.
     /// `systemImage` sets the leading icon (default: success checkmark); pass an
     /// error glyph like "exclamationmark.triangle.fill" for failures.
@@ -117,9 +117,9 @@ enum MinisToast {
 // MARK: - Custom Attributed String Keys
 
 extension NSAttributedString.Key {
-    static let inlineCodeBackground = NSAttributedString.Key("minisInlineCodeBackground")
-    static let inlineCodeText = NSAttributedString.Key("minisInlineCodeText")
-    static let blockquoteDepth = NSAttributedString.Key("minisBlockquoteDepth")
+    static let inlineCodeBackground = NSAttributedString.Key("iInlineCodeBackground")
+    static let inlineCodeText = NSAttributedString.Key("iInlineCodeText")
+    static let blockquoteDepth = NSAttributedString.Key("iBlockquoteDepth")
 }
 
 // MARK: - Media Extension Sets
@@ -145,7 +145,7 @@ final class NativeMediaImageCache {
     /// re-entered conversation, or message-list session re-load from disk)
     /// already have the size on the very first attachmentBounds call.
     /// [AttachHang preload-bounds]
-    private static let defaultsKey = "MinisImageSizes_v1"
+    private static let defaultsKey = "IImageSizes_v1"
     private var sizes: [String: CGSize]
     private let sizesLock = NSLock()
     private init() {
@@ -177,7 +177,7 @@ final class NativeMediaImageCache {
     // re-fetches on every recycle. Each failed fetch fires onLoad → updateAttachment
     // Views → re-render → re-fetch, a main-thread storm that shows up as the
     // residual scroll-deceleration jank on image-heavy sessions (device log:
-    // 28 MinisImage + 19 AttachHotPath events on a single 115ms landing frame,
+    // 28 IImage + 19 AttachHotPath events on a single 115ms landing frame,
     // all the same FAILED url). Record failures process-wide with a short TTL
     // so a recycled cell doesn't re-hit the network; the TTL lets a transient
     // network error recover later (a fresh attempt after the window).
@@ -257,13 +257,13 @@ func downsampleImageData(_ data: Data, maxPixelSize: CGFloat = 2048) -> UIImage?
 /// (#F2F2F7); dark lifts to #3A3A3C (systemGray4's dark value) — systemGray6
 /// resolves to #1C1C1E in dark, indistinguishable from the near-black chat
 /// background, which made inline code read as bare orange text.
-private let minisInlineCodeBackgroundColor = UIColor { traits in
+private let iInlineCodeBackgroundColor = UIColor { traits in
     traits.userInterfaceStyle == .dark
         ? UIColor(red: 0x3A / 255.0, green: 0x3A / 255.0, blue: 0x3C / 255.0, alpha: 1)
         : .systemGray6
 }
 
-/// Mirrors the `.minisChat` MarkdownUI theme using UIKit types.
+/// Mirrors the `.iChat` MarkdownUI theme using UIKit types.
 struct SelectableMarkdownTheme {
     let baseFontSize: CGFloat
     let codeBlockCornerRadius: CGFloat = 8
@@ -284,7 +284,7 @@ struct SelectableMarkdownTheme {
     var codeBlockTextColor: UIColor {
         UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0.55, green: 0.95, blue: 0.55, alpha: 1) : .systemGreen }
     }
-    var inlineCodeBackground: UIColor { minisInlineCodeBackgroundColor }
+    var inlineCodeBackground: UIColor { iInlineCodeBackgroundColor }
     var inlineCodeColor: UIColor { .systemOrange }
     var blockquoteBarColor: UIColor { UIColor.systemOrange.withAlphaComponent(0.5) }
     var tableBorderColor: UIColor { UIColor.label.withAlphaComponent(0.25) }
@@ -361,9 +361,9 @@ fileprivate final class MarkdownNSRenderer {
         theme = SelectableMarkdownTheme(baseFontSize: size)
     }
     private var bodyLineSpacing: CGFloat { theme.baseFontSize * 0.25 }
-    /// minisChat list item: .em(0.25) top margin
+    /// iChat list item: .em(0.25) top margin
     private var listItemTopMargin: CGFloat { theme.baseFontSize * 0.25 }
-    /// minisChat headings: .em(1) top and bottom
+    /// iChat headings: .em(1) top and bottom
     private var headingTopMargin: CGFloat { theme.baseFontSize }
     private var headingBottomMargin: CGFloat { theme.baseFontSize }
 
@@ -385,7 +385,7 @@ fileprivate final class MarkdownNSRenderer {
     /// every TableAttachment was rebuilt and its `cachedLayout` reset to
     /// nil — forcing typesetter to run a full per-cell `boundingRect`
     /// pass on each `attachmentBounds` query. On a 6-table message that
-    /// was 27 s of main-thread typesetter pin (ips Minis-2026-05-14-094312).
+    /// was 27 s of main-thread typesetter pin (ips I-2026-05-14-094312).
     /// Keying by contentHash lets re-rendered identical tables hit the
     /// previously-built attachment + its `cachedLayout`.
     var tableAttachmentCache: [Int: TableAttachment] = [:]
@@ -579,7 +579,7 @@ fileprivate final class MarkdownNSRenderer {
         var attrs = baseAttributes(quoteDepth: quoteDepth)
         attrs[.font] = theme.headingFont(level: level)
         let style = NSMutableParagraphStyle()
-        // minisChat doesn't set relativeLineSpacing for headings
+        // iChat doesn't set relativeLineSpacing for headings
         style.lineSpacing = 0
         if quoteDepth > 0 {
             style.headIndent = CGFloat(quoteDepth) * Self.quoteIndentPerLevel
@@ -658,10 +658,10 @@ fileprivate final class MarkdownNSRenderer {
             for range in deeperRanges {
                 result.addAttribute(.blockquoteDepth, value: newDepth, range: range)
             }
-            // minisChat blockquote uses secondaryText color
+            // iChat blockquote uses secondaryText color
             result.addAttribute(.foregroundColor, value: theme.secondaryLabelColor, range: fullRange)
         }
-        // Blockquote inherits margins from children (no explicit markdownMargin in minisChat)
+        // Blockquote inherits margins from children (no explicit markdownMargin in iChat)
         return RenderedBlock(
             attributed: result,
             topMargin: renderedChildren.topMargin,
@@ -680,7 +680,7 @@ fileprivate final class MarkdownNSRenderer {
         // Bullet glyphs MUST be Unicode characters, NOT NSTextAttachments.
         // Build 13 reverted bullets to SF-symbol NSTextAttachments per
         // user request to restore visual size — within 90s of install the
-        // device hit a fresh 0x8BADF00D watchdog (ips Minis-2026-05-14-
+        // device hit a fresh 0x8BADF00D watchdog (ips I-2026-05-14-
         // 163330). Main-thread frame #1: `NSConcreteTextStorage
         // attribute:atIndex:effectiveRange:` — fillLayoutHole scanning
         // attribute runs. A 6-item list produces 6 image-attachment runs;
@@ -1018,23 +1018,23 @@ fileprivate final class MarkdownNSRenderer {
         let attachment: ImageAttachment
         if let cached = imageAttachmentCache[source] {
             AppLogger(category: "AttachHotPath").info("[IMG][RENDER] REUSE src=\(ImageAttachment.shortSrc(source)) ptr=\(ObjectIdentifier(cached).hashValue & 0xFFFFFF) loaded=\(cached.loadedImage != nil)")
-            imgLogger.info("[MinisImage][RenderAttach] REUSE cached attachment src=\(source) loaded=\(cached.loadedImage != nil) imgSize=\(cached.loadedImage.map { "\($0.size.width)x\($0.size.height)" } ?? "nil")")
+            imgLogger.info("[IImage][RenderAttach] REUSE cached attachment src=\(source) loaded=\(cached.loadedImage != nil) imgSize=\(cached.loadedImage.map { "\($0.size.width)x\($0.size.height)" } ?? "nil")")
             // Keep messageId fresh on reused attachments — the same renderer
             // instance may survive across different messages during cell reuse.
             cached.messageId = messageId
             // Fingerprint check: if the underlying file has been rewritten
             // since we last loaded (size or mtime changed), drop the
             // cached bitmap so the next draw re-reads from disk.
-            let currentFp = minisMediaCacheKey(for: source)
+            let currentFp = iMediaCacheKey(for: source)
             if let loadedFp = cached.loadedFingerprint, loadedFp != currentFp {
                 AppLogger(category: "AttachHotPath").info("[IMG][RENDER] FINGERPRINT-DROP src=\(ImageAttachment.shortSrc(source)) old=\(loadedFp) new=\(currentFp) — bitmap invalidated, will reload")
-                imgLogger.info("[MinisImage][RenderAttach] FINGERPRINT CHANGED src=\(source) old=\(loadedFp) new=\(currentFp) — invalidating cached image")
+                imgLogger.info("[IImage][RenderAttach] FINGERPRINT CHANGED src=\(source) old=\(loadedFp) new=\(currentFp) — invalidating cached image")
                 cached.invalidateLoadedImage()
             }
             attachment = cached
         } else {
             AppLogger(category: "AttachHotPath").info("[IMG][RENDER] CREATE src=\(ImageAttachment.shortSrc(source)) cacheCount=\(self.imageAttachmentCache.count) — fresh ImageAttachment, ObjectIdentifier changed, view WILL be rebuilt")
-            imgLogger.info("[MinisImage][RenderAttach] CREATE new ImageAttachment src=\(source) cacheCount=\(self.imageAttachmentCache.count)")
+            imgLogger.info("[IImage][RenderAttach] CREATE new ImageAttachment src=\(source) cacheCount=\(self.imageAttachmentCache.count)")
             attachment = ImageAttachment(source: source, theme: theme, messageId: messageId)
             imageAttachmentCache[source] = attachment
         }
@@ -1075,7 +1075,7 @@ fileprivate final class MarkdownNSRenderer {
     /// double percent-encoding when present.
     ///
     /// [T-ios-file-preview-stale-cache] file_write returns a singly-encoded
-    /// minis_url (e.g. `minis://workspace/GitHub%E7%83%AD….md`). When the model
+    /// i_url (e.g. `i://workspace/GitHub%E7%83%AD….md`). When the model
     /// embeds it in `[text](url)` and it passes through the markdown render
     /// pipeline, the literal `%` can get re-encoded to `%25`, yielding a
     /// double-encoded destination (`…%25E7…`). `URL(string:).path` then only
@@ -1087,23 +1087,23 @@ fileprivate final class MarkdownNSRenderer {
     /// resolver-side `subPathCandidates` tolerance stays as a backstop.
     private func normalizedLinkURL(from destination: String) -> URL? {
         let fallback = URL(string: destination)
-        // Only minis:// links are affected; everything else is untouched.
-        guard destination.hasPrefix("minis://") else {
+        // Only i:// links are affected; everything else is untouched.
+        guard destination.hasPrefix("i://") else {
             return fallback
         }
-        // [T-minis-url-fullwidth-pipe-ios] URL(string:) returned nil — on iOS
+        // [T-i-url-fullwidth-pipe-ios] URL(string:) returned nil — on iOS
         // Foundation this happens when the destination carries raw non-ASCII in
         // the path (e.g. a filename with U+FF5C `｜`, CJK, emoji that the LLM
-        // emitted unencoded inside a minis:// link). The link would otherwise be
+        // emitted unencoded inside a i:// link). The link would otherwise be
         // dead (no .link attribute → not tappable). Percent-encode the path
         // portion segment-by-segment and retry. Idempotent: a segment that is
         // ALREADY validly encoded is left untouched, so an already-%EF%BD%9C URL
         // is never double-encoded (it also wouldn't reach here, since URL(string:)
         // accepts it — this is belt-and-suspenders).
         guard let base = fallback else {
-            return encodeRawMinisURL(destination)
+            return encodeRawIURL(destination)
         }
-        // A correctly singly-encoded minis_url decodes cleanly: `base.path`
+        // A correctly singly-encoded i_url decodes cleanly: `base.path`
         // contains no stray `%`. A double-encoded one (`%25E7…`) peels only one
         // layer here, leaving a literal `%E7…` in `.path`. That residual `%` is
         // the double-encoding signal — decode one more layer. A filename that
@@ -1112,7 +1112,7 @@ fileprivate final class MarkdownNSRenderer {
         // existence check (subPathCandidates) remains the final disambiguator.
         guard base.path.contains("%"),
               let once = destination.removingPercentEncoding,
-              once.hasPrefix("minis://"),
+              once.hasPrefix("i://"),
               let fixed = URL(string: once) else {
             return base
         }
@@ -1139,7 +1139,7 @@ fileprivate final class MarkdownNSRenderer {
             codeAttrs[.foregroundColor] = theme.inlineCodeColor
             codeAttrs[.inlineCodeBackground] = true
             codeAttrs[.inlineCodeText] = code
-            // Set .backgroundColor to trigger fillBackgroundRectArray in MinisLayoutManager
+            // Set .backgroundColor to trigger fillBackgroundRectArray in ILayoutManager
             // The actual color is drawn there with rounded corners; this just triggers the callback.
             codeAttrs[.backgroundColor] = theme.inlineCodeBackground
             // Add hair spaces for visual padding inside the background highlight.
@@ -1179,17 +1179,17 @@ fileprivate final class MarkdownNSRenderer {
         case .image(let source, let children):
             let ext = URL(string: source)?.pathExtension.lowercased() ?? ""
             let altText = children.plainText
-            imgLogger.info("[MinisImage][InlineParse] .image node src=\(source) ext=\(ext) alt=\(altText)")
+            imgLogger.info("[IImage][InlineParse] .image node src=\(source) ext=\(ext) alt=\(altText)")
             if nativeAudioExts.contains(ext) {
                 return renderAudioAttachment(source: source)
             } else if nativeVideoExts.contains(ext) {
                 return renderVideoAttachment(source: source)
             } else if nativeImageExts.contains(ext) || ext.isEmpty {
-                imgLogger.info("[MinisImage][InlineParse] routing to IMAGE attachment src=\(source)")
+                imgLogger.info("[IImage][InlineParse] routing to IMAGE attachment src=\(source)")
                 return renderImageAttachment(source: source)
             } else {
                 // Unknown extension — render as image attachment (best guess)
-                imgLogger.info("[MinisImage][InlineParse] unknown ext=\(ext), routing to IMAGE attachment (best guess) src=\(source)")
+                imgLogger.info("[IImage][InlineParse] unknown ext=\(ext), routing to IMAGE attachment (best guess) src=\(source)")
                 return renderImageAttachment(source: source)
             }
 
@@ -1209,7 +1209,7 @@ fileprivate final class MarkdownNSRenderer {
 
     // MARK: Helpers
 
-    /// Per-depth indent: 3pt bar + 10pt leading padding (matches minisChat blockquote padding)
+    /// Per-depth indent: 3pt bar + 10pt leading padding (matches iChat blockquote padding)
     private static let quoteIndentPerLevel: CGFloat = 13
     private static let listIndentPerLevel: CGFloat = 24
 
@@ -2137,15 +2137,15 @@ final class TableAttachment: NSTextAttachment {
             // and the standard `.backgroundColor` (the rect range the painter
             // keys off). Two cell render paths consume this:
             //   - Link cells -> TableCellTextView, now backed by a
-            //     MinisLayoutManager whose fillBackgroundRectArray draws the
+            //     ILayoutManager whose fillBackgroundRectArray draws the
             //     same rounded rect as body inline code (theme.inlineCodeCornerRadius=5).
             //   - Link-inert cells -> TableCellLabel, which has no layout
             //     manager; it strips `.backgroundColor` (to avoid the square
             //     fill) and paints the rounded background itself in drawText.
-            // Both resolve minisInlineCodeBackgroundColor at draw time and
+            // Both resolve iInlineCodeBackgroundColor at draw time and
             // repaint on trait changes, so light/dark stay correct.
             codeAttrs[.inlineCodeBackground] = true
-            codeAttrs[.backgroundColor] = minisInlineCodeBackgroundColor
+            codeAttrs[.backgroundColor] = iInlineCodeBackgroundColor
             return NSAttributedString(string: code, attributes: codeAttrs)
         case .html(let h):
             return NSAttributedString(string: h, attributes: attrs)
@@ -2281,7 +2281,7 @@ final class TableAttachment: NSTextAttachment {
             guard let self else { return }
             UIPasteboard.general.string = self.plainText()
             // [T-toast-feedback] Confirm the copy succeeded.
-            MinisToast.show(String(localized: "Table copied"))
+            IToast.show(String(localized: "Table copied"))
         }
 
         // [T-ios-copy-table-image] Render the FULL table (all rows/cols, not
@@ -2339,7 +2339,7 @@ final class TableAttachment: NSTextAttachment {
             }
             UIPasteboard.general.image = image
             // [T-toast-feedback] Confirm the image copy succeeded.
-            MinisToast.show(String(localized: "Table image copied"))
+            IToast.show(String(localized: "Table image copied"))
         }
 
         var yOffset: CGFloat = 0
@@ -2630,13 +2630,13 @@ private final class TableCellTextView: UITextView, UITextViewDelegate {
     }
 
     /// [T-ios-table-inline-code-rounded] TextKit1 stack backed by a
-    /// MinisLayoutManager so inline-code spans (marked with
+    /// ILayoutManager so inline-code spans (marked with
     /// `.inlineCodeBackground`) draw the same rounded background as body
     /// inline code via fillBackgroundRectArray. The default UITextView layout
     /// manager only paints square `.backgroundColor`.
     convenience init() {
         let textStorage = NSTextStorage()
-        let layoutManager = MinisLayoutManager()
+        let layoutManager = ILayoutManager()
         let textContainer = NSTextContainer()
         textContainer.lineFragmentPadding = 0
         textContainer.widthTracksTextView = true
@@ -2895,7 +2895,7 @@ private final class TableCellLabel: UILabel, UIGestureRecognizerDelegate, UICont
     // `.backgroundColor` from the displayed text (keeping `.inlineCodeBackground`
     // as the range marker) and paint rounded rects ourselves in drawText.
     // `selectableAttributedText` is left untouched — the promoted UITextView
-    // keeps `.backgroundColor` so its MinisLayoutManager painter still fires.
+    // keeps `.backgroundColor` so its ILayoutManager painter still fires.
 
     override var attributedText: NSAttributedString? {
         get { super.attributedText }
@@ -2951,7 +2951,7 @@ private final class TableCellLabel: UILabel, UIGestureRecognizerDelegate, UICont
         let usedHeight = manager.usedRect(for: container).height
         let yOffset = max(0, (bounds.height - usedHeight) / 2)
 
-        let bgColor = minisInlineCodeBackgroundColor.resolvedColor(with: traitCollection)
+        let bgColor = iInlineCodeBackgroundColor.resolvedColor(with: traitCollection)
         ctx.saveGState()
         ctx.setFillColor(bgColor.cgColor)
         for range in codeRanges {
@@ -3444,7 +3444,7 @@ final class ImageAttachment: NSTextAttachment {
     /// The maxPixelSize used for the current loadedImage (0 = initial full load).
     private var downsampledAtPixelSize: CGFloat = 0
     private var isLoading = false
-    /// Set when a minis:// file was not found; allows retry on next render.
+    /// Set when a i:// file was not found; allows retry on next render.
     private var fileNotFound = false
     /// Number of file-not-found retries remaining (prevents infinite polling).
     private var retriesRemaining = 15
@@ -3473,9 +3473,9 @@ final class ImageAttachment: NSTextAttachment {
 
     /// Rewrite a markdown image source so relative paths resolve against
     /// the active session's workspace directory. Paths that already carry
-    /// a URL scheme (`http`, `https`, `minis`, `file`, …) are returned
+    /// a URL scheme (`http`, `https`, `i`, `file`, …) are returned
     /// unchanged. Bare filenames and relative paths (e.g. `foo.png`,
-    /// `./foo.png`, `subdir/bar.jpg`) become `minis://workspace/<path>`
+    /// `./foo.png`, `subdir/bar.jpg`) become `i://workspace/<path>`
     /// with non-ASCII segments percent-encoded so `URL(string:)` parses
     /// them cleanly.
     static func canonicalizeMarkdownImageSource(_ src: String) -> String {
@@ -3484,13 +3484,13 @@ final class ImageAttachment: NSTextAttachment {
             let maybeScheme = src[src.startIndex..<colon]
             // Only accept alphabetic-prefixed schemes (RFC 3986 § 3.1).
             if !maybeScheme.isEmpty && maybeScheme.allSatisfy({ $0.isLetter }) {
-                // [T-minis-url-fullwidth-pipe-ios] Exception: a minis:// source the
+                // [T-i-url-fullwidth-pipe-ios] Exception: a i:// source the
                 // model emitted with raw non-ASCII in the path (e.g. `｜`, CJK) that
                 // URL(string:) can't parse. Re-encode the path so the image resolves
                 // instead of bailing with a dead source. Idempotent for already-
-                // encoded URLs (encodeRawMinisURL decodes-then-encodes per segment).
-                if src.hasPrefix("minis://"), URL(string: src) == nil,
-                   let fixed = encodeRawMinisURL(src) {
+                // encoded URLs (encodeRawIURL decodes-then-encodes per segment).
+                if src.hasPrefix("i://"), URL(string: src) == nil,
+                   let fixed = encodeRawIURL(src) {
                     return fixed.absoluteString
                 }
                 return src
@@ -3506,7 +3506,7 @@ final class ImageAttachment: NSTextAttachment {
         let encoded = segments.map { seg -> String in
             String(seg).addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? String(seg)
         }.joined(separator: "/")
-        return "minis://workspace/\(encoded)"
+        return "i://workspace/\(encoded)"
     }
 
     /// Drop the currently-loaded bitmap so the next `beginLoadingIfNeeded`
@@ -3655,115 +3655,115 @@ final class ImageAttachment: NSTextAttachment {
 
     func beginLoadingIfNeeded() {
         guard loadedImage == nil, !isLoading else {
-            imgLogger.info("[MinisImage][Load] skip src=\(self.source) alreadyLoaded=\(self.loadedImage != nil) isLoading=\(self.isLoading)")
+            imgLogger.info("[IImage][Load] skip src=\(self.source) alreadyLoaded=\(self.loadedImage != nil) isLoading=\(self.isLoading)")
             return
         }
         // Reset fileNotFound so we don't spin; it will be set again if still missing.
         fileNotFound = false
         guard retriesRemaining > 0 else {
-            imgLogger.warning("[MinisImage][Load] no retries left src=\(self.source)")
+            imgLogger.warning("[IImage][Load] no retries left src=\(self.source)")
             return
         }
         retriesRemaining -= 1
         isLoading = true
-        // Canonicalize scheme-less / relative sources to minis://workspace/…
+        // Canonicalize scheme-less / relative sources to i://workspace/…
         // so the rest of the pipeline (cache key, resolve, fingerprint)
         // treats them uniformly. Agents writing plain markdown like
         // `![img](foo.png)` or `![img](subdir/foo.png)` land here.
         let canonicalSrc = Self.canonicalizeMarkdownImageSource(source)
         if canonicalSrc != source {
-            imgLogger.info("[MinisImage][Load] canonicalized src=\(self.source) → \(canonicalSrc)")
+            imgLogger.info("[IImage][Load] canonicalized src=\(self.source) → \(canonicalSrc)")
         }
         let parsedURL = URL(string: canonicalSrc)
-        imgLogger.info("[MinisImage][Load] START src=\(canonicalSrc) scheme=\(parsedURL?.scheme ?? "nil") host=\(parsedURL?.host ?? "nil") path=\(parsedURL?.path ?? "nil") ext=\(parsedURL?.pathExtension ?? "nil") retriesRemaining=\(self.retriesRemaining)")
+        imgLogger.info("[IImage][Load] START src=\(canonicalSrc) scheme=\(parsedURL?.scheme ?? "nil") host=\(parsedURL?.host ?? "nil") path=\(parsedURL?.path ?? "nil") ext=\(parsedURL?.pathExtension ?? "nil") retriesRemaining=\(self.retriesRemaining)")
 
         // Fingerprint-keyed cache so an in-place rewrite of the same
-        // minis:// path produces a different key and falls through to
+        // i:// path produces a different key and falls through to
         // a fresh decode.
-        let fpKey = minisMediaCacheKey(for: canonicalSrc)
+        let fpKey = iMediaCacheKey(for: canonicalSrc)
         if let cached = NativeMediaImageCache.shared.image(for: fpKey) {
-            imgLogger.info("[MinisImage][Load] MEMORY CACHE HIT src=\(canonicalSrc) size=\(cached.size.width)x\(cached.size.height)")
+            imgLogger.info("[IImage][Load] MEMORY CACHE HIT src=\(canonicalSrc) size=\(cached.size.width)x\(cached.size.height)")
             loadedImage = cached
             loadedFingerprint = fpKey
             isLoading = false
             onLoad?()
             // Memory-cache hit still grows the cell: placeholder bounds →
             // image bounds at the recorded size. Cell needs to re-measure.
-            NotificationCenter.default.post(name: .minisAttachmentSizeChanged, object: canonicalSrc)
+            NotificationCenter.default.post(name: .iAttachmentSizeChanged, object: canonicalSrc)
             return
         }
-        imgLogger.info("[MinisImage][Load] MEMORY CACHE MISS src=\(canonicalSrc) — will load from disk/network")
+        imgLogger.info("[IImage][Load] MEMORY CACHE MISS src=\(canonicalSrc) — will load from disk/network")
 
         let src = canonicalSrc
-        let isMinisURL = URL(string: src).map { $0.scheme == "minis" } ?? false
-        // [T-ios-failed-image-refetch-storm] For remote (non-minis) URLs that
+        let isIURL = URL(string: src).map { $0.scheme == "i" } ?? false
+        // [T-ios-failed-image-refetch-storm] For remote (non-i) URLs that
         // failed recently, don't re-dispatch a network fetch on every cell
-        // recycle — render the placeholder and bail. minis:// is exempt: those
+        // recycle — render the placeholder and bail. i:// is exempt: those
         // are local files that may be written shortly after the markdown
         // references them, so the retriesRemaining-scheduled flow must stay.
-        if !isMinisURL, NativeMediaImageCache.shared.isRecentlyFailed(src) {
-            imgLogger.info("[MinisImage][Load] SUPPRESSED (recent failure within TTL) src=\(src)")
+        if !isIURL, NativeMediaImageCache.shared.isRecentlyFailed(src) {
+            imgLogger.info("[IImage][Load] SUPPRESSED (recent failure within TTL) src=\(src)")
             isLoading = false
             fileNotFound = true
             return
         }
-        imgLogger.info("[MinisImage][Load] dispatching async load src=\(src) isMinisURL=\(isMinisURL)")
+        imgLogger.info("[IImage][Load] dispatching async load src=\(src) isIURL=\(isIURL)")
         Task.detached(priority: .userInitiated) {
             var fileURL: URL?
             let img: UIImage?
-            if let url = URL(string: src), url.scheme == "minis" {
-                imgLogger.info("[MinisImage][Load] resolving minis:// URL src=\(src) host=\(url.host ?? "nil") path=\(url.path)")
-                if let resolved = resolveMinisFileURLForNativeText(url: url) {
-                    imgLogger.info("[MinisImage][Load] minis:// resolved to localPath=\(resolved.path)")
+            if let url = URL(string: src), url.scheme == "i" {
+                imgLogger.info("[IImage][Load] resolving i:// URL src=\(src) host=\(url.host ?? "nil") path=\(url.path)")
+                if let resolved = resolveIFileURLForNativeText(url: url) {
+                    imgLogger.info("[IImage][Load] i:// resolved to localPath=\(resolved.path)")
                     fileURL = resolved
                     if let data = try? Data(contentsOf: resolved) {
-                        imgLogger.info("[MinisImage][Load] read \(data.count) bytes from localPath=\(resolved.path)")
+                        imgLogger.info("[IImage][Load] read \(data.count) bytes from localPath=\(resolved.path)")
                         let downsampled = downsampleImageData(data)
                         if let downsampled {
-                            imgLogger.info("[MinisImage][Load] downsample OK src=\(src) resultSize=\(downsampled.size.width)x\(downsampled.size.height)")
+                            imgLogger.info("[IImage][Load] downsample OK src=\(src) resultSize=\(downsampled.size.width)x\(downsampled.size.height)")
                         } else {
-                            imgLogger.error("[MinisImage][Load] downsample FAILED src=\(src) dataSize=\(data.count)")
+                            imgLogger.error("[IImage][Load] downsample FAILED src=\(src) dataSize=\(data.count)")
                         }
                         img = downsampled
                     } else {
-                        imgLogger.error("[MinisImage][Load] Data(contentsOf:) FAILED localPath=\(resolved.path)")
+                        imgLogger.error("[IImage][Load] Data(contentsOf:) FAILED localPath=\(resolved.path)")
                         img = nil
                     }
                 } else {
-                    imgLogger.warning("[MinisImage][Load] resolveMinisFileURLForNativeText returned nil src=\(src)")
+                    imgLogger.warning("[IImage][Load] resolveIFileURLForNativeText returned nil src=\(src)")
                     img = nil
                 }
             } else if let url = URL(string: src), url.scheme == "http" || url.scheme == "https" {
-                imgLogger.info("[MinisImage][Load] fetching HTTP(S) url=\(src)")
+                imgLogger.info("[IImage][Load] fetching HTTP(S) url=\(src)")
                 if let data = try? Data(contentsOf: url) {
                     // HTTP images: no local file URL for re-downsample (network-only)
-                    imgLogger.info("[MinisImage][Load] HTTP fetched \(data.count) bytes src=\(src)")
+                    imgLogger.info("[IImage][Load] HTTP fetched \(data.count) bytes src=\(src)")
                     img = downsampleImageData(data)
                 } else {
-                    imgLogger.warning("[MinisImage][Load] HTTP fetch FAILED src=\(src)")
+                    imgLogger.warning("[IImage][Load] HTTP fetch FAILED src=\(src)")
                     img = nil
                 }
             } else if let url = URL(string: src) {
                 // file URL or relative
-                imgLogger.info("[MinisImage][Load] trying file/relative URL scheme=\(url.scheme ?? "nil") path=\(url.path)")
+                imgLogger.info("[IImage][Load] trying file/relative URL scheme=\(url.scheme ?? "nil") path=\(url.path)")
                 fileURL = url
                 if let data = try? Data(contentsOf: url) {
-                    imgLogger.info("[MinisImage][Load] file loaded \(data.count) bytes src=\(src)")
+                    imgLogger.info("[IImage][Load] file loaded \(data.count) bytes src=\(src)")
                     img = downsampleImageData(data)
                 } else {
-                    imgLogger.warning("[MinisImage][Load] file load FAILED src=\(src)")
+                    imgLogger.warning("[IImage][Load] file load FAILED src=\(src)")
                     img = nil
                 }
             } else {
-                imgLogger.error("[MinisImage][Load] cannot parse URL src=\(src)")
+                imgLogger.error("[IImage][Load] cannot parse URL src=\(src)")
                 img = nil
             }
 
             // Recompute the fingerprint post-load in case the file was
             // rewritten between the pre-check at entry and this point.
-            let postLoadKey = minisMediaCacheKey(for: src)
+            let postLoadKey = iMediaCacheKey(for: src)
             if let img {
-                imgLogger.info("[MinisImage][Load] SUCCESS src=\(src) finalSize=\(img.size.width)x\(img.size.height) — caching in memory")
+                imgLogger.info("[IImage][Load] SUCCESS src=\(src) finalSize=\(img.size.width)x\(img.size.height) — caching in memory")
                 NativeMediaImageCache.shared.set(img, for: postLoadKey)
                 // Also record the size (keyed by canonical source) so future
                 // ImageAttachment instances can compute correct bounds before
@@ -3771,15 +3771,15 @@ final class ImageAttachment: NSTextAttachment {
                 NativeMediaImageCache.shared.recordSize(img.size, forSource: src)
                 // [T-ios-failed-image-refetch-storm] A previously-failed URL
                 // that now succeeded — clear its negative-cache entry.
-                if !isMinisURL { NativeMediaImageCache.shared.clearFailure(src) }
+                if !isIURL { NativeMediaImageCache.shared.clearFailure(src) }
             } else {
-                imgLogger.warning("[MinisImage][Load] FAILED src=\(src) — no image produced")
+                imgLogger.warning("[IImage][Load] FAILED src=\(src) — no image produced")
                 // [T-ios-failed-image-refetch-storm] Negative-cache remote
                 // failures so cell recycling during scroll doesn't re-fetch the
                 // same broken URL every recycle (the image-session decel storm).
-                // minis:// is exempt — its not-yet-written-file case is handled
+                // i:// is exempt — its not-yet-written-file case is handled
                 // by the retriesRemaining-scheduled retry below.
-                if !isMinisURL { NativeMediaImageCache.shared.recordFailure(src) }
+                if !isIURL { NativeMediaImageCache.shared.recordFailure(src) }
             }
 
             await MainActor.run {
@@ -3787,16 +3787,16 @@ final class ImageAttachment: NSTextAttachment {
                 self.loadedFingerprint = img != nil ? postLoadKey : nil
                 self.resolvedFileURL = fileURL
                 self.isLoading = false
-                if img == nil && isMinisURL && self.retriesRemaining > 0 {
-                    imgLogger.info("[MinisImage][Load] RETRY scheduled src=\(src) retriesRemaining=\(self.retriesRemaining)")
+                if img == nil && isIURL && self.retriesRemaining > 0 {
+                    imgLogger.info("[IImage][Load] RETRY scheduled src=\(src) retriesRemaining=\(self.retriesRemaining)")
                     self.fileNotFound = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                         guard let self, self.fileNotFound else { return }
                         self.beginLoadingIfNeeded()
                     }
                 } else {
-                    if img == nil && isMinisURL {
-                        imgLogger.error("[MinisImage][Load] GAVE UP src=\(src) — all retries exhausted")
+                    if img == nil && isIURL {
+                        imgLogger.error("[IImage][Load] GAVE UP src=\(src) — all retries exhausted")
                     }
                     self.onLoad?()
                     if img != nil {
@@ -3804,7 +3804,7 @@ final class ImageAttachment: NSTextAttachment {
                         // Mirrors the fix in VideoAttachment — without this,
                         // the cell stays at the 200pt placeholder height
                         // until an unrelated event triggers a reconfigure.
-                        NotificationCenter.default.post(name: .minisAttachmentSizeChanged, object: src)
+                        NotificationCenter.default.post(name: .iAttachmentSizeChanged, object: src)
                     }
                 }
             }
@@ -3820,10 +3820,10 @@ final class ImageAttachment: NSTextAttachment {
         // updateAttachmentViews reuse path.
         AppLogger(category: "AttachHotPath").info("[IMG][MAKEVIEW] #\(self.makeViewCallCount) src=\(Self.shortSrc(self.source)) ptr=\(ObjectIdentifier(self).hashValue & 0xFFFFFF) hasImg=\(self.loadedImage != nil) width=\(String(format: "%.0f", width))")
         if let img = loadedImage {
-            imgLogger.info("[MinisImage][MakeView] rendering LOADED image src=\(self.source) imgSize=\(img.size.width)x\(img.size.height) containerWidth=\(width)")
+            imgLogger.info("[IImage][MakeView] rendering LOADED image src=\(self.source) imgSize=\(img.size.width)x\(img.size.height) containerWidth=\(width)")
             return makeImageView(img, width: width)
         } else {
-            imgLogger.info("[MinisImage][MakeView] rendering PLACEHOLDER src=\(self.source) containerWidth=\(width) fileNotFound=\(self.fileNotFound) retriesRemaining=\(self.retriesRemaining)")
+            imgLogger.info("[IImage][MakeView] rendering PLACEHOLDER src=\(self.source) containerWidth=\(width) fileNotFound=\(self.fileNotFound) retriesRemaining=\(self.retriesRemaining)")
             return makePlaceholderView(width: width)
         }
     }
@@ -3838,7 +3838,7 @@ final class ImageAttachment: NSTextAttachment {
         let aspect = img.size.height / max(img.size.width, 1)
         let maxH = UIScreen.main.bounds.height / 2
         let h = min(imgWidth * aspect, maxH)
-        imgLogger.info("[MinisImage][MakeView] layout src=\(self.source) displayWidth=\(imgWidth) displayHeight=\(h) aspect=\(aspect) maxImageWidth=\(Self.maxImageWidth)")
+        imgLogger.info("[IImage][MakeView] layout src=\(self.source) displayWidth=\(imgWidth) displayHeight=\(h) aspect=\(aspect) maxImageWidth=\(Self.maxImageWidth)")
 
         let shadowInset: CGFloat = Self.imageShadowInset
         // Container == the attachment box (image + shadow room on all sides).
@@ -4011,8 +4011,8 @@ final class VideoAttachment: NSTextAttachment {
         let src = source
         Task.detached(priority: .userInitiated) {
             var fileURL: URL?
-            if let url = URL(string: src), url.scheme == "minis" {
-                fileURL = resolveMinisFileURLForNativeText(url: url)
+            if let url = URL(string: src), url.scheme == "i" {
+                fileURL = resolveIFileURLForNativeText(url: url)
             } else if let url = URL(string: src) {
                 fileURL = url
             }
@@ -4037,7 +4037,7 @@ final class VideoAttachment: NSTextAttachment {
                     // until some unrelated event (scroll, reconfigure) forces
                     // a re-measure (the "appears half-rendered, then snaps
                     // 10s later" bug).
-                    NotificationCenter.default.post(name: .minisAttachmentSizeChanged, object: src)
+                    NotificationCenter.default.post(name: .iAttachmentSizeChanged, object: src)
                 }
                 return
             }
@@ -4065,7 +4065,7 @@ final class VideoAttachment: NSTextAttachment {
                 self.isLoading = false
                 self.onLoad?()
                 if thumb != nil {
-                    NotificationCenter.default.post(name: .minisAttachmentSizeChanged, object: src)
+                    NotificationCenter.default.post(name: .iAttachmentSizeChanged, object: src)
                 }
             }
         }
@@ -4174,9 +4174,9 @@ private final class VideoTapGesture: UITapGestureRecognizer {
         // Save scroll position to restore after dismiss.
         let scrollView = self.view?.enclosingScrollView()
         let savedOffset = scrollView?.contentOffset
-        // Reuse the shared MinisVideoFullscreenPlayer from AIChatView.
+        // Reuse the shared IVideoFullscreenPlayer from AIChatView.
         let playerView = ScrollRestoringDismissWrapper(scrollView: scrollView, savedOffset: savedOffset) {
-            MinisVideoFullscreenPlayer(fileURL: url)
+            IVideoFullscreenPlayer(fileURL: url)
         }
         let hosting = UIHostingController(rootView: playerView)
         hosting.modalPresentationStyle = .overFullScreen
@@ -4219,8 +4219,8 @@ final class AudioAttachment: NSTextAttachment {
         } else {
             cleanSource = source
         }
-        if let url = URL(string: cleanSource), url.scheme == "minis" {
-            resolvedURL = resolveMinisFileURLForNativeText(url: url)
+        if let url = URL(string: cleanSource), url.scheme == "i" {
+            resolvedURL = resolveIFileURLForNativeText(url: url)
         } else if let url = URL(string: cleanSource) {
             resolvedURL = url
         }
@@ -4330,7 +4330,7 @@ private final class AudioTapGesture: UITapGestureRecognizer {
         guard let url = fileURL else { return }
         guard let presenter = self.view?.nearestViewController() else { return }
         // Playback continues seamlessly — global player is shared with preview
-        let preview = MinisAudioPreviewView(fileURL: url)
+        let preview = IAudioPreviewView(fileURL: url)
         let hosting = UIHostingController(rootView: preview)
         if let sheet = hosting.sheetPresentationController {
             sheet.detents = [.large()]
@@ -4461,12 +4461,12 @@ private extension Array where Element == InlineNode {
     }
 }
 
-// MARK: - MinisLayoutManager
+// MARK: - ILayoutManager
 
 /// Custom NSLayoutManager subclass. Originally added for inline-code rounded
 /// background rendering (see `fillBackgroundRectArray` below). Kept as a
 /// dedicated class so other layout-manager hooks can be added in one place.
-final class MinisLayoutManager: NSLayoutManager {
+final class ILayoutManager: NSLayoutManager {
 
     override func fillBackgroundRectArray(_ rectArray: UnsafePointer<CGRect>, count rectCount: Int, forCharacterRange charRange: NSRange, color: UIColor) {
         // Check if this range has inline code background
@@ -4491,7 +4491,7 @@ final class MinisLayoutManager: NSLayoutManager {
         // against the current traits explicitly so the CGColor is correct even
         // if UITraitCollection.current isn't the drawing view's during this
         // TextKit callback.
-        let bgColor = minisInlineCodeBackgroundColor.resolvedColor(with: UITraitCollection.current)
+        let bgColor = iInlineCodeBackgroundColor.resolvedColor(with: UITraitCollection.current)
         context.saveGState()
         context.setFillColor(bgColor.cgColor)
 
@@ -4757,7 +4757,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
     init() {
         // Use TextKit 1 for reliable NSLayoutManager overrides
         let textStorage = NSTextStorage()
-        let layoutManager = MinisLayoutManager()
+        let layoutManager = ILayoutManager()
         let textContainer = NSTextContainer()
         textContainer.lineFragmentPadding = 0
         textContainer.widthTracksTextView = true
@@ -5281,13 +5281,13 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
         onCopyScreenshot?()
     }
 
-    // MARK: - [T-selection-menu-minis-tts] Minis TTS menu actions
+    // MARK: - [T-selection-menu-i-tts] I TTS menu actions
 
-    /// Read the WHOLE reply from the start via the Minis TTS stack
+    /// Read the WHOLE reply from the start via the I TTS stack
     /// (vm.readReplyFromStart). Plumbed from the cell bridge; nil while the
     /// reply is still streaming (would clash with live streaming TTS).
     var onReadAloud: (() -> Void)?
-    /// Speak an arbitrary text snippet via the Minis TTS stack (vm.speakText).
+    /// Speak an arbitrary text snippet via the I TTS stack (vm.speakText).
     var onSpeakText: ((String) -> Void)?
 
     @objc func readReplyFromMenu(_ sender: Any?) {
@@ -5349,8 +5349,8 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
 
     override func buildMenu(with builder: UIMenuBuilder) {
         super.buildMenu(with: builder)
-        // [T-selection-menu-minis-tts] Remove the SYSTEM speech menu ("Speak…"
-        // / "Spell") — it reads with the OS voice, bypassing the Minis TTS
+        // [T-selection-menu-i-tts] Remove the SYSTEM speech menu ("Speak…"
+        // / "Spell") — it reads with the OS voice, bypassing the I TTS
         // stack (provider voices, sanitizer, fail-over). Replaced below with
         // our own Read Selection / Read Reply entries.
         builder.remove(menu: .speech)
@@ -5372,7 +5372,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
                 action: #selector(copyScreenshotFromMenu(_:))
             ))
         }
-        // [T-selection-menu-minis-tts] Minis-owned read-aloud entries. "Read
+        // [T-selection-menu-i-tts] I-owned read-aloud entries. "Read
         // Selection" speaks just the selected range; "Read from Start" replays
         // the whole reply — both through the in-app TTS stack.
         // Matching speaker glyph family so the two read-aloud entries read as
@@ -5650,7 +5650,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
         var reusedIds: Set<ObjectIdentifier> = []
 
         guard let textStorage = self.textStorage as? NSTextStorage,
-              let layoutManager = self.layoutManager as? MinisLayoutManager else {
+              let layoutManager = self.layoutManager as? ILayoutManager else {
             for view in attachmentViews { view.removeFromSuperview() }
             attachmentViews.removeAll()
             attachmentViewMap.removeAll()
@@ -5868,7 +5868,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
             } else if let table = attachment as? TableAttachment {
                 // Re-wire every render: the prior closure may have captured a
                 // since-deallocated coordinator (`[weak self] → nil`), in which
-                // case taps fell through to UIApplication.open and minis://
+                // case taps fell through to UIApplication.open and i://
                 // links failed silently. Closure assignment is cheap.
                 table.onOpenURL = { [weak self] url in
                     if let coordinator = self?.delegate as? SelectableMarkdownView.Coordinator,
@@ -6056,7 +6056,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
         // cell to grow before the typesetter can fit the new layout.
         //
         // (a) invalidate the layout so ensureLayout will re-typeset.
-        if let layoutManager = self.layoutManager as? MinisLayoutManager,
+        if let layoutManager = self.layoutManager as? ILayoutManager,
            let textStorage = self.textStorage as? NSTextStorage {
             let full = NSRange(location: 0, length: textStorage.length)
             layoutManager.invalidateLayout(forCharacterRange: full, actualCharacterRange: nil)
@@ -6314,7 +6314,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
         // is identical, because UIKit doesn't equality-check size on
         // NSTextContainer. In the BoundsChangeFading path that's the
         // recursion seed for the watchdog hang seen in
-        // Minis-2026-05-13-084827.ips: every layout pass re-triggers a full
+        // I-2026-05-13-084827.ips: every layout pass re-triggers a full
         // fillLayoutHole on tables, which calls back into attachmentBounds,
         // which re-enters typesetting.
         if textContainer.size.height < CGFloat.greatestFiniteMagnitude {
@@ -6359,7 +6359,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
                         ranges.append(range)
                     }
                 }
-                if !ranges.isEmpty, let lm = self.layoutManager as? MinisLayoutManager {
+                if !ranges.isEmpty, let lm = self.layoutManager as? ILayoutManager {
                     for r in ranges {
                         lm.invalidateLayout(forCharacterRange: r, actualCharacterRange: nil)
                     }
@@ -6389,7 +6389,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
         // first-load case where updateAttachmentViews() runs before sizeThatFits
         // has set the correct textContainer size.
         guard !attachmentViews.isEmpty,
-              let layoutManager = self.layoutManager as? MinisLayoutManager,
+              let layoutManager = self.layoutManager as? ILayoutManager,
               let textStorage = self.textStorage as? NSTextStorage else { return }
         let fullRange = NSRange(location: 0, length: textStorage.length)
 
@@ -6869,7 +6869,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
     private func drawBlockquoteBars(in rect: CGRect) {
         guard let context = UIGraphicsGetCurrentContext(),
               let textStorage = self.textStorage as? NSTextStorage,
-              let layoutManager = self.layoutManager as? MinisLayoutManager else { return }
+              let layoutManager = self.layoutManager as? ILayoutManager else { return }
 
         let theme = SelectableMarkdownTheme()
         let fullRange = NSRange(location: 0, length: textStorage.length)
@@ -6938,7 +6938,7 @@ final class SelectableMarkdownTextView: UITextView, UIGestureRecognizerDelegate 
         //
         // The same fix was applied to MarkdownRenderView in e235132f, but that
         // view has no call sites; this is the copy the chat actually renders
-        // through, which is why OpenMinis#123 stayed reproducible after it.
+        // through, which is why I#123 stayed reproducible after it.
         for span in spans {
             let height = span.rect.maxY - span.rect.minY
             guard height > 1 else { continue }
@@ -6976,9 +6976,9 @@ struct SelectableMarkdownView: UIViewRepresentable {
     var onTapBlank: ((CGPoint) -> Void)?
     /// Called when the user picks "Copy Screenshot" from the text selection menu.
     var onCopyScreenshot: (() -> Void)?
-    /// [T-selection-menu-minis-tts] "Read from Start" (whole reply) via Minis TTS.
+    /// [T-selection-menu-i-tts] "Read from Start" (whole reply) via I TTS.
     var onReadAloud: (() -> Void)?
-    /// [T-selection-menu-minis-tts] "Read Selection" (selected text) via Minis TTS.
+    /// [T-selection-menu-i-tts] "Read Selection" (selected text) via I TTS.
     var onSpeakText: ((String) -> Void)?
     @Environment(\.openURL) private var openURL
 
@@ -7083,7 +7083,7 @@ struct SelectableMarkdownView: UIViewRepresentable {
                         ranges.append(range)
                     }
                 }
-                if !ranges.isEmpty, let lm = textView.layoutManager as? MinisLayoutManager {
+                if !ranges.isEmpty, let lm = textView.layoutManager as? ILayoutManager {
                     for r in ranges {
                         lm.invalidateLayout(forCharacterRange: r, actualCharacterRange: nil)
                     }
@@ -7309,11 +7309,11 @@ struct SelectableMarkdownView: UIViewRepresentable {
         if !imageMatches.isEmpty {
             for match in imageMatches {
                 let matchStr = String(markdown[match])
-                imgLogger.info("[MinisImage][StreamParse] image markdown found: \(matchStr)")
+                imgLogger.info("[IImage][StreamParse] image markdown found: \(matchStr)")
             }
             let imageBlockCount = content.blocks.flatMap { Self.collectImageNodes(from: $0) }.count
             if imageBlockCount > 0 {
-                imgLogger.info("[MinisImage][StreamParse] parsed \(imageBlockCount) image node(s) from \(content.blocks.count) block(s), markdownLen=\(markdown.count)")
+                imgLogger.info("[IImage][StreamParse] parsed \(imageBlockCount) image node(s) from \(content.blocks.count) block(s), markdownLen=\(markdown.count)")
             }
         }
 
@@ -7407,16 +7407,16 @@ struct SelectableMarkdownView: UIViewRepresentable {
         //   2. invalidate any stale bitmap if the underlying file was
         //      rewritten since the attachment last loaded (size+mtime
         //      fingerprint mismatch). Skips the on-disk stat for
-        //      non-minis schemes.
+        //      non-i schemes.
         attributed.enumerateAttribute(.attachment,
                                       in: NSRange(location: 0, length: attributed.length),
                                       options: []) { value, _, _ in
             guard let att = value as? ImageAttachment else { return }
             if let messageId { att.messageId = messageId }
             if let loadedFp = att.loadedFingerprint {
-                let currentFp = minisMediaCacheKey(for: att.source)
+                let currentFp = iMediaCacheKey(for: att.source)
                 if loadedFp != currentFp {
-                    imgLogger.info("[MinisImage][CachedAttr] FINGERPRINT CHANGED src=\(att.source) old=\(loadedFp) new=\(currentFp) — invalidating cached image")
+                    imgLogger.info("[IImage][CachedAttr] FINGERPRINT CHANGED src=\(att.source) old=\(loadedFp) new=\(currentFp) — invalidating cached image")
                     att.invalidateLoadedImage()
                 }
             }
@@ -7826,7 +7826,7 @@ struct SelectableMarkdownView: UIViewRepresentable {
         // fixed-height attachments (tool capsules, code/shell blocks, images):
         // those blocks don't grow with character count, so the estimate came
         // out too short and the NEXT cell overlapped the tail of a finished
-        // message (user report, macOS, "Minis Feedback Review" — the shell
+        // message (user report, macOS, "I Feedback Review" — the shell
         // preview + tool capsule covered the body text of the last message).
         // Gate it back off so every streaming sizeThatFits takes a real
         // measurement; the hang de4d3df6 fixed is the tradeoff to revisit with
@@ -7871,7 +7871,7 @@ struct SelectableMarkdownView: UIViewRepresentable {
         // `addSubview` / `setNeedsLayout` on the live textView during
         // SwiftUI's measurement pass, which causes SwiftUI to re-invoke
         // `sizeThatFits` recursively. The resulting watchdog hang is
-        // recorded in `Minis-2026-05-13-084827.ips` (depth=9 recursion at
+        // recorded in `I-2026-05-13-084827.ips` (depth=9 recursion at
         // `LayoutEngineBox.sizeThatFits`). Measuring on a detached textView
         // keeps the live view's state stable until the subsequent
         // `updateUIView` runs.
@@ -8440,7 +8440,7 @@ struct SelectableMarkdownView: UIViewRepresentable {
         /// attributedText that hasn't been committed to the on-screen
         /// textView yet. Writing pending text into the live `uiView` from
         /// inside `sizeThatFits` is what caused the watchdog hang seen in
-        /// `Minis-2026-05-13-084827.ips`: it rebuilds attachment subviews
+        /// `I-2026-05-13-084827.ips`: it rebuilds attachment subviews
         /// and calls `addSubview` → `setNeedsLayout` on the textView
         /// during SwiftUI's measurement pass, which then triggers SwiftUI
         /// to re-invoke `sizeThatFits` indefinitely.
@@ -8588,76 +8588,76 @@ struct SelectableMarkdownView: UIViewRepresentable {
     }
 }
 
-// MARK: - Minis URL Resolution (bridged from AIChatView)
+// MARK: - I URL Resolution (bridged from AIChatView)
 
-/// Resolves a `minis://` URL to a local file URL.
-/// Keeps resolution behavior aligned with AIChatView's minis resolver.
-private func resolveMinisFileURLForNativeText(url: URL) -> URL? {
-    guard url.scheme == "minis" else { return nil }
+/// Resolves a `i://` URL to a local file URL.
+/// Keeps resolution behavior aligned with AIChatView's i resolver.
+private func resolveIFileURLForNativeText(url: URL) -> URL? {
+    guard url.scheme == "i" else { return nil }
     guard let host = url.host else {
-        imgLogger.warning("[MinisImage][Resolve] no host in URL: \(url.absoluteString)")
+        imgLogger.warning("[IImage][Resolve] no host in URL: \(url.absoluteString)")
         return nil
     }
     // Try the single-decoded subpath first; fall back to a double-decoded
     // variant when an inline-image link arrives double-encoded. This is the
-    // same tolerant resolution the other 4 minis:// resolvers already use; this
+    // same tolerant resolution the other 4 i:// resolvers already use; this
     // one (the inline-markdown image resolver) was the remaining single-decode
     // holdout, so double-encoded non-ASCII inline image names still failed here.
     // [T-ios-file-preview-stale-cache, completing T-fix-double-encoding 2026-06-01]
-    let subPaths = MinisURLPathDecoding.subPathCandidates(for: url)
-    imgLogger.info("[MinisImage][Resolve] BEGIN url=\(url.absoluteString) host=\(host) subPaths=\(subPaths) activeSession=\(AIChatViewModel.activeSessionId ?? "nil")")
+    let subPaths = IURLPathDecoding.subPathCandidates(for: url)
+    imgLogger.info("[IImage][Resolve] BEGIN url=\(url.absoluteString) host=\(host) subPaths=\(subPaths) activeSession=\(AIChatViewModel.activeSessionId ?? "nil")")
     let fm = FileManager.default
 
     // Primary: active session persistent storage
     if let sid = AIChatViewModel.activeSessionId {
         for subPath in subPaths {
-            let persistURL = AIChatViewModel.minisPersistentBase
+            let persistURL = AIChatViewModel.iPersistentBase
                 .appendingPathComponent(sid, isDirectory: true)
                 .appendingPathComponent(host, isDirectory: true)
                 .appendingPathComponent(subPath)
-            imgLogger.info("[MinisImage][Resolve] checking session path=\(persistURL.path)")
+            imgLogger.info("[IImage][Resolve] checking session path=\(persistURL.path)")
             if fm.fileExists(atPath: persistURL.path) {
                 let size = (try? fm.attributesOfItem(atPath: persistURL.path)[.size] as? Int64) ?? -1
-                imgLogger.info("[MinisImage][Resolve] FOUND in active session=\(sid) path=\(persistURL.path) size=\(size)")
+                imgLogger.info("[IImage][Resolve] FOUND in active session=\(sid) path=\(persistURL.path) size=\(size)")
                 return persistURL
             }
         }
-        imgLogger.info("[MinisImage][Resolve] NOT in active session=\(sid)")
+        imgLogger.info("[IImage][Resolve] NOT in active session=\(sid)")
     } else {
-        imgLogger.info("[MinisImage][Resolve] no active session — skipping session lookup")
+        imgLogger.info("[IImage][Resolve] no active session — skipping session lookup")
     }
 
     // Global namespaces (not session-scoped)
     if host == "skills" {
         for subPath in subPaths {
-            let candidate = AIChatViewModel.minisSkillsPersistentDir.appendingPathComponent(subPath)
-            imgLogger.info("[MinisImage][Resolve] checking global skills path=\(candidate.path)")
+            let candidate = AIChatViewModel.iSkillsPersistentDir.appendingPathComponent(subPath)
+            imgLogger.info("[IImage][Resolve] checking global skills path=\(candidate.path)")
             if fm.fileExists(atPath: candidate.path) {
                 let size = (try? fm.attributesOfItem(atPath: candidate.path)[.size] as? Int64) ?? -1
-                imgLogger.info("[MinisImage][Resolve] FOUND global skills path=\(candidate.path) size=\(size)")
+                imgLogger.info("[IImage][Resolve] FOUND global skills path=\(candidate.path) size=\(size)")
                 return candidate
             }
         }
     } else if host == "memory" {
         for subPath in subPaths {
-            let candidate = AIChatViewModel.minisMemoryPersistentDir.appendingPathComponent(subPath)
-            imgLogger.info("[MinisImage][Resolve] checking global memory path=\(candidate.path)")
+            let candidate = AIChatViewModel.iMemoryPersistentDir.appendingPathComponent(subPath)
+            imgLogger.info("[IImage][Resolve] checking global memory path=\(candidate.path)")
             if fm.fileExists(atPath: candidate.path) {
                 let size = (try? fm.attributesOfItem(atPath: candidate.path)[.size] as? Int64) ?? -1
-                imgLogger.info("[MinisImage][Resolve] FOUND global memory path=\(candidate.path) size=\(size)")
+                imgLogger.info("[IImage][Resolve] FOUND global memory path=\(candidate.path) size=\(size)")
                 return candidate
             }
         }
     }
 
-    // [T-ios-minisurl-cross-session-isolation] DO NOT scan all session dirs.
+    // [T-ios-iurl-cross-session-isolation] DO NOT scan all session dirs.
     // This is the main image-render resolve path; the old "scan every session
     // and return the first same-named file" loop was the same P0 isolation
-    // leak fixed in resolveMinisFileURL — session B rendering
-    // model-use-zimage-0.jpg would resolve to session A's image. minis:// is
+    // leak fixed in resolveIFileURL — session B rendering
+    // model-use-zimage-0.jpg would resolve to session A's image. i:// is
     // session-scoped; not-found is the correct result for a cross-session ref.
     //
-    // The rootfs `/var/minis/<host>` fallback is kept ONLY for the global,
+    // The rootfs `/var/i/<host>` fallback is kept ONLY for the global,
     // non-session-scoped namespaces (skills/memory/shared) — for those it just
     // points at the same global dir the iSH mount binds to. We explicitly
     // restrict it to those hosts so it can never reach another session's
@@ -8666,17 +8666,17 @@ private func resolveMinisFileURLForNativeText(url: URL) -> URL? {
     if globalHosts.contains(host) {
         for subPath in subPaths {
             let rootfsURL = RootfsManager.shared.dataPath
-                .appendingPathComponent("var/minis", isDirectory: true)
+                .appendingPathComponent("var/i", isDirectory: true)
                 .appendingPathComponent(host, isDirectory: true)
                 .appendingPathComponent(subPath)
             if fm.fileExists(atPath: rootfsURL.path) {
                 let size = (try? fm.attributesOfItem(atPath: rootfsURL.path)[.size] as? Int64) ?? -1
-                imgLogger.info("[MinisImage][Resolve] FOUND in global rootfs path=\(rootfsURL.path) size=\(size)")
+                imgLogger.info("[IImage][Resolve] FOUND in global rootfs path=\(rootfsURL.path) size=\(size)")
                 return rootfsURL
             }
         }
     }
 
-    imgLogger.warning("[MinisImage][Resolve] NOT FOUND in active session / global dirs url=\(url.absoluteString) host=\(host) subPaths=\(subPaths) (cross-session scan disabled for isolation)")
+    imgLogger.warning("[IImage][Resolve] NOT FOUND in active session / global dirs url=\(url.absoluteString) host=\(host) subPaths=\(subPaths) (cross-session scan disabled for isolation)")
     return nil
 }

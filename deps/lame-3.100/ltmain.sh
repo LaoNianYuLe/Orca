@@ -4059,10 +4059,10 @@ func_mode_finish ()
 	$ECHO "   - use the '$flag' linker flag"
       fi
       if test -n "$admincmds"; then
-	$ECHO "   - have your system administrator run these commands:$admincmds"
+	$ECHO "   - have your system aditrator run these commands:$admincmds"
       fi
       if test -f /etc/ld.so.conf; then
-	echo "   - have your system administrator add LIBDIR to '/etc/ld.so.conf'"
+	echo "   - have your system aditrator add LIBDIR to '/etc/ld.so.conf'"
       fi
       echo
 

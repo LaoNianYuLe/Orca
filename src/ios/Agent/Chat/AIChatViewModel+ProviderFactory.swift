@@ -160,7 +160,7 @@ extension AIChatViewModel {
             let orProvider = OpenAIProvider(apiKey: key, model: entry.model, customBaseURL: customBase ?? "https://openrouter.ai/api", appendV1Suffix: customBase == nil)
             orProvider.extraHeaders = [
                 "HTTP-Referer": "https://github.com/OpenMinis/OpenMinis",
-                "X-Title": "Minis App",
+                "X-Title": "I App",
             ]
             orProvider.useOpenRouterCompat = true
             return LLMProviderFactory.applyCustomUserAgent(orProvider, instance: instance)
@@ -458,7 +458,7 @@ extension AIChatViewModel {
     /// member-order change takes effect on the very next resolution (#112
     /// symptom ①). The router already filters to available members
     /// (enabled + credentialed + not hidden, #34), and both its strategies
-    /// are deterministic (fallback → first available; loadBalance → stable
+    /// are deteritic (fallback → first available; loadBalance → stable
     /// hash), so when nothing changed the result equals the cached
     /// resolvedEntryId. The cached id is kept only as a last resort for the
     /// "router finds no available member right now" edge.

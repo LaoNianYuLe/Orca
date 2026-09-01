@@ -1,6 +1,6 @@
 //
 //  CurrentRoot.h
-//  Minis — adapted from iSH app/CurrentRoot.h
+//  I — adapted from iSH app/CurrentRoot.h
 //
 
 #import <Foundation/Foundation.h>

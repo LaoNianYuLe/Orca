@@ -338,7 +338,7 @@ extension AIChatViewModel {
             logger.error("[FolderSuggest] FAILED reason=no-sessions-selected")
             throw NSError(domain: "TitleGen", code: -3, userInfo: [NSLocalizedDescriptionKey: "No sessions selected"])
         }
-        // [T-ios-folder-suggest-anchor-nondeterminism] Don't let ONE session
+        // [T-ios-folder-suggest-anchor-nondeterim] Don't let ONE session
         // decide whether this works. The caller's `sessionIds` originates from
         // a `Set<String>` (FolderPickerRequest), so `.first` is whatever the
         // per-process hash seed put there — a different session, and therefore
@@ -380,7 +380,7 @@ extension AIChatViewModel {
             folderLines.append("- \"\(f.name)\"\(descPart): \(memberTitles.joined(separator: " / "))")
         }
 
-        // [T-ios-folder-suggest-anchor-nondeterminism] Sorted for the same
+        // [T-ios-folder-suggest-anchor-nondeterim] Sorted for the same
         // reason as the anchor loop above: the caller's ids come from a Set, so
         // an unsorted `prefix(20)` would send a DIFFERENT 20-session sample to
         // the model on each launch whenever more than 20 are selected — making
@@ -659,7 +659,7 @@ extension AIChatViewModel {
     ///
     /// Resolution order:
     ///   1. The user's explicit `appLanguage` (Settings → Language, also
-    ///      writable via minis-config `appearance.language`). Honors changes
+    ///      writable via i-config `appearance.language`). Honors changes
     ///      made after launch — `Bundle.main.preferredLocalizations` is
     ///      computed once at launch from `AppleLanguages` and does NOT update
     ///      when `setLanguage(...)` rewrites that key at runtime, so reading

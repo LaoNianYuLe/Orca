@@ -10,7 +10,7 @@ plugins {
 
 // Build-time customization values that must NOT ship in the public
 // open-source mirror. `provider-customization.properties` is tracked in the PRIVATE
-// MinisApp repo (with real values) and listed under `private:` in
+// IApp repo (with real values) and listed under `private:` in
 // PUBLISH_MANIFEST.yml so it is never synced; the public repo ships only
 // `provider-customization.properties.example` (empty values). A build without a
 // configured value compiles fine but fails at runtime the first time the
@@ -23,7 +23,7 @@ fun customizationValue(key: String): String =
     (appCustomization.getProperty(key) ?: "").replace("\"", "\\\"")
 
 android {
-    namespace = "com.openminis.app"
+    namespace = "com.i.app"
     // [T-android-dynamic-island] Bumped 35→36 so the Android 16 (Baklava)
     // Live Updates APIs — Notification.ProgressStyle, FLAG_PROMOTED_ONGOING,
     // NotificationManager.canPostPromotedNotifications(), setShortCriticalText —
@@ -33,7 +33,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.openminis.app"
+        applicationId = "com.i.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 24

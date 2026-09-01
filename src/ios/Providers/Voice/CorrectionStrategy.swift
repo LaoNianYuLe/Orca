@@ -124,7 +124,7 @@ struct LLMCorrectionStrategy: CorrectionStrategy {
         //
         // [T-correction-low-freq-evidence] Terms whose phonetic key is already
         // answered by a confusion record are dropped here. Listing "Linux" as a
-        // high-frequency typed term (56×) alongside "Linux→minis（用户已手动纠正1次）"
+        // high-frequency typed term (56×) alongside "Linux→i（用户已手动纠正1次）"
         // put the two signals in direct competition and the model kept Linux —
         // frequency read as authority. The confusion record is strictly
         // higher-quality evidence (explicit user correction vs. a typing count),

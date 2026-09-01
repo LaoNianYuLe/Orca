@@ -1,6 +1,6 @@
 //
 //  NFCOffload.h
-//  MinisApp
+//  IApp
 //
 //  Native offload handler for `apple-nfc` — CoreNFC tag reading and writing.
 //

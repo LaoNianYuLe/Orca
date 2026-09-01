@@ -85,7 +85,7 @@ struct ModelGroupDetailView: View {
                 if let group {
                     Button {
                         UIPasteboard.general.string = "group:\(group.id)"
-                        MinisToast.show(String(localized: "Copied: \(group.name)"))
+                        IToast.show(String(localized: "Copied: \(group.name)"))
                     } label: {
                         Label(String(localized: "Copy Shortcut Model ID"), systemImage: "link")
                     }

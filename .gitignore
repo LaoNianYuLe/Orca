@@ -68,6 +68,7 @@ Package.resolved
 # Environment and secrets
 .env
 .env.*
+src/android/app/provider-customization.properties
 
 # App Store Connect API keys
 fastlane/.env

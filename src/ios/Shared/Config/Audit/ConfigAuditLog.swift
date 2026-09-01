@@ -5,8 +5,8 @@ private let auditLogger = AppLogger(category: "ConfigAudit")
 
 /// SQLite-backed rolling log of config changes.
 ///
-/// Storage: a dedicated `minis-config-audit.db` next to the chat db.
-/// Keeping it separate from `minis.db` means the audit table never
+/// Storage: a dedicated `i-config-audit.db` next to the chat db.
+/// Keeping it separate from `i.db` means the audit table never
 /// gets caught in sync-dirty queries and can be wiped independently
 /// if it ever corrupts. Capacity: most-recent **1000** rows; older
 /// rows are pruned in the same transaction as each insert.
@@ -25,9 +25,9 @@ final class ConfigAuditLog: ObservableObject {
 
     init() {
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let base = library.appendingPathComponent("MinisChat", isDirectory: true)
+        let base = library.appendingPathComponent("IChat", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        self.dbURL = base.appendingPathComponent("minis-config-audit.db")
+        self.dbURL = base.appendingPathComponent("i-config-audit.db")
         openAndMigrate()
         // [T-config-audit-wal-loss] See checkpoint(): a disappeared log and a
         // never-used one look identical without this line.
@@ -154,7 +154,7 @@ final class ConfigAuditLog: ObservableObject {
     }
 
     /// Clear ALL entries. Surfaced via Logs UI as a manual action; not
-    /// callable through `minis-config` (would let the agent erase its
+    /// callable through `i-config` (would let the agent erase its
     /// own trail).
     func clearAll() {
         guard db != nil else { return }
@@ -164,13 +164,13 @@ final class ConfigAuditLog: ObservableObject {
 
     /// [T-config-audit-wal-loss] Fold the WAL back into the main DB file.
     ///
-    /// This database is deliberately separate from `minis.db` so the audit table
+    /// This database is deliberately separate from `i.db` so the audit table
     /// never lands in a sync-dirty query — but that also leaves it out of the
-    /// checkpointing that covers minis.db and skills.db. It runs in WAL mode with
+    /// checkpointing that covers i.db and skills.db. It runs in WAL mode with
     /// nothing else ever checkpointing it, so a jetsam or crash can drop history
     /// that was only in the `-wal` sidecar.
     ///
-    /// This is the defensive half of OpenMinis#98 defect 3. The report's "audit
+    /// This is the defensive half of I#98 defect 3. The report's "audit
     /// log was erased" could NOT be reproduced from code — no path in this tree
     /// deletes the DB or bulk-deletes rows outside the 1000-row cap — so the two
     /// surviving explanations are an uncheckpointed WAL (fixed here) or a

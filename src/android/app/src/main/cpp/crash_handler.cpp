@@ -1,6 +1,6 @@
 // T283 — native crash → file (NDK signal handler).
 //
-// Registered at app startup from MinisApp.onCreate via JNI. Catches
+// Registered at app startup from IApp.onCreate via JNI. Catches
 // fatal signals raised inside JNI / proot / pty_bridge / any other
 // native code, writes a one-shot text report to the configured logs
 // dir, then restores the default handler and re-raises so the system
@@ -20,7 +20,7 @@
 #include <sys/syscall.h>
 #include <android/log.h>
 
-#define LOG_TAG "MinisCrashHandler"
+#define LOG_TAG "ICrashHandler"
 
 // Plenty of headroom for "<logs_dir>/native-crash-YYYY-MM-DD_HH-MM-SS.log".
 static char g_log_dir[512] = {0};
@@ -117,7 +117,7 @@ static void crash_signal_handler(int sig, siginfo_t* info, void* ctx) {
     int n;
     if (addr_is_fault) {
         n = snprintf(buf, sizeof(buf),
-            "=== Minis Native Crash ===\n"
+            "=== I Native Crash ===\n"
             "Time: %04d-%02d-%02d %02d:%02d:%02d\n"
             "Signal: %d (%s)\n"
             "si_code: %d\n"
@@ -133,7 +133,7 @@ static void crash_signal_handler(int sig, siginfo_t* info, void* ctx) {
             getpid(), tid, comm);
     } else {
         n = snprintf(buf, sizeof(buf),
-            "=== Minis Native Crash ===\n"
+            "=== I Native Crash ===\n"
             "Time: %04d-%02d-%02d %02d:%02d:%02d\n"
             "Signal: %d (%s)\n"
             "si_code: %d (%s)\n"
@@ -181,7 +181,7 @@ static void crash_signal_handler(int sig, siginfo_t* info, void* ctx) {
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_openminis_app_crash_NativeCrashHandler_nativeInstall(
+Java_com_i_app_crash_NativeCrashHandler_nativeInstall(
         JNIEnv* env, jobject /*thiz*/, jstring jLogDir) {
     if (jLogDir == nullptr) return;
     const char* dir = env->GetStringUTFChars(jLogDir, nullptr);

@@ -383,7 +383,7 @@ enum ChatStoreSyncHydrators {
         let sessionId = String(parts[0])
         let relativePath = String(parts[1])
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let fileURL = library.appendingPathComponent("MinisChat/minis/\(sessionId)/\(relativePath)")
+        let fileURL = library.appendingPathComponent("IChat/i/\(sessionId)/\(relativePath)")
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
         let attrs = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
         let fileSize = (attrs?[.size] as? Int) ?? 0
@@ -427,7 +427,7 @@ enum ChatStoreSyncHydrators {
             return
         }
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let destURL = library.appendingPathComponent("MinisChat/minis/\(sessionId)/\(relativePath)")
+        let destURL = library.appendingPathComponent("IChat/i/\(sessionId)/\(relativePath)")
         let fm = FileManager.default
         let remoteFileUpdatedAt = dateField(record, "updatedAt") ?? record.updatedAt
         // [T-icloud-deleted-session-resurrection] Refuse to recreate a file
@@ -563,7 +563,7 @@ enum ChatStoreSyncHydrators {
 
     private static func buildProviderConfig() async -> PortableRecord? {
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let configURL = library.appendingPathComponent("MinisChat/provider-config.json")
+        let configURL = library.appendingPathComponent("IChat/provider-config.json")
         guard let data = try? Data(contentsOf: configURL),
               let json = String(data: data, encoding: .utf8) else { return nil }
         // Reuse v1's export — it already pulls API keys out of the
@@ -746,7 +746,7 @@ enum ChatStoreSyncHydrators {
 
     private static func buildEnvVars() async -> PortableRecord? {
         let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
-        let envURL = library.appendingPathComponent("MinisChat/env-vars.json")
+        let envURL = library.appendingPathComponent("IChat/env-vars.json")
         guard let data = try? Data(contentsOf: envURL),
               let json = String(data: data, encoding: .utf8) else { return nil }
         let secrets: String = {
@@ -886,7 +886,7 @@ enum ChatStoreSyncHydrators {
         let device = SyncDevice(
             id: id,
             deviceName: stringField(record, "deviceName") ?? "Unknown",
-            zoneName: "minis-devices",
+            zoneName: "i-devices",
             lastSeen: dateField(record, "lastSeen") ?? Date(),
             osVersion: stringField(record, "osVersion") ?? "",
             uploadTypes: (stringField(record, "uploadTypes") ?? "")
@@ -968,7 +968,7 @@ enum ChatStoreSyncHydrators {
     // MARK: - Memory Global (GLOBAL.md singleton)
 
     private static func buildMemoryGlobal() async -> PortableRecord? {
-        let url = AIChatViewModel.minisMemoryPersistentDir
+        let url = AIChatViewModel.iMemoryPersistentDir
                     .appendingPathComponent("GLOBAL.md")
         let fm = FileManager.default
         guard fm.fileExists(atPath: url.path),
@@ -994,7 +994,7 @@ enum ChatStoreSyncHydrators {
         }
         let remoteUpdatedAt = dateField(record, "updatedAt") ?? record.updatedAt
 
-        let url = AIChatViewModel.minisMemoryPersistentDir
+        let url = AIChatViewModel.iMemoryPersistentDir
                     .appendingPathComponent("GLOBAL.md")
         let fm = FileManager.default
 
@@ -1094,7 +1094,7 @@ enum ChatStoreSyncHydrators {
             return nil  // Too old — skip
         }
 
-        let url = AIChatViewModel.minisMemoryPersistentDir
+        let url = AIChatViewModel.iMemoryPersistentDir
                     .appendingPathComponent("\(dateKey).md")
         guard let text = try? String(contentsOf: url, encoding: .utf8),
               !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -1126,7 +1126,7 @@ enum ChatStoreSyncHydrators {
             return
         }
 
-        let url = AIChatViewModel.minisMemoryPersistentDir
+        let url = AIChatViewModel.iMemoryPersistentDir
                     .appendingPathComponent("\(dateKey).md")
         let fm = FileManager.default
 
@@ -1145,14 +1145,14 @@ enum ChatStoreSyncHydrators {
         //   serialised file will show both as separate `<!-- ts -->` blocks
         //   sharing the same timestamp (effectively "append the conflicting
         //   block to the end" once sorted). Hashing the content makes the
-        //   suffix deterministic — re-merging the same pair never produces
+        //   suffix deteritic — re-merging the same pair never produces
         //   a third copy, so the file can't grow on each sync round.
         var merged: [String: MemoryEntry] = [:]
         for e in localEntries { merged[e.timestamp] = e }
         for e in remoteEntries {
             if let existing = merged[e.timestamp] {
                 if existing.content != e.content {
-                    // Conflict: deterministic suffix from content hash.
+                    // Conflict: deteritic suffix from content hash.
                     let hashSuffix = String(abs(e.content.hashValue) % 100_000_000)
                     let conflictKey = "\(e.timestamp)#\(hashSuffix)"
                     if merged[conflictKey] == nil {
@@ -1503,7 +1503,7 @@ enum ChatStoreSyncHydrators {
     /// minted on another device points at THAT device's instance UUID. With no
     /// cross-device instance remapping on inbound, those members are permanently
     /// unresolvable here. The UI drops them silently (`compactMap`), which is
-    /// what made OpenMinis#98 hard to characterise — the group just looked
+    /// what made I#98 hard to characterise — the group just looked
     /// short. This logs what was dropped and the distinct peer instance ids
     /// involved, which is the signal that identifies a remap gap vs. a genuine
     /// user deletion.
@@ -1588,7 +1588,7 @@ enum ChatStoreSyncHydrators {
         )
         if applied {
             // [T-icloud-modelgroup-orphan-members] Orphan diagnostic
-            // (OpenMinis#98 defect 1). A group references model ENTRIES, and an
+            // (I#98 defect 1). A group references model ENTRIES, and an
             // entry id embeds the minting device's provider-instance UUID
             // (`<instanceUUID>/<modelId>`, see ModelEntry.compositeKey). Nothing
             // remaps that on inbound, so a group synced from a peer can land

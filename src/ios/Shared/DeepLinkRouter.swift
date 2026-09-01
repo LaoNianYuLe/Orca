@@ -3,41 +3,41 @@ import Foundation
 private let deepLinkLog = AppLogger(category: "DeepLink")
 
 extension Notification.Name {
-    /// Posted by `DeepLinkRouter` when `minis://open?session=…&path=…` lands
-    /// from the openminis.app launcher. `userInfo["shortcut"]` is a
+    /// Posted by `DeepLinkRouter` when `i://open?session=…&path=…` lands
+    /// from the i.app launcher. `userInfo["shortcut"]` is a
     /// `WebAppShortcut` reconstructed from the deep-link params; not
     /// necessarily persisted. (Relocated here from the removed
     /// OpenWebAppIntent.swift — T-ios-remove-open-webapp-shortcut-intent.)
     static let openWebAppDeepLink = Notification.Name("openWebAppDeepLink")
 }
 
-/// Parses `minis://` URLs into navigation actions and dispatches them
+/// Parses `i://` URLs into navigation actions and dispatches them
 /// to the relevant coordinator. Mirrors the Android `DeepLinkHandler`
 /// route table at `src/android/.../deeplink/DeepLinkHandler.kt`.
 ///
 /// Supported URLs (all aliases match the Android side):
-///   minis://share
-///   minis://views/alarm
-///   minis://open_terminal[?init_command=…]
-///   minis://open?session=<sid>&path=<scope-prefixed-path>  (openminis.app launcher round-trip)
-///   minis://session/<id>      (legacy singular alias)
-///   minis://sessions/<id>     (canonical — matches minis-sessions-cli)
-///   minis://settings
-///   minis://settings/providers[/<instanceId>]
-///   minis://settings/model-groups[/<groupId>]   (alias: model_groups)
-///   minis://settings/usage                      (alias: usage-stats, usage_stats)
-///   minis://settings/skills
-///   minis://settings/memory
-///   minis://settings/storage
-///   minis://settings/mount-external             (alias: mount_external, mounts, mounted-folders, mounted_folders)
-///   minis://settings/shared-folders             (alias: shared_folders)
-///   minis://settings/logs
-///   minis://settings/appearance
-///   minis://settings/background
-///   minis://settings/about
-///   minis://settings/permissions
-///   minis://settings/environments[?create_key=…&create_value=…&create_note=…]
-///   minis://settings/rootfs                     (alias: mirrors, rootfs-management, rootfs_management)
+///   i://share
+///   i://views/alarm
+///   i://open_terminal[?init_command=…]
+///   i://open?session=<sid>&path=<scope-prefixed-path>  (i.app launcher round-trip)
+///   i://session/<id>      (legacy singular alias)
+///   i://sessions/<id>     (canonical — matches i-sessions-cli)
+///   i://settings
+///   i://settings/providers[/<instanceId>]
+///   i://settings/model-groups[/<groupId>]   (alias: model_groups)
+///   i://settings/usage                      (alias: usage-stats, usage_stats)
+///   i://settings/skills
+///   i://settings/memory
+///   i://settings/storage
+///   i://settings/mount-external             (alias: mount_external, mounts, mounted-folders, mounted_folders)
+///   i://settings/shared-folders             (alias: shared_folders)
+///   i://settings/logs
+///   i://settings/appearance
+///   i://settings/background
+///   i://settings/about
+///   i://settings/permissions
+///   i://settings/environments[?create_key=…&create_value=…&create_note=…]
+///   i://settings/rootfs                     (alias: mirrors, rootfs-management, rootfs_management)
 ///
 /// Unknown settings paths fall back to the Settings home rather than
 /// failing — same as Android — so an LLM-generated link can never
@@ -46,8 +46,8 @@ enum DeepLinkRouter {
 
     @MainActor
     static func handle(url: URL, shareCoordinator: ShareCoordinator) {
-        guard url.scheme == "minis", let host = url.host else {
-            deepLinkLog.info("ignored — non-minis or missing host: \(url.absoluteString)")
+        guard url.scheme == "i", let host = url.host else {
+            deepLinkLog.info("ignored — non-i or missing host: \(url.absoluteString)")
             return
         }
         let coord = DeepLinkCoordinator.shared
@@ -75,7 +75,7 @@ enum DeepLinkRouter {
 
         case "session", "sessions":
             // `session/<id>` (legacy singular) and `sessions/<id>` (canonical,
-            // matches minis-sessions-cli) both route to the same place. Post
+            // matches i-sessions-cli) both route to the same place. Post
             // `.openSessionFromIntent` so we reuse the same code path the
             // App Intents flow uses — which already pops the navigation
             // stack back to root before opening the target session.
@@ -106,7 +106,7 @@ enum DeepLinkRouter {
             .split(separator: "/", omittingEmptySubsequences: true)
             .map { String($0) }
         guard let head = segments.first else {
-            // bare `minis://settings`
+            // bare `i://settings`
             coord.pendingSettingsTarget = .home
             return
         }
@@ -130,9 +130,9 @@ enum DeepLinkRouter {
         case "skills":
             coord.pendingSettingsTarget = .skills
 
-        // [T-mcp-oauth-deeplink] minis://settings/mcp-servers/<serverId> —
+        // [T-mcp-oauth-deeplink] i://settings/mcp-servers/<serverId> —
         // jump straight to the server's edit form (Authorize button). The
-        // AUTH_REQUIRED error from minis-mcp-cli embeds this link. Server
+        // AUTH_REQUIRED error from i-mcp-cli embeds this link. Server
         // names may be percent-encoded; url.path already decodes them.
         case "mcp-servers", "mcp_servers", "mcp":
             coord.pendingSettingsTarget = (arg?.isEmpty == false)
@@ -208,10 +208,10 @@ enum DeepLinkRouter {
         }
     }
 
-    // MARK: - openminis.app launcher round-trip
+    // MARK: - i.app launcher round-trip
 
-    /// Parses a `minis://open?session=…&path=…` URL fired by the
-    /// openminis.app launcher when the pinned home-screen tile is
+    /// Parses a `i://open?session=…&path=…` URL fired by the
+    /// i.app launcher when the pinned home-screen tile is
     /// launched in standalone mode. The `path` query is scope-prefixed
     /// so we can recover `(scope, scopeContext, htmlPath)` without
     /// looking anything up:
@@ -230,7 +230,7 @@ enum DeepLinkRouter {
         let session = components?.queryItems?.first(where: { $0.name == "session" })?.value
         guard let rawPath = components?.queryItems?.first(where: { $0.name == "path" })?.value,
               !rawPath.isEmpty else {
-            deepLinkLog.warning("minis://open missing path")
+            deepLinkLog.warning("i://open missing path")
             return
         }
 
@@ -240,7 +240,7 @@ enum DeepLinkRouter {
 
         if rawPath.hasPrefix("attachments/") {
             guard let sid = session, !sid.isEmpty else {
-                deepLinkLog.warning("minis://open path=attachments/… missing session")
+                deepLinkLog.warning("i://open path=attachments/… missing session")
                 return
             }
             scope = .sessionAttachment
@@ -248,7 +248,7 @@ enum DeepLinkRouter {
             htmlPath = String(rawPath.dropFirst("attachments/".count))
         } else if rawPath.hasPrefix("workspace/") {
             guard let sid = session, !sid.isEmpty else {
-                deepLinkLog.warning("minis://open path=workspace/… missing session")
+                deepLinkLog.warning("i://open path=workspace/… missing session")
                 return
             }
             scope = .sessionWorkspace
@@ -262,14 +262,14 @@ enum DeepLinkRouter {
             // mount:<uuid>/<rest>
             let rest = rawPath.dropFirst("mount:".count)
             guard let slash = rest.firstIndex(of: "/") else {
-                deepLinkLog.warning("minis://open path=mount:… missing /<rest>")
+                deepLinkLog.warning("i://open path=mount:… missing /<rest>")
                 return
             }
             scope = .mount
             ctx = String(rest[..<slash])
             htmlPath = String(rest[rest.index(after: slash)...])
         } else {
-            deepLinkLog.warning("minis://open unknown path prefix in \(rawPath)")
+            deepLinkLog.warning("i://open unknown path prefix in \(rawPath)")
             return
         }
 
@@ -286,7 +286,7 @@ enum DeepLinkRouter {
             sourceSessionId: (scope == .sessionAttachment || scope == .sessionWorkspace) ? ctx : nil
         )
 
-        deepLinkLog.info("minis://open scope=\(scope.rawValue) ctx=\(ctx ?? "nil") htmlPath=\(htmlPath)")
+        deepLinkLog.info("i://open scope=\(scope.rawValue) ctx=\(ctx ?? "nil") htmlPath=\(htmlPath)")
         // Dismiss any leftover fullScreenCover (image gallery, in-chat
         // web preview, camera, etc.) BEFORE attempting to present the
         // WebApp. iOS only allows one fullScreenCover per host view at a

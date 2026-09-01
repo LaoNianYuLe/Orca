@@ -53,7 +53,7 @@ enum ForceSyncHelper {
     @discardableResult
     static func markMemoryDirty() async -> Int {
         let fm = FileManager.default
-        let memDir = AIChatViewModel.minisMemoryPersistentDir
+        let memDir = AIChatViewModel.iMemoryPersistentDir
         var count = 0
         // GLOBAL.md
         let globalURL = memDir.appendingPathComponent("GLOBAL.md")
