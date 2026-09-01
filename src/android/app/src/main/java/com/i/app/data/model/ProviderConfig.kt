@@ -14,7 +14,11 @@ enum class ProviderType(val displayName: String) {
     // [T-kimi-oauth] Kimi Code (Coding Plan) — RFC 8628 device-code OAuth,
     // OpenAI-compatible upstream at api.kimi.com/coding/v1. DB round-trip is
     // name-based (ProviderCredential.valueOf), so appending is migration-safe.
-    kimiCode("Kimi Code");
+    kimiCode("Kimi Code"),
+    // OpenAI-compatible vendor presets. They intentionally reuse the
+    // OpenAIProvider transport rather than introducing duplicate clients.
+    poolside("Poolside"),
+    inception("Inception");
 
     val builtInModels: List<LLMModel>
         get() = when (this) {
@@ -24,6 +28,7 @@ enum class ProviderType(val displayName: String) {
             openRouter -> LLMModel.allOpenRouter
             xAI -> LLMModel.allXAI
             kimiCode -> LLMModel.allKimi
+            poolside, inception -> emptyList()
         }
 }
 

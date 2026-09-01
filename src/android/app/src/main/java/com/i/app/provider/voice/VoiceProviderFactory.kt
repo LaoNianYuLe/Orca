@@ -29,7 +29,7 @@ object VoiceProviderFactory {
 
         return when (instance.providerType) {
             // OpenAI-compatible families -------------------------------------
-            ProviderType.openAI, ProviderType.openRouter -> {
+            ProviderType.openAI, ProviderType.openRouter, ProviderType.poolside, ProviderType.inception -> {
                 if (instance.providerType == ProviderType.openRouter) {
                     // OpenRouter. TTS goes through chat.completions + the audio
                     // modality, NOT /v1/audio/speech — that endpoint does not

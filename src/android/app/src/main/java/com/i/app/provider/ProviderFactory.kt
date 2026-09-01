@@ -171,6 +171,23 @@ object ProviderFactory {
                     )
                 }
             }
+            ProviderType.poolside, ProviderType.inception -> {
+                // Both vendors expose the OpenAI Chat Completions contract.
+                // The preset base URL is supplied by the add-provider flow;
+                // customBaseURL remains available for private deployments.
+                val base = basePath ?: when (instance.providerType) {
+                    ProviderType.poolside -> "https://inference.poolside.ai/openai/v1"
+                    ProviderType.inception -> "https://api.inceptionlabs.ai/v1"
+                    else -> error("Unexpected compatible provider")
+                }
+                OpenAIProvider(
+                    apiKey = apiKey,
+                    model = model,
+                    basePath = base,
+                    useResponsesAPI = false,
+                    customUserAgent = instance.customUserAgent,
+                )
+            }
         }
         // [T-android-thinking-rules-phase2] Tag OpenAI-family providers with their
         // owning instance id so the thinking resolver can look up this instance's

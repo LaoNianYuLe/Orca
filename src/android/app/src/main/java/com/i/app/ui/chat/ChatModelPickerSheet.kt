@@ -1293,5 +1293,7 @@ private fun providerDotColor(providerType: ProviderType?): Color = when (provide
     ProviderType.openRouter -> Color(0xFF00BCD4) // cyan
     ProviderType.xAI -> Color(0xFFFF7043)        // orange — Grok brand
     ProviderType.kimiCode -> Color(0xFF5C6BC0)   // indigo — Kimi accent
+    ProviderType.poolside -> Color(0xFF607D8B)
+    ProviderType.inception -> Color(0xFF7E57C2)
     null -> Color(0xFF8E8E93)                    // gray
 }

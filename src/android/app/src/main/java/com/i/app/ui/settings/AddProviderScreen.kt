@@ -186,6 +186,8 @@ private val providerDisplayOrder = listOf(
     ProviderType.xAI,
     ProviderType.kimiCode,
     ProviderType.openRouter,
+    ProviderType.poolside,
+    ProviderType.inception,
 )
 
 /** Icon and color per provider type, matching iOS SF Symbols. */
@@ -197,6 +199,8 @@ private fun providerIcon(type: ProviderType): Pair<ImageVector, Color> = when (t
     ProviderType.xAI -> Icons.Default.FlashOn to Color(0xFFFF7043)           // orange — Grok visual cue
     // [T-kimi-oauth] Indigo — matches iOS's Kimi accent.
     ProviderType.kimiCode -> Icons.Default.Terminal to Color(0xFF5C6BC0)
+    ProviderType.poolside -> Icons.Default.Cloud to Color(0xFF607D8B)
+    ProviderType.inception -> Icons.Default.AutoAwesome to Color(0xFF7E57C2)
 }
 
 /** Returns available credential types per provider. */
@@ -214,6 +218,7 @@ private fun availableCredentials(type: ProviderType): List<ProviderCredential> {
         // [T-kimi-oauth] Primary target is the Coding Plan device-code
         // sign-in; a manual Moonshot API key remains available.
         ProviderType.kimiCode -> listOf(ProviderCredential.oauth, ProviderCredential.apiKey)
+        ProviderType.poolside, ProviderType.inception -> listOf(ProviderCredential.apiKey)
     }
 }
 
@@ -242,6 +247,8 @@ private fun ChooseProviderScreen(
                     ProviderType.openRouter -> "OpenRouter"
                     ProviderType.xAI -> "xAI (Grok)"
                     ProviderType.kimiCode -> "Kimi Code"
+                    ProviderType.poolside -> "Poolside"
+                    ProviderType.inception -> "Inception"
                 }
                 // Describe which vendors each protocol supports, rather than a
                 // raw built-in model count.
@@ -252,6 +259,7 @@ private fun ChooseProviderScreen(
                     ProviderType.openRouter -> R.string.add_provider_subtitle_openrouter
                     ProviderType.xAI -> R.string.add_provider_subtitle_xai
                     ProviderType.kimiCode -> R.string.add_provider_subtitle_kimi
+                    ProviderType.poolside, ProviderType.inception -> R.string.add_provider_subtitle_openai
                 }
                 val (icon, iconColor) = providerIcon(type)
                 SettingsRow(
@@ -350,6 +358,8 @@ private fun apiKeyDescription(type: ProviderType): String = when (type) {
     ProviderType.openRouter -> "Use an API key from your OpenRouter account"
     ProviderType.xAI -> "Use an API key from your xAI Console (api.x.ai)"
     ProviderType.kimiCode -> "Use an API key from your Moonshot account"
+    ProviderType.poolside -> "Use an API key from your Poolside deployment"
+    ProviderType.inception -> "Use an API key from Inception Labs"
 }
 
 private fun oauthDescription(type: ProviderType): String = when (type) {
@@ -359,6 +369,7 @@ private fun oauthDescription(type: ProviderType): String = when (type) {
     ProviderType.xAI -> "Sign in with xAI (requires SuperGrok or X Premium+)"
     ProviderType.openRouter -> "Sign in with OpenRouter"
     ProviderType.kimiCode -> "Sign in with your Kimi account (Coding Plan)"
+    ProviderType.poolside, ProviderType.inception -> "API key authentication"
 }
 
 // -- Step 3: Configure & Save --
@@ -485,6 +496,7 @@ private fun ColumnScope.ApiKeyConfigSection(
         ProviderType.openRouter -> "sk-or-..."
         ProviderType.xAI -> "xai-..."
         ProviderType.kimiCode -> "sk-..."
+        ProviderType.poolside, ProviderType.inception -> "API key..."
     }
     SettingsSection(
         header = stringResource(R.string.add_provider_credential),
@@ -516,6 +528,8 @@ private fun ColumnScope.ApiKeyConfigSection(
             ProviderType.gemini -> "https://generativelanguage.googleapis.com/v1beta"
             ProviderType.anthropic -> "https://api.anthropic.com"
             ProviderType.openAI -> "https://api.openai.com"
+            ProviderType.poolside -> "https://inference.poolside.ai/openai/v1"
+            ProviderType.inception -> "https://api.inceptionlabs.ai/v1"
             else -> "https://api.example.com"
         }
         // T-mimo-anthropic-endpoint-android: Anthropic third-party
@@ -657,6 +671,7 @@ private fun ColumnScope.OAuthConfigSection(
         ProviderType.openRouter -> "Sign in with OpenRouter"
         ProviderType.xAI -> "Sign in with xAI"
         ProviderType.kimiCode -> "Sign in with Kimi Code"
+        ProviderType.poolside, ProviderType.inception -> "API key authentication"
     }
 
     // [T-kimi-oauth] Device-code dialog state: non-null while a Kimi login is
@@ -833,6 +848,8 @@ private fun ColumnScope.OAuthConfigSection(
             ProviderType.xAI -> "https://api.x.ai/v1"
             // [T-kimi-oauth] /v1 is load-bearing (…/coding/… 404s without it).
             ProviderType.kimiCode -> "https://api.kimi.com/coding/v1"
+            ProviderType.poolside -> "https://inference.poolside.ai/openai/v1"
+            ProviderType.inception -> "https://api.inceptionlabs.ai/v1"
         }
         SettingsSection(
             header = stringResource(R.string.add_provider_or_configure_manually),

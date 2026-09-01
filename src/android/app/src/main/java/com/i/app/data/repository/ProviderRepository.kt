@@ -2155,6 +2155,15 @@ class ProviderRepository(private val context: Context) {
                         baseURL ?: "${com.i.app.auth.KimiDeviceFlow.CODING_API_BASE}/v1",
                         customUserAgent = instance.customUserAgent,
                     )
+                    ProviderType.poolside, ProviderType.inception -> OpenAIModelsApi.fetchModels(
+                        apiKey,
+                        baseURL ?: when (instance.providerType) {
+                            ProviderType.poolside -> "https://inference.poolside.ai/openai/v1"
+                            ProviderType.inception -> "https://api.inceptionlabs.ai/v1"
+                            else -> error("Unexpected compatible provider")
+                        },
+                        customUserAgent = instance.customUserAgent,
+                    )
                 }
             } catch (e: Exception) {
                 android.util.Log.e("ProviderRepo", "refreshModels fetch error: ${e.message}", e)
@@ -2278,6 +2287,8 @@ class ProviderRepository(private val context: Context) {
             ProviderType.openRouter -> "https://openrouter.ai/api/v1"
             ProviderType.xAI -> "https://api.x.ai/v1"
             ProviderType.kimiCode -> "${com.i.app.auth.KimiDeviceFlow.CODING_API_BASE}/v1"
+            ProviderType.poolside -> "https://inference.poolside.ai/openai/v1"
+            ProviderType.inception -> "https://api.inceptionlabs.ai/v1"
         }
     }
 
