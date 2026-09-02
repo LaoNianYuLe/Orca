@@ -78,7 +78,7 @@ class OrcaDocumentsProvider : DocumentsProvider() {
 
     private fun providerRoot(): File {
         val ctx = context ?: throw IllegalStateException("Provider has no context")
-        return File(ctx.filesDir, "i-global").apply { mkdirs() }
+        return File(ctx.filesDir, "orca-global").apply { mkdirs() }
     }
 
     private fun resolveDoc(documentId: String): File {

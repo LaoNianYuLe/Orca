@@ -22,7 +22,7 @@ import android.content.SharedPreferences
  * offered on the prompt.
  */
 object AutoCompactPrefs {
-    private const val PREFS = "i_auto_compact_prefs"
+    private const val PREFS = "orca_auto_compact_prefs"
     private const val KEY_ENABLED = "autoCompactOnThreshold"
 
     @Volatile

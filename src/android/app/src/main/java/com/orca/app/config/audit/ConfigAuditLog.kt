@@ -197,7 +197,7 @@ class ConfigAuditLog private constructor(context: Context) {
 
     companion object {
         private const val TAG = "ConfigAuditLog"
-        private const val DB_NAME = "i-config-audit.db"
+        private const val DB_NAME = "orca-config-audit.db"
         private const val DB_VERSION = 1
         private const val MAX_ROWS = 1000
 

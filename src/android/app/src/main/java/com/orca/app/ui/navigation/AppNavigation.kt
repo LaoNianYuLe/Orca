@@ -123,7 +123,7 @@ object Routes {
     const val SKILLS = "skills"
     const val SKILL_DETAIL = "skill/{skillId}"
     const val SKILL_FILE = "skill_file/{skillId}/{relativePath}"
-    const val I_SKILLS_BROWSER = "i_skills_browser"
+    const val I_SKILLS_BROWSER = "orca_skills_browser"
 
     fun skillDetail(skillId: String) = "skill/$skillId"
     fun skillFile(skillId: String, relativePath: String = "SKILL.md"): String {

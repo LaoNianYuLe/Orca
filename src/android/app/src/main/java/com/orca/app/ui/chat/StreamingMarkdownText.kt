@@ -2301,7 +2301,7 @@ internal fun resolveMdMediaFile(context: Context, url: String, sessionId: String
     val decoded = java.net.URLDecoder.decode(stripped.removePrefix("i://"), "UTF-8")
     val basename = decoded.substringAfterLast('/')
     val subdir = decoded.substringBefore('/', missingDelimiterValue = "").takeIf { it.isNotEmpty() } ?: "attachments"
-    val root = File(context.filesDir, "i-sessions")
+    val root = File(context.filesDir, "orca-sessions")
     if (root.isDirectory) {
         root.listFiles()?.forEach { sessionDir ->
             val candidate = File(sessionDir, "$subdir/$basename")

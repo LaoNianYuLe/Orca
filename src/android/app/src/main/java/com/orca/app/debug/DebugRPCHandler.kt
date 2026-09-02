@@ -220,8 +220,8 @@ class DebugRPCHandler(private val context: Context) {
             put("totalLogSize", AppLogger.totalSize())
             put("diskUsage", JSONObject().apply {
                 put("filesDir", dirSize(filesDir))
-                put("sessions", dirSize(File(filesDir, "i-sessions")))
-                put("global", dirSize(File(filesDir, "i-global")))
+                put("sessions", dirSize(File(filesDir, "orca-sessions")))
+                put("global", dirSize(File(filesDir, "orca-global")))
             })
         }
     }
@@ -320,7 +320,7 @@ class DebugRPCHandler(private val context: Context) {
      * were written into a session we no longer have mounted.
      */
     private fun handleRawLS(params: JSONObject): Any {
-        val subPath = params.optString("path", "i-sessions")
+        val subPath = params.optString("path", "orca-sessions")
         if (subPath.contains("..")) throw RPCException(-32602, "Invalid path: '..' not allowed")
         val recursive = params.optBoolean("recursive", true)
         val maxDepth = params.optInt("maxDepth", 4)

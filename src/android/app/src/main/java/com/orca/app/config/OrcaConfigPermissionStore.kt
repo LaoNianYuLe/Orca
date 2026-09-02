@@ -18,8 +18,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * Mirrors iOS `OrcaConfigPermissionStore`.
  */
 object OrcaConfigPermissionStore {
-    private const val PREFS = "i_config_permission"
-    private const val KEY = "i_config_enabled"
+    private const val PREFS = "orca_config_permission"
+    private const val KEY = "orca_config_enabled"
 
     /** Default: true (preserves existing behaviour for upgrade users). */
     private const val DEFAULT_ENABLED = true

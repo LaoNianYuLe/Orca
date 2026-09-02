@@ -17,7 +17,7 @@ import android.content.SharedPreferences
  * context-free [isEnabled] is then safe to call from any request builder.
  */
 object FastModePrefs {
-    private const val PREFS = "i_fast_mode_prefs"
+    private const val PREFS = "orca_fast_mode_prefs"
     private const val KEY_ENABLED = "codexFastModeEnabled"
 
     @Volatile

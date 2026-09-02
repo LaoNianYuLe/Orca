@@ -83,7 +83,7 @@ fun StorageManagementScreen(
                 dbSize = databaseSize(context)
 
                 val allSessions = chatDao.listSessions()
-                val sessionsDir = File(context.filesDir, "i-sessions")
+                val sessionsDir = File(context.filesDir, "orca-sessions")
                 val mediaDir = File(context.filesDir, "media")
 
                 val mediaSizes = mediaSizesBySession(mediaDir, allSessions.map { it.id }.toSet())
@@ -177,7 +177,7 @@ fun SessionStorageDetailScreen(
     var isClearing by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
 
-    val sessionsDir = File(context.filesDir, "i-sessions")
+    val sessionsDir = File(context.filesDir, "orca-sessions")
     val mediaDir = File(context.filesDir, "media")
 
     fun reload() {
@@ -367,7 +367,7 @@ private fun directorySize(dir: File): Long {
 }
 
 private fun databaseSize(context: Context): Long {
-    val dbFile = context.getDatabasePath("i.db")
+    val dbFile = context.getDatabasePath("orca.db")
     var size = if (dbFile.exists()) dbFile.length() else 0L
     val wal = File(dbFile.path + "-wal")
     val shm = File(dbFile.path + "-shm")

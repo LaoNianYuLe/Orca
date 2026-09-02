@@ -79,7 +79,7 @@ internal class ScheduledNotificationStore(context: Context) {
     }
 
     companion object {
-        private const val PREFS = "i_scheduled_notifications"
+        private const val PREFS = "orca_scheduled_notifications"
         private const val KEY = "scheduled"
     }
 }

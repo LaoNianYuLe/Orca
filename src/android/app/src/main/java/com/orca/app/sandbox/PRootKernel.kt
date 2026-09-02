@@ -189,7 +189,7 @@ object PRootKernel {
      * booted or any shell to have started. Safe to call repeatedly.
      */
     fun registerGlobalBindMounts(context: Context) {
-        val globalBase = File(context.filesDir, "i-global")
+        val globalBase = File(context.filesDir, "orca-global")
         // [T-mcp-integration-android] mcp-servers is global (like memory/skills):
         // binding it here makes the in-PRoot i-mcp-cli read/write the SAME
         // servers.json the Android Settings UI does (host: i-global/mcp-servers).

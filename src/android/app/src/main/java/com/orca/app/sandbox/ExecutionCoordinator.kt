@@ -198,7 +198,7 @@ object ExecutionCoordinator {
         // server (the UI / debug.ls read via resolveHostPath, a separate map,
         // which is why they disagreed). Same trap as the external-mounts note
         // below.
-        val globalBase = File(filesDir, "i-global")
+        val globalBase = File(filesDir, "orca-global")
         listOf("memory", "skills", "shared", "mcp-servers").forEach { subdir ->
             val hostDir = File(globalBase, subdir).also { it.mkdirs() }
             val linuxPath = "/var/i/$subdir"

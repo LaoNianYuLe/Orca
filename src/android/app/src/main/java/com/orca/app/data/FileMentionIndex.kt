@@ -43,7 +43,7 @@ class FileMentionIndex(
     private val cacheTtlMs: Long = DEFAULT_CACHE_TTL_MS,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
 ) {
-    constructor(context: Context) : this(File(context.filesDir, "i-global"))
+    constructor(context: Context) : this(File(context.filesDir, "orca-global"))
 
     /**
      * Scope priorities — `order` doubles as the empty-query default sort key

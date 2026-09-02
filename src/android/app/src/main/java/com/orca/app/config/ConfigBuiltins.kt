@@ -67,7 +67,7 @@ internal object ConfigBuiltins {
     // list-topics since topics derive from field-path prefixes.
 
     private fun registerMemory(r: ConfigRegistry, context: Context) {
-        val prefs = context.getSharedPreferences("i_memory_prefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("orca_memory_prefs", Context.MODE_PRIVATE)
         r.register(
             PrefsBoolField(
                 path = "memory.enabled",
@@ -311,7 +311,7 @@ internal object ConfigBuiltins {
     private fun registerChat(r: ConfigRegistry, context: Context) {
         // Default app prefs — Android persists most chat preferences in
         // the default SharedPreferences for the package.
-        val prefs = context.getSharedPreferences("i_settings", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences("orca_settings", Context.MODE_PRIVATE)
         r.register(
             PrefsIntCodedEnumField(
                 path = "chat.returnKey",

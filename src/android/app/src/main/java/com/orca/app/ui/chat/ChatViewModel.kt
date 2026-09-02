@@ -1170,7 +1170,7 @@ class ChatViewModel(
         // launch by OrcaApp); reading via a closure means the index sees
         // an up-to-date snapshot on every rescan without a manual refresh.
         FileMentionIndex(
-            filesDir = java.io.File(context.applicationContext.filesDir, "i-global"),
+            filesDir = java.io.File(context.applicationContext.filesDir, "orca-global"),
             mountsProvider = {
                 com.orca.app.sandbox.PRootKernel
                     .mountEntriesForIndex(context.applicationContext)
@@ -3376,7 +3376,7 @@ class ChatViewModel(
         // we can't reuse it after the migration.
         runCatching { ExecutionCoordinator.sessionDidTerminate(fromDraft) }
 
-        val base = java.io.File(context.filesDir, "i-sessions")
+        val base = java.io.File(context.filesDir, "orca-sessions")
         val draftBase = java.io.File(base, fromDraft)
         if (!draftBase.isDirectory) return
         val realBase = java.io.File(base, toReal).apply { mkdirs() }
