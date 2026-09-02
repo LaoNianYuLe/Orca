@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * SoulStore (`src/ios/Agent/Session/SoulStore.swift`, commit 6370d5a).
  *
  * SOUL.md lives next to GLOBAL.md and the daily memory logs under
- * `<filesDir>/i-global/memory/`. Format: YAML frontmatter delimited
+ * `<filesDir>/orca-global/memory/`. Format: YAML frontmatter delimited
  * by `---` followed by a Markdown body. The body becomes Layer 1 of the
  * system prompt; `name` + `emoji` drive the chat assistant bubble header.
  *
@@ -179,7 +179,7 @@ object SoulStore {
 
     private const val TAG = "SoulStore"
     private const val FILE_NAME = "SOUL.md"
-    private const val MEMORY_SUBDIR = "i-global/memory"
+    private const val MEMORY_SUBDIR = "orca-global/memory"
 
     fun fileLocation(context: Context): File =
         File(File(context.filesDir, MEMORY_SUBDIR), FILE_NAME)

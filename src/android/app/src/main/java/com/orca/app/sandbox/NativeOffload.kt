@@ -32,7 +32,7 @@ data class NativeOffloadRequest(
     val cwd: String,
     /**
      * T340: chat session id forwarded by the agent shell via the
-     * `I_CHAT_SESSION_ID` env var. Lets [OffloadPermissionManager]
+     * `ORCA_CHAT_SESSION_ID` env var. Lets [OffloadPermissionManager]
      * scope ASK_ONCE grants/denials per-chat-session instead of using
      * a single process-wide bucket. Null when the offload originates
      * outside a chat (e.g. interactive terminal) — handlers fall back
@@ -88,25 +88,6 @@ object NativeOffloadServer {
         require(name.isNotEmpty())
         handlers[name] = handler
         Log.d(TAG, "register '$name' (total=${handlers.size})")
-    }
-
-    /**
-     * Register an `orca-*` tool under its current name and its pre-rebrand
-     * `i-*` alias.
-     *
-     * These names are the argv[0] the agent types in the guest shell, so they
-     * outlive any single app version: they are baked into existing chat
-     * transcripts the model reads back as context, and into whatever scripts a
-     * user wrote inside their own rootfs. Dropping the old spelling would turn
-     * those into exit-127 "no handler" failures.
-     *
-     * The alias costs nothing to keep — [PRootKernel.installHandlerStubs]
-     * enumerates registered names, so both stubs appear automatically.
-     */
-    fun registerWithLegacyAlias(name: String, handler: NativeOffloadHandler) {
-        register(name, handler)
-        val legacy = name.removePrefix("orca-")
-        if (legacy != name) register("i-$legacy", handler)
     }
 
     @Synchronized
@@ -309,8 +290,7 @@ object NativeOffloadServer {
                     argv = argv,
                     env = env,
                     cwd = cwd,
-                    sessionId = (env["ORCA_CHAT_SESSION_ID"] ?: env["I_CHAT_SESSION_ID"])
-                        ?.takeIf { it.isNotEmpty() },
+                    sessionId = env["ORCA_CHAT_SESSION_ID"]?.takeIf { it.isNotEmpty() },
                 ))
             } catch (e: Exception) {
                 Log.w(TAG, "handler '$name' threw: ${e.message}", e)

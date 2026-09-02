@@ -19,9 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.orca.app.R
 import com.orca.app.offload.OffloadPermissionManager
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.IOutlinedButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaOutlinedButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Dialog shown when an ASK_ONCE tool requests permission.
@@ -88,21 +88,21 @@ fun OffloadPermissionDialog() {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 // Allow in this session — happy path goes first.
-                IButton(
+                OrcaButton(
                     onClick = { OffloadPermissionManager.respondToRequest(OffloadPermissionManager.Response.ALLOW_SESSION) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.offload_perm_allow_session))
                 }
                 // Allow once — no caching; next call re-prompts.
-                IOutlinedButton(
+                OrcaOutlinedButton(
                     onClick = { OffloadPermissionManager.respondToRequest(OffloadPermissionManager.Response.ALLOW_ONCE) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.offload_perm_allow_once))
                 }
                 // Deny in this session — refuse + remember.
-                ITextButton(
+                OrcaTextButton(
                     onClick = { OffloadPermissionManager.respondToRequest(OffloadPermissionManager.Response.DENY_SESSION) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.textButtonColors(

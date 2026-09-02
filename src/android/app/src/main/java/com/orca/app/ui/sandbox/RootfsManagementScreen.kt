@@ -1,7 +1,7 @@
 package com.orca.app.ui.sandbox
 
 import com.orca.app.R
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.text.format.Formatter
 import androidx.compose.foundation.background
@@ -316,7 +316,7 @@ fun RootfsManagementScreen(
             title = { Text(stringResource(R.string.rootfs_reset_confirm_title)) },
             text = { Text(stringResource(R.string.rootfs_reset_confirm_message)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     showResetDialog = false
                     viewModel.resetRootfs(context, keepUserData = false)
                 }) {
@@ -324,7 +324,7 @@ fun RootfsManagementScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showResetDialog = false }) {
+                OrcaTextButton(onClick = { showResetDialog = false }) {
                     Text(stringResource(R.string.common_cancel))
                 }
             },
@@ -339,7 +339,7 @@ fun RootfsManagementScreen(
                 Text(stringResource(R.string.rootfs_reset_backup_confirm_message))
             },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     showResetBackupDialog = false
                     viewModel.resetRootfs(context, keepUserData = true)
                 }) {
@@ -347,7 +347,7 @@ fun RootfsManagementScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showResetBackupDialog = false }) {
+                OrcaTextButton(onClick = { showResetBackupDialog = false }) {
                     Text(stringResource(R.string.common_cancel))
                 }
             },

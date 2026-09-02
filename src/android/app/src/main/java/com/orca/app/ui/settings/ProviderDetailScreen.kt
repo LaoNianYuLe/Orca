@@ -65,16 +65,16 @@ import androidx.compose.ui.res.stringResource
 import com.orca.app.data.model.ProviderType
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.logging.AppLogger
-import com.orca.app.ui.components.IAlertDialog
+import com.orca.app.ui.components.OrcaAlertDialog
 import com.orca.app.ui.util.bringIntoViewOnFocus
 import com.orca.app.R
 import kotlinx.coroutines.launch
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.IOutlinedButton
-import com.orca.app.ui.components.ISmallButton
-import com.orca.app.ui.components.ISmallOutlinedButton
-import com.orca.app.ui.components.ISmallTextButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaOutlinedButton
+import com.orca.app.ui.components.OrcaSmallButton
+import com.orca.app.ui.components.OrcaSmallOutlinedButton
+import com.orca.app.ui.components.OrcaSmallTextButton
+import com.orca.app.ui.components.OrcaTextButton
 import com.orca.app.ui.components.SectionTextField
 
 private const val TAG = "ProviderDetail"
@@ -161,7 +161,7 @@ fun ProviderDetailScreen(
                     )
                     if (labelChanged) {
                         Spacer(modifier = Modifier.width(8.dp))
-                        ISmallButton(onClick = {
+                        OrcaSmallButton(onClick = {
                             providerRepository.updateInstance(instance.copy(label = label))
                             AppLogger.info(TAG, "Updated label for ${instance.id}: '$label'")
                         }) {
@@ -319,7 +319,7 @@ fun ProviderDetailScreen(
                 }
                 // Save action — TextButton presentation so it reads as a list
                 // row rather than a floating filled button inside the card.
-                ISmallTextButton(
+                OrcaSmallTextButton(
                     onClick = {
                         providerRepository.updateInstance(
                             instance.copy(
@@ -708,7 +708,7 @@ fun ProviderDetailScreen(
         // Match iOS visual: button sits on the page background with horizontal
         // gutter padding only. The 20dp top padding mirrors SettingsSection's
         // top spacing so the rhythm against the cards above stays consistent.
-        IOutlinedButton(
+        OrcaOutlinedButton(
             onClick = onAddCustomModel,
             modifier = Modifier
                 .fillMaxWidth()
@@ -719,11 +719,11 @@ fun ProviderDetailScreen(
         }
 
         // [T-android-delete-provider-button-height] The "Delete provider" button
-        // uses the same default 48dp IButtonHeight as "Add custom model"
+        // uses the same default 48dp OrcaButtonHeight as "Add custom model"
         // above it for visual consistency (no explicit .height override). The
         // destructive intent is conveyed by the error container color, not by a
         // taller button.
-        IButton(
+        OrcaButton(
             onClick = { showDeleteDialog = true },
             modifier = Modifier
                 .fillMaxWidth()
@@ -740,7 +740,7 @@ fun ProviderDetailScreen(
     }
 
     if (showDeleteDialog) {
-        IAlertDialog(
+        OrcaAlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = stringResource(R.string.provider_detail_delete_provider),
             text = stringResource(R.string.provider_detail_delete_provider_confirm, instance.label),
@@ -760,7 +760,7 @@ fun ProviderDetailScreen(
     // from any modelGroups it belongs to (see ProviderRepository L304-306),
     // so the StateFlow update propagates the row removal everywhere.
     entryToDelete?.let { e ->
-        IAlertDialog(
+        OrcaAlertDialog(
             onDismissRequest = { entryToDelete = null },
             title = stringResource(R.string.provider_detail_delete_model),
             text = stringResource(R.string.provider_detail_delete_model_confirm, e.model.displayName),
@@ -845,7 +845,7 @@ private fun OAuthCredentialBlock(
     }
     Spacer(modifier = Modifier.height(8.dp))
     if (displayedKey.isNotEmpty()) {
-        ISmallButton(
+        OrcaSmallButton(
             onClick = {
                 // [T-android-openai-oauth-signout-signin-stuck] A real sign-out
                 // must clear BOTH credential stores: (1) the persisted OAuth
@@ -869,9 +869,9 @@ private fun OAuthCredentialBlock(
             Text(stringResource(R.string.provider_detail_sign_out))
         }
     } else {
-        ISmallButton(
+        OrcaSmallButton(
             onClick = {
-                if (isAuthenticating) return@ISmallButton
+                if (isAuthenticating) return@OrcaSmallButton
                 isAuthenticating = true
                 kimiLoginJob = scope.launch {
                     try {
@@ -957,7 +957,7 @@ private fun ApiKeyCredentialBlock(
             // a neutral outlined pill (onSurfaceVariant content/border), forming
             // the standard MD3 outlined-vs-filled pair with the filled Save below.
             // Previously a primary-teal text button — indistinguishable from Save.
-            ISmallOutlinedButton(
+            OrcaSmallOutlinedButton(
                 onClick = onCancelEdit,
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -967,7 +967,7 @@ private fun ApiKeyCredentialBlock(
                 Text(stringResource(R.string.common_cancel))
             }
             Spacer(modifier = Modifier.width(8.dp))
-            ISmallButton(onClick = onSave, enabled = editValue.isNotBlank()) {
+            OrcaSmallButton(onClick = onSave, enabled = editValue.isNotBlank()) {
                 Text(stringResource(R.string.provider_detail_save_key))
             }
         }
@@ -984,7 +984,7 @@ private fun ApiKeyCredentialBlock(
                     contentDescription = if (keyVisible) "Hide" else "Show",
                 )
             }
-            ISmallTextButton(onClick = onBeginEdit) {
+            OrcaSmallTextButton(onClick = onBeginEdit) {
                 Text(stringResource(R.string.common_edit))
             }
         }
@@ -1067,7 +1067,7 @@ private fun ManualBearerTokenSection(
         Row(modifier = Modifier.padding(top = 8.dp)) {
             // [T-android-settings-ui-md3] #4 + #12 neutral outlined Cancel (see
             // the API-key edit pair above) paired with the filled Save.
-            ISmallOutlinedButton(
+            OrcaSmallOutlinedButton(
                 onClick = {
                     isEditing = false
                     draft = ""
@@ -1080,7 +1080,7 @@ private fun ManualBearerTokenSection(
                 Text(stringResource(R.string.common_cancel))
             }
             Spacer(modifier = Modifier.width(8.dp))
-            ISmallButton(
+            OrcaSmallButton(
                 onClick = {
                     val cleaned = draft.replace(Regex("\\s+"), "")
                     if (cleaned.isNotEmpty() && manager != null) {
@@ -1115,14 +1115,14 @@ private fun ManualBearerTokenSection(
             )
         }
         Row(modifier = Modifier.padding(top = 8.dp)) {
-            ISmallOutlinedButton(onClick = {
+            OrcaSmallOutlinedButton(onClick = {
                 draft = ""
                 isEditing = true
             }) {
                 Text(stringResource(R.string.common_change))
             }
             Spacer(modifier = Modifier.width(8.dp))
-            ISmallOutlinedButton(
+            OrcaSmallOutlinedButton(
                 onClick = {
                     manager?.deleteManualBearerToken()
                     AppLogger.info(TAG, "Manual bearer token removed for ${instance.id}")
@@ -1136,7 +1136,7 @@ private fun ManualBearerTokenSection(
             }
         }
     } else {
-        ISmallOutlinedButton(onClick = {
+        OrcaSmallOutlinedButton(onClick = {
             draft = ""
             isEditing = true
         }) {

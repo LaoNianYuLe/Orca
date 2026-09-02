@@ -138,9 +138,9 @@ import com.orca.app.BuildConfig
 import com.orca.app.R
 import com.orca.app.data.FileMentionIndex
 import com.orca.app.logging.AppLogger
-import com.orca.app.ui.components.IAlertDialog
-import com.orca.app.ui.components.IMenu
-import com.orca.app.ui.components.IMenuDivider
+import com.orca.app.ui.components.OrcaAlertDialog
+import com.orca.app.ui.components.OrcaMenu
+import com.orca.app.ui.components.OrcaMenuDivider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -269,7 +269,7 @@ import com.orca.app.data.repository.MemoryRepository
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.browser.BrowserSheet
 import com.orca.app.ui.theme.ChatColors
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 internal sealed class FlatChatItem {
     abstract val key: String

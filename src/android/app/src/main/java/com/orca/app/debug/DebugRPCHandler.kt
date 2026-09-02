@@ -194,7 +194,7 @@ class DebugRPCHandler(private val context: Context) {
             // re-uses the production ConfigBridge code path; we override
             // skipConfirmation under the hood via a dedicated arg the
             // production CLI never exposes.
-            "debug.iConfig.exec" -> {
+            "debug.orcaConfig.exec" -> {
                 if (!BuildConfig.DEBUG) {
                     throw RPCException(-32601, "Method not found: $method. Call 'rpc.discover' to list available methods.")
                 }
@@ -315,7 +315,7 @@ class DebugRPCHandler(private val context: Context) {
     /**
      * [diag] Raw list of a host-filesystem directory, bypassing the PRoot
      * bindMounts/rootfs resolver. Constrained to filesDir to avoid poking
-     * at arbitrary paths. Use `i-sessions` (default) to enumerate every
+     * at arbitrary paths. Use `orca-sessions` (default) to enumerate every
      * session's attachments/workspace/... directories and find files that
      * were written into a session we no longer have mounted.
      */
@@ -846,7 +846,7 @@ class DebugRPCHandler(private val context: Context) {
         val timeoutSec = params.optInt("timeout", 60).coerceIn(1, 900)
 
         // Mirror ChatViewModel's terminal lineCallback: scan raw lines for
-        // OSC IOpenURL markers before TerminalSanitizer strips them and
+        // OSC OrcaOpenURL markers before TerminalSanitizer strips them and
         // hand captured URLs to the broker so test harnesses driving
         // `orca-open` via this RPC trigger the same in-app preview flow as
         // real chat shell output.
@@ -857,7 +857,7 @@ class DebugRPCHandler(private val context: Context) {
                 command = command,
                 timeout = timeoutSec * 1000L,
                 lineCallback = { rawLine ->
-                    val (_, urls) = com.orca.app.terminal.IUrlMarker.extract(rawLine)
+                    val (_, urls) = com.orca.app.terminal.OrcaUrlMarker.extract(rawLine)
                     capturedUrls.addAll(urls)
                 },
             )
@@ -865,7 +865,7 @@ class DebugRPCHandler(private val context: Context) {
             throw RPCException(-32000, "Shell execute failed: ${e.message}")
         }
         for (raw in capturedUrls) {
-            com.orca.app.terminal.IOpenUrlBroker.offer(raw)
+            com.orca.app.terminal.OrcaOpenUrlBroker.offer(raw)
         }
         return JSONObject()
             .put("output", result.output)
@@ -1291,14 +1291,14 @@ class DebugRPCHandler(private val context: Context) {
                 val skip = params.optBoolean("skipConfirmation", true)
                 AppLogger.info(
                     "DebugRPC",
-                    "debug.iConfig.exec set items=${items.length()} skipConfirmation=$skip",
+                    "debug.orcaConfig.exec set items=${items.length()} skipConfirmation=$skip",
                 )
                 // Hop to the main thread because performWriteBatch is a
                 // suspend fun that uses Dispatchers.Main internally.
                 kotlinx.coroutines.runBlocking {
                     com.orca.app.config.ConfigBridge.performWriteBatch(
                         items = items,
-                        caption = "debug.iConfig.exec",
+                        caption = "debug.orcaConfig.exec",
                         actorRaw = "debug-rpc",
                         sessionId = null,
                         skipConfirmation = skip,
@@ -1317,7 +1317,7 @@ class DebugRPCHandler(private val context: Context) {
                 val filter = params.optString("filter", "").takeIf { it.isNotEmpty() }
                 val page = params.optInt("page", 0)
                 val pageSize = params.optInt("pageSize", 0)
-                AppLogger.info("DebugRPC", "debug.iConfig.exec get path=$path")
+                AppLogger.info("DebugRPC", "debug.orcaConfig.exec get path=$path")
                 com.orca.app.config.ConfigBridge.readField(
                     path = path,
                     filter = filter,

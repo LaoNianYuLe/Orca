@@ -58,7 +58,7 @@ import com.orca.app.ui.settings.SkillDetailScreen
 import com.orca.app.ui.settings.StorageManagementScreen
 import com.orca.app.ui.settings.SkillFileViewerScreen
 import com.orca.app.ui.settings.UsageStatsScreen
-import com.orca.app.ui.settings.ISkillsBrowserScreen
+import com.orca.app.ui.settings.OrcaSkillsBrowserScreen
 import com.orca.app.ui.settings.MountDetailScreen
 import com.orca.app.ui.settings.MountedFoldersScreen
 import com.orca.app.ui.settings.SharedFolderDetailScreen
@@ -144,7 +144,7 @@ object Routes {
         }
         return if (params.isEmpty()) "terminal" else "terminal?${params.joinToString("&")}"
     }
-    /** Chat-files browser: opens FileBrowser rooted at /var/i for the session. */
+    /** Chat-files browser: opens FileBrowser rooted at /var/orca for the session. */
     const val CHAT_FILES = "chat_files/{sessionId}"
     fun chatFiles(sessionId: String) = "chat_files/$sessionId"
     const val MEMORY = "memory"
@@ -414,7 +414,7 @@ fun AppNavigation(
     }
 
     // Pinned-shortcut cold start: when launched via
-     // `i://session/<id>/<resource-path>`, set the pending HTML
+     // `orca://session/<id>/<resource-path>`, set the pending HTML
      // preview synchronously and start NavHost directly at the matching
      // chat so ChatScreen's LaunchedEffect consumes the pending state on
      // first composition — no sessions-list flash, no launch-session
@@ -685,9 +685,9 @@ fun AppNavigation(
                         rootPath = hostPath,
                         rootLabel = label,
                         // Route reads through PRoot bind mounts so the host
-                        // dirs that back /var/i/{shared,skills,memory}
+                        // dirs that back /var/orca/{shared,skills,memory}
                         // resolve, matching how chat-files browse works.
-                        linuxRootPath = "/var/i/$folderId",
+                        linuxRootPath = "/var/orca/$folderId",
                         appContext = ctx.applicationContext,
                     )
                     navController.safeNavigate(Routes.FILE_BROWSER)
@@ -935,19 +935,19 @@ fun AppNavigation(
                 onBack = { navController.safePopBackStack() },
                 onBrowseFiles = { rootPath ->
                     // [T-android-copy-abs-path-fullpath] This browser is rooted at
-                    // the per-session host dir (filesDir/i-sessions/<sid>),
+                    // the per-session host dir (filesDir/orca-sessions/<sid>),
                     // whose immediate children (workspace/ attachments/ offloads/
-                    // browser/) are exactly the PRoot /var/i/* subdirs. The
+                    // browser/) are exactly the PRoot /var/orca/* subdirs. The
                     // host listing already resolves correctly so we keep rootPath
                     // host-based (no linuxRootPath re-routing — that would redirect
-                    // /var/i to the global/empty placeholder dir). We only pass
-                    // displayLinuxPrefix = "/var/i" so "Copy Absolute Path"
-                    // emits the agent-visible /var/i/workspace/foo.py instead of
-                    // the opaque /data/user/0/.../i-sessions/<sid>/... host path.
+                    // /var/orca to the global/empty placeholder dir). We only pass
+                    // displayLinuxPrefix = "/var/orca" so "Copy Absolute Path"
+                    // emits the agent-visible /var/orca/workspace/foo.py instead of
+                    // the opaque /data/user/0/.../orca-sessions/<sid>/... host path.
                     FilePreviewHolder.fileBrowserViewModel = FileBrowserViewModel(
                         rootPath = java.io.File(rootPath),
                         rootLabel = "Session Files",
-                        displayLinuxPrefix = "/var/i",
+                        displayLinuxPrefix = "/var/orca",
                     )
                     navController.safeNavigate(Routes.FILE_BROWSER)
                 },
@@ -1002,10 +1002,10 @@ fun AppNavigation(
         }
 
         // Browse Chat Files (iOS parity: open FileBrowser rooted at the full
-        // Linux root, focused on /var/i. Matches AIChatView.swift L490:
-        //   FileBrowserView(rootPath: dataPath, initialPath: dataPath/var/i,
+        // Linux root, focused on /var/orca. Matches AIChatView.swift L490:
+        //   FileBrowserView(rootPath: dataPath, initialPath: dataPath/var/orca,
         //                   rootLabel: "/")
-        // so the user can navigate up out of /var/i into the broader rootfs.
+        // so the user can navigate up out of /var/orca into the broader rootfs.
         composable(
             route = Routes.CHAT_FILES,
             arguments = listOf(navArgument("sessionId") { type = NavType.StringType }),
@@ -1020,8 +1020,8 @@ fun AppNavigation(
                     initialPath = varI.takeIf { it.exists() },
                     rootLabel = "/",
                     // T121: route directory listings through PRootKernel bind
-                    // mounts so /var/i/{skills,memory,shared} resolve to
-                    // their backing host dirs (filesDir/i-global/<subdir>).
+                    // mounts so /var/orca/{skills,memory,shared} resolve to
+                    // their backing host dirs (filesDir/orca-global/<subdir>).
                     // Without this the browser walks the rootfs tarball
                     // directly and shows the empty placeholder dirs that ship
                     // inside Alpine's var/i/ — every subdir reads as
@@ -1134,7 +1134,7 @@ fun AppNavigation(
 
         composable(Routes.I_SKILLS_BROWSER) {
             if (skillRepository != null) {
-                ISkillsBrowserScreen(
+                OrcaSkillsBrowserScreen(
                     skillRepository = skillRepository,
                     onBack = { navController.safePopBackStack() },
                 )

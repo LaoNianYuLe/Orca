@@ -28,7 +28,7 @@ import java.util.TimeZone
  * every invocation emits a JSON envelope
  *   `{ ok, tool, action, data | error, timestamp }`
  * (pretty-printed by default; minified with `--compact`; data-only with `-q`).
- * Screenshots are persisted under `/var/i/browser/` and referenced via
+ * Screenshots are persisted under `/var/orca/browser/` and referenced via
  * `image_path` + `i_url` — raw base64 is only included when the caller
  * explicitly passes `--with-base64`, matching iOS.
  *
@@ -242,10 +242,10 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
         out.put("success", r.success)
         r.pageURL?.takeIf { it.isNotEmpty() }?.let { out.put("page_url", it) }
 
-        // Persist screenshot bytes under /var/i/browser/ so shells can
+        // Persist screenshot bytes under /var/orca/browser/ so shells can
         // reference the JPEG via image_path + i_url instead of piping
         // base64 through stdout.
-        val browserHostDir: File? = PRootKernel.resolveHostPath(VAR_I_BROWSER)?.also {
+        val browserHostDir: File? = PRootKernel.resolveHostPath(VAR_ORCA_BROWSER)?.also {
             try { it.mkdirs() } catch (_: Throwable) { /* non-fatal — write will fail below */ }
         }
 
@@ -258,16 +258,16 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
                 val filename = "screenshot_${System.currentTimeMillis()}.jpg"
                 val dest = File(browserHostDir, filename)
                 if (runCatching { dest.writeBytes(bytes) }.isSuccess) {
-                    val linuxPath = "$VAR_I_BROWSER/$filename"
+                    val linuxPath = "$VAR_ORCA_BROWSER/$filename"
                     persistedImagePath = linuxPath
                     out.put("image_path", linuxPath)
-                    out.put("orca_url", "i://browser/$filename")
+                    out.put("orca_url", "orca://browser/$filename")
                 } else {
                     Log.w(TAG, "Failed to persist screenshot to ${dest.absolutePath}")
                 }
             }
         } else if (!base64.isNullOrEmpty()) {
-            Log.w(TAG, "No /var/i/browser mount — falling back to base64-only output")
+            Log.w(TAG, "No /var/orca/browser mount — falling back to base64-only output")
         }
 
         // Fall back to the in-memory host path only when we couldn't persist.
@@ -289,8 +289,8 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
                 if (browserHostDir != null) {
                     val dest = File(browserHostDir, fname)
                     if (runCatching { dest.writeBytes(data) }.isSuccess) {
-                        out.put("fetched_path", "$VAR_I_BROWSER/$fname")
-                        out.put("fetched_i_url", "i://browser/$fname")
+                        out.put("fetched_path", "$VAR_ORCA_BROWSER/$fname")
+                        out.put("fetched_orca_url", "orca://browser/$fname")
                     } else {
                         Log.w(TAG, "Failed to persist fetched file to ${dest.absolutePath}")
                     }
@@ -387,7 +387,7 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
     companion object {
         private const val TAG = "BrowserUseOffload"
         private const val TOOL_NAME = "orca-browser-use"
-        private const val VAR_I_BROWSER = "/var/i/browser"
+        private const val VAR_ORCA_BROWSER = "/var/orca/browser"
         private const val EXECUTE_TIMEOUT_MS = 90_000L
 
         /**
@@ -452,7 +452,7 @@ COMMON OPTIONS:
   --tab-id <n>     Route the action to a specific tab (default: active tab)
   --json '<s>'     Pass the full input object as JSON (matches browser_use schema)
   --with-base64    Also include image_base64 in the screenshot output. Off by
-                   default — screenshots are persisted to /var/i/browser/
+                   default — screenshots are persisted to /var/orca/browser/
                    and referenced via image_path + i_url.
   --compact        Minimize JSON output
   -q, --quiet      Output only the data field
@@ -463,13 +463,13 @@ OUTPUT:
     text              Human-readable result the agent would see
     success           true / false
     page_url          URL after the action (when applicable)
-    image_path        Linux path of the persisted JPEG under /var/i/browser/
-    i_url         i://browser/<filename> — stable reference for
+    image_path        Linux path of the persisted JPEG under /var/orca/browser/
+    i_url         orca://browser/<filename> — stable reference for
                       read_image / downstream tools
     image_base64      Base64 JPEG (only when --with-base64 is set)
     fetched_file      Filename of the downloaded resource (fetch action)
-    fetched_path      Linux path of the persisted download under /var/i/browser/
-    fetched_i_url i://browser/<filename> for the download
+    fetched_path      Linux path of the persisted download under /var/orca/browser/
+    fetched_orca_url orca://browser/<filename> for the download
 
 EXAMPLES:
   orca-browser-use navigate --url https://example.com

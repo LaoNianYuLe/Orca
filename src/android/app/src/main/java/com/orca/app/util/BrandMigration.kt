@@ -27,6 +27,7 @@ object BrandMigration {
     private const val TAG = "BrandMigration"
     private const val MARKER_PREFS = "orca_brand_migration"
     private const val KEY_DONE = "i_to_orca_done"
+    private const val KEY_LOGS = "i_to_orca_logs"
 
     /** Plain SharedPreferences: safe to move as files. */
     private val PLAIN_PREFS = listOf(
@@ -55,17 +56,42 @@ object BrandMigration {
 
     fun runIfNeeded(context: Context) {
         val marker = context.getSharedPreferences(MARKER_PREFS, Context.MODE_PRIVATE)
-        if (marker.getBoolean(KEY_DONE, false)) return
+        if (!marker.getBoolean(KEY_DONE, false)) {
+            val moved = runCatching { migrate(context) }
+                .onFailure { Log.e(TAG, "migration failed — leaving old files in place", it) }
+                .getOrDefault(0)
+            marker.edit().putBoolean(KEY_DONE, true).apply()
+            Log.i(TAG, "brand migration complete, $moved item(s) moved")
+        }
+        if (!marker.getBoolean(KEY_LOGS, false)) {
+            val renamed = runCatching { migrateDailyLogs(context) }
+                .onFailure { Log.w(TAG, "daily log rename skipped: ${it.message}") }
+                .getOrDefault(0)
+            marker.edit().putBoolean(KEY_LOGS, true).apply()
+            if (renamed > 0) Log.i(TAG, "renamed $renamed daily log file(s)")
+        }
+    }
 
-        val moved = runCatching { migrate(context) }
-            .onFailure { Log.e(TAG, "migration failed — leaving old files in place", it) }
-            .getOrDefault(0)
-
-        // Mark done even on partial success: a retry would find the old paths
-        // already consumed and could clobber freshly written data. Anything that
-        // failed is still on disk and recoverable by hand.
-        marker.edit().putBoolean(KEY_DONE, true).apply()
-        Log.i(TAG, "brand migration complete, $moved item(s) moved")
+    /**
+     * `i-YYYY-MM-DD.log` was the community-derivative spelling of upstream's
+     * `minis-YYYY-MM-DD.log`. Rename both onto `orca-` so the viewer and the
+     * crash-loop detector keep seeing history after the prefix change.
+     */
+    private fun migrateDailyLogs(context: Context): Int {
+        val dir = File(context.filesDir, "logs")
+        if (!dir.isDirectory) return 0
+        var renamed = 0
+        val files = dir.listFiles() ?: return 0
+        for (file in files) {
+            val name = file.name
+            val rest = when {
+                name.startsWith("i-") && name.endsWith(".log") -> name.removePrefix("i-")
+                name.startsWith("minis-") && name.endsWith(".log") -> name.removePrefix("minis-")
+                else -> continue
+            }
+            if (moveFile(file, File(dir, "orca-$rest"))) renamed++
+        }
+        return renamed
     }
 
     private fun migrate(context: Context): Int {

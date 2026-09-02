@@ -163,7 +163,7 @@ class ProvidersCollection(
         val resolved = envVars.getValue(key)
             ?: throw ConfigError.InvalidValue(
                 "$fieldName references env var \$\$$key, but no such env var exists. " +
-                    "Create it first via [Set $key](i://settings/environments?create_key=$key&create_value=)."
+                    "Create it first via [Set $key](orca://settings/environments?create_key=$key&create_value=)."
             )
         if (resolved.isEmpty()) {
             throw ConfigError.InvalidValue("$fieldName references env var \$\$$key but its value is empty.")
@@ -315,7 +315,7 @@ class ProvidersCollection(
      * [T-android-iconfig-custom-useragent] Per-provider User-Agent
      * override. Empty string clears the override and falls back to the
      * branded default (I/<version> (Android <release>; <model>) — see
-     * IUserAgent.DEFAULT) at request build time. Cloned from
+     * OrcaUserAgent.DEFAULT) at request build time. Cloned from
      * [customBaseURL] in shape; the underlying field on ProviderInstance
      * has been wired through ProviderFactory + applyUserAgentOverride
      * since #802, so a write here takes effect on the very next outbound

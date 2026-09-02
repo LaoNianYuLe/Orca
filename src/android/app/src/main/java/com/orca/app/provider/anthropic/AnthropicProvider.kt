@@ -999,7 +999,7 @@ class AnthropicProvider(
         // everywhere else.
         builder.applyUserAgentOverride(
             customUserAgent,
-            defaultUserAgent = if (isOAuth) null else com.orca.app.provider.IUserAgent.DEFAULT,
+            defaultUserAgent = if (isOAuth) null else com.orca.app.provider.OrcaUserAgent.DEFAULT,
         )
         return builder.build()
     }

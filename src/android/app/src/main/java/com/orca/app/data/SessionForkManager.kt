@@ -181,7 +181,7 @@ class SessionForkManager(
 
     /**
      * Persist a memory note (plain Markdown / text) under
-     * `<filesDir>/i-global/memory/<fileName>`. Mirrors iOS
+     * `<filesDir>/orca-global/memory/<fileName>`. Mirrors iOS
      * `SessionForkManager.copyRemoteMemory` which writes under
      * `iMemoryPersistentDir`. Overwrites if the file already exists.
      */
@@ -190,7 +190,7 @@ class SessionForkManager(
             AppLogger.warning(TAG, "copyMemory: rejecting unsafe fileName '$fileName'")
             return false
         }
-        val dir = File(filesDir, "i-global/memory").apply { mkdirs() }
+        val dir = File(filesDir, "orca-global/memory").apply { mkdirs() }
         return try {
             File(dir, fileName).writeText(content)
             true

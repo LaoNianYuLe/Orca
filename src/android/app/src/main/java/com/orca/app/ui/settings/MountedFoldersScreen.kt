@@ -42,7 +42,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -321,7 +321,7 @@ fun MountedFoldersScreen(
         AlertDialog(
             onDismissRequest = { addError = null },
             confirmButton = {
-                ITextButton(onClick = { addError = null }) {
+                OrcaTextButton(onClick = { addError = null }) {
                     Text(stringResource(android.R.string.ok))
                 }
             },
@@ -346,7 +346,7 @@ fun MountedFoldersScreen(
             title = { Text(stringResource(R.string.mount_picker_intro_title)) },
             text = { Text(stringResource(R.string.mount_picker_intro_message)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     showPickerIntro = false
                     pickerLauncher.launch(initialPickerUri())
                 }) {
@@ -354,7 +354,7 @@ fun MountedFoldersScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showPickerIntro = false }) {
+                OrcaTextButton(onClick = { showPickerIntro = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },
@@ -545,7 +545,7 @@ private fun MountRow(
                 AccessBadge(entry = entry)
             }
             Text(
-                text = "/var/i/mounts/${entry.name}",
+                text = "/var/orca/mounts/${entry.name}",
                 style = MaterialTheme.typography.bodySmall,
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -674,11 +674,11 @@ private fun AddMountSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                ITextButton(onClick = onDismiss) {
+                OrcaTextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.cancel))
                 }
                 Spacer(Modifier.width(8.dp))
-                ITextButton(
+                OrcaTextButton(
                     onClick = { onConfirm(name.trim(), allowWrite) },
                     enabled = isValidMountName(name),
                 ) {

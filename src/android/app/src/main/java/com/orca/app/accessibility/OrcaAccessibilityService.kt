@@ -21,21 +21,21 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * IAccessibilityService — host-side AccessibilityService backing the
+ * OrcaAccessibilityService — host-side AccessibilityService backing the
  * `android-a11y-cli` offload command. The user must enable it manually
  * under Settings → Accessibility; we never start it programmatically.
  */
-class IAccessibilityService : AccessibilityService() {
+class OrcaAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "IA11y"
-        const val SERVICE_ID = "com.orca.app/.accessibility.IAccessibilityService"
+        const val SERVICE_ID = "com.orca.app/.accessibility.OrcaAccessibilityService"
         private const val EVENT_RING_CAP = 1024
 
         @Volatile
-        private var _instance: IAccessibilityService? = null
+        private var _instance: OrcaAccessibilityService? = null
 
-        fun getInstance(): IAccessibilityService? = _instance
+        fun getInstance(): OrcaAccessibilityService? = _instance
     }
 
     data class RecordedEvent(

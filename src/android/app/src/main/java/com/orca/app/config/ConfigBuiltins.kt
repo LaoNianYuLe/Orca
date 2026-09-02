@@ -85,7 +85,7 @@ internal object ConfigBuiltins {
     private fun registerSelfMeta(r: ConfigRegistry) {
         r.register(
             ClosureField(
-                path = "permissions.iConfig.enabled",
+                path = "permissions.orcaConfig.enabled",
                 displayName = "Allow orca-config",
                 description = "Master switch. Read-only here — toggle via Settings → Permissions.",
                 valueSchema = ConfigSchema.Bool,

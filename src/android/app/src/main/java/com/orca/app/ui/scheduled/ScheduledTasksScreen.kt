@@ -246,7 +246,7 @@ private fun ScheduledTaskRow(
 
         // [T-android-scheduled-tasks-run-records] Long-press menu: Edit / Run
         // records / Delete (delete is confirmed by the caller's dialog).
-        com.orca.app.ui.components.IMenu(
+        com.orca.app.ui.components.OrcaMenu(
             expanded = menuExpanded,
             onDismissRequest = { menuExpanded = false },
         ) {

@@ -12,7 +12,7 @@ import java.io.File
 import java.io.FileNotFoundException
 
 /**
- * Exposes `<filesDir>/i-global/{memory,skills,shared}` to the system
+ * Exposes `<filesDir>/orca-global/{memory,skills,shared}` to the system
  * Files app as a storage root. Mirrors iOS `FileProviderExtension`
  * (spec_FileMount §1). Runs in the main app process — no IPC / no
  * independent extension target needed on Android.

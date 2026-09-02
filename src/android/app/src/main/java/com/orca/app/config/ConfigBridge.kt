@@ -63,7 +63,7 @@ object ConfigBridge {
         put(
             "user_message",
             "Orca tried to change a setting but orca-config is currently disabled. " +
-                "You can enable it at [Settings → Permissions](i://settings/permissions), " +
+                "You can enable it at [Settings → Permissions](orca://settings/permissions), " +
                 "then ask me again. Or change the setting yourself directly through the relevant Settings screen."
         )
     }
@@ -731,8 +731,8 @@ object ConfigBridge {
                         put("ok", true)
                         put("applied", applied)
                         put("audit_ids", auditIds)
-                        put("audit_url", "i://settings/logs?tab=config-audit")
-                        put("user_message", "Settings updated. Review or revert at [Logs → Config Changes](i://settings/logs?tab=config-audit).")
+                        put("audit_url", "orca://settings/logs?tab=config-audit")
+                        put("user_message", "Settings updated. Review or revert at [Logs → Config Changes](orca://settings/logs?tab=config-audit).")
                     }
                 }
             }

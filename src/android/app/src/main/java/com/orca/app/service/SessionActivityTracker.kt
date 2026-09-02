@@ -111,7 +111,7 @@ object SessionActivityTracker {
      * T-bg-overlay phase 1: true while a tool call is actively executing
      * (between dispatch and result). Drives the notification's
      * indeterminate progress bar so the user can tell at a glance whether
-     * I is "between turns" (false → no progress) vs "doing something"
+     * Orca is "between turns" (false → no progress) vs "doing something"
      * (true → spinning bar).
      */
     private val _isToolRunning = MutableStateFlow(false)
@@ -161,7 +161,7 @@ object SessionActivityTracker {
      * [T-android-overlay-reply-status-34599] Session ID associated with
      * [lastReplyExcerpt] and the current activity. Drives the
      * "tap-overlay → open chat" intent in [ToolOverlayController] by
-     * synthesising a `i://session/<id>` deep-link the existing
+     * synthesising a `orca://session/<id>` deep-link the existing
      * DeepLinkHandler already understands.
      */
     private val _currentSessionId = MutableStateFlow<String?>(null)

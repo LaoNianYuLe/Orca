@@ -20,19 +20,19 @@ import androidx.compose.ui.unit.dp
 
 // Material3 ButtonDefaults.MinHeight = 40dp; tuned to 48dp for touch
 // ergonomics on phones. IconButton family is unaffected (icon-sized).
-val IButtonHeight = 48.dp
+val OrcaButtonHeight = 48.dp
 
 // Compact button height for actions embedded inside section cards
 // (e.g. "Sign out" inside a credentials card, "Set Bearer Token" inside
-// a token section). Visually subordinate to IButtonHeight (48dp)
+// a token section). Visually subordinate to OrcaButtonHeight (48dp)
 // which remains the size for primary screen actions ("Add Custom Model",
 // TopAppBar Save, AlertDialog confirm).
-val ISmallButtonHeight = 32.dp
+val OrcaSmallButtonHeight = 32.dp
 
 private val SmallButtonContentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
 
 @Composable
-fun IButton(
+fun OrcaButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -46,7 +46,7 @@ fun IButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = IButtonHeight),
+        modifier = modifier.heightIn(min = OrcaButtonHeight),
         enabled = enabled,
         shape = shape,
         colors = colors,
@@ -59,7 +59,7 @@ fun IButton(
 }
 
 @Composable
-fun IOutlinedButton(
+fun OrcaOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -73,7 +73,7 @@ fun IOutlinedButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = IButtonHeight),
+        modifier = modifier.heightIn(min = OrcaButtonHeight),
         enabled = enabled,
         shape = shape,
         colors = colors,
@@ -86,7 +86,7 @@ fun IOutlinedButton(
 }
 
 @Composable
-fun ITextButton(
+fun OrcaTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -100,7 +100,7 @@ fun ITextButton(
 ) {
     TextButton(
         onClick = onClick,
-        modifier = modifier.heightIn(min = IButtonHeight),
+        modifier = modifier.heightIn(min = OrcaButtonHeight),
         enabled = enabled,
         shape = shape,
         colors = colors,
@@ -112,11 +112,11 @@ fun ITextButton(
     )
 }
 
-// defaultMinSize is also pinned at ISmallButtonHeight so Material3's
+// defaultMinSize is also pinned at OrcaSmallButtonHeight so Material3's
 // internal 40dp floor (ButtonDefaults.MinHeight) doesn't override the
 // heightIn modifier and keep the button at 40dp.
 @Composable
-fun ISmallButton(
+fun OrcaSmallButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -131,8 +131,8 @@ fun ISmallButton(
     Button(
         onClick = onClick,
         modifier = modifier
-            .heightIn(min = ISmallButtonHeight)
-            .defaultMinSize(minHeight = ISmallButtonHeight),
+            .heightIn(min = OrcaSmallButtonHeight)
+            .defaultMinSize(minHeight = OrcaSmallButtonHeight),
         enabled = enabled,
         shape = shape,
         colors = colors,
@@ -145,7 +145,7 @@ fun ISmallButton(
 }
 
 @Composable
-fun ISmallOutlinedButton(
+fun OrcaSmallOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -160,8 +160,8 @@ fun ISmallOutlinedButton(
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
-            .heightIn(min = ISmallButtonHeight)
-            .defaultMinSize(minHeight = ISmallButtonHeight),
+            .heightIn(min = OrcaSmallButtonHeight)
+            .defaultMinSize(minHeight = OrcaSmallButtonHeight),
         enabled = enabled,
         shape = shape,
         colors = colors,
@@ -174,7 +174,7 @@ fun ISmallOutlinedButton(
 }
 
 @Composable
-fun ISmallTextButton(
+fun OrcaSmallTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -189,8 +189,8 @@ fun ISmallTextButton(
     TextButton(
         onClick = onClick,
         modifier = modifier
-            .heightIn(min = ISmallButtonHeight)
-            .defaultMinSize(minHeight = ISmallButtonHeight),
+            .heightIn(min = OrcaSmallButtonHeight)
+            .defaultMinSize(minHeight = OrcaSmallButtonHeight),
         enabled = enabled,
         shape = shape,
         colors = colors,

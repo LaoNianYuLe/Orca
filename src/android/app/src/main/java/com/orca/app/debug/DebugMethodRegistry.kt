@@ -81,7 +81,7 @@ object DebugMethodRegistry {
             ),
         ),
         MethodSpec(
-            name = "debug.iConfig.exec",
+            name = "debug.orcaConfig.exec",
             description = "DEBUG-only: drive orca-config through the REAL ConfigBridge (same code path as the in-shell CLI), so a harness can exercise every collection, the confirmation gate and the audit log without an in-shell prompt. Subcommands: set, get, topics, topic-help, audit-list.",
             params = listOf(
                 ParamSpec("subcommand", "string", required = true, description = "One of: set, get, topics, topic-help, audit-list."),
@@ -330,7 +330,7 @@ object DebugMethodRegistry {
             name = "debug.writeFile",
             description = "Write a file into the app's filesDir-rooted Linux-path namespace (resolved through PRoot bind mounts). Intended for staging test fixtures before debug.shellExecute.",
             params = listOf(
-                ParamSpec("path", "string", required = true, description = "Linux path under the proot rootfs (e.g. /tmp/test.sh, /var/i/skills/example.md)."),
+                ParamSpec("path", "string", required = true, description = "Linux path under the proot rootfs (e.g. /tmp/test.sh, /var/orca/skills/example.md)."),
                 ParamSpec("content", "string", required = true, description = "File content. Encoded per the 'encoding' field."),
                 ParamSpec("encoding", "string", required = false, default = "utf8", description = "'utf8' or 'base64'."),
                 ParamSpec("overwrite", "bool", required = false, default = true, description = "Whether to overwrite an existing file."),

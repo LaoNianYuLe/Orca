@@ -1,8 +1,8 @@
 package com.orca.app.ui.settings
 
 import com.orca.app.R
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.net.Uri
 import android.widget.Toast
@@ -169,7 +169,7 @@ fun SkillsManagementScreen(
                         contentDescription = stringResource(R.string.filebrowser_sort_by),
                     )
                 }
-                com.orca.app.ui.components.IMenu(
+                com.orca.app.ui.components.OrcaMenu(
                     expanded = sortMenuExpanded,
                     onDismissRequest = { sortMenuExpanded = false },
                 ) {
@@ -365,13 +365,13 @@ fun SkillsManagementScreen(
             title = { Text("Delete ${skill?.name ?: "skill"}?") },
             text = { Text(stringResource(R.string.skill_delete_confirm_text)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     deleteSkillId?.let { skillRepository.delete(it) }
                     deleteSkillId = null
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                ITextButton(onClick = { deleteSkillId = null }) { Text(stringResource(R.string.common_cancel)) }
+                OrcaTextButton(onClick = { deleteSkillId = null }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -499,7 +499,7 @@ private fun SkillImportSheet(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    ITextButton(
+                    OrcaTextButton(
                         onClick = { fileLauncher.launch("*/*") },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.skill_import_file_button)) }
@@ -512,12 +512,12 @@ private fun SkillImportSheet(
 
             if (selectedTab < 2) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    ITextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-                    ITextButton(
+                    OrcaTextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
+                    OrcaTextButton(
                         onClick = {
                             when (selectedTab) {
                                 0 -> {
-                                    if (urlText.isBlank()) { errorText = context.getString(R.string.skill_import_error_no_url); return@ITextButton }
+                                    if (urlText.isBlank()) { errorText = context.getString(R.string.skill_import_error_no_url); return@OrcaTextButton }
                                     isLoading = true
                                     scope.launch {
                                         try {
@@ -870,7 +870,7 @@ fun SkillDetailScreen(
 
             // ── Delete ──
             Spacer(Modifier.height(16.dp))
-            IButton(
+            OrcaButton(
                 onClick = { showDeleteDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -892,7 +892,7 @@ fun SkillDetailScreen(
             title = { Text("Delete ${skill.name}?") },
             text = { Text(stringResource(R.string.skill_delete_confirm_text)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     deleted = true
                     skillRepository.delete(skill.id)
                     showDeleteDialog = false
@@ -900,7 +900,7 @@ fun SkillDetailScreen(
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                ITextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                OrcaTextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -923,7 +923,7 @@ fun SkillDetailScreen(
             confirmButton = {
                 val trimmed = editName.trim()
                 val canSave = trimmed.isNotEmpty() && trimmed != skill.name
-                ITextButton(
+                OrcaTextButton(
                     onClick = {
                         if (canSave) skillRepository.update(skill.id, name = trimmed)
                         showEditNameDialog = false
@@ -932,7 +932,7 @@ fun SkillDetailScreen(
                 ) { Text(stringResource(R.string.skill_file_save)) }
             },
             dismissButton = {
-                ITextButton(onClick = { showEditNameDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                OrcaTextButton(onClick = { showEditNameDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -1163,7 +1163,7 @@ fun SkillFileViewerScreen(
                 },
                 actions = {
                     if (isEditing) {
-                        ITextButton(onClick = {
+                        OrcaTextButton(onClick = {
                             if (isSkillMd) {
                                 // SKILL.md edits go through importFromContent so
                                 // YAML frontmatter changes flow back into DB metadata.
@@ -1175,7 +1175,7 @@ fun SkillFileViewerScreen(
                             onBack()
                         }) { Text(stringResource(R.string.skill_file_save)) }
                     } else {
-                        ITextButton(onClick = {
+                        OrcaTextButton(onClick = {
                             editContent = initialContent
                             isEditing = true
                         }) { Text(stringResource(R.string.skill_file_edit)) }

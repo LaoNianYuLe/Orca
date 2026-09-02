@@ -1,5 +1,0 @@
-#!/bin/sh
-# Pre-rebrand name for orca-open, kept because it is baked into existing chat
-# transcripts the model reads back as context and into user scripts written
-# inside the guest. Forwards verbatim; delete once those stop appearing.
-exec /usr/local/bin/orca-open "$@"

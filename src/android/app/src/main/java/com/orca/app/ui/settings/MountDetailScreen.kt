@@ -51,7 +51,7 @@ import com.orca.app.R
 import com.orca.app.data.MountedFoldersStore
 import com.orca.app.ui.components.SectionTextField
 import kotlinx.coroutines.launch
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Detail/edit screen for a single mounted folder. Mirrors iOS
@@ -101,7 +101,7 @@ fun MountDetailScreen(
                     }
                 },
                 actions = {
-                    ITextButton(
+                    OrcaTextButton(
                         enabled = canSave,
                         onClick = {
                             scope.launch {
@@ -214,7 +214,7 @@ fun MountDetailScreen(
             title = { Text(stringResource(R.string.mount_unmount_title)) },
             text = { Text(stringResource(R.string.mount_unmount_message)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     showUnmountConfirm = false
                     scope.launch {
                         store.remove(entry.id)
@@ -228,7 +228,7 @@ fun MountDetailScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showUnmountConfirm = false }) {
+                OrcaTextButton(onClick = { showUnmountConfirm = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },
@@ -270,7 +270,7 @@ private fun HeaderCard(entry: MountedFoldersStore.Entry) {
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "/var/i/mounts/${entry.name}",
+                    text = "/var/orca/mounts/${entry.name}",
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

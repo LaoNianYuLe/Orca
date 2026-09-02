@@ -40,7 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.orca.app.R
 import com.orca.app.accessibility.AccessibilityRecoveryManager
-import com.orca.app.accessibility.IAccessibilityService
+import com.orca.app.accessibility.OrcaAccessibilityService
 import com.orca.app.offload.ShizukuManager
 import com.orca.app.power.PowerOptimizationManager
 import kotlinx.coroutines.delay
@@ -78,7 +78,7 @@ fun SystemPermissionsScreen(onBack: () -> Unit) {
     LaunchedEffect(Unit) {
         while (true) {
             val inSettings = isAccessibilityEnabled(context)
-            val connected = IAccessibilityService.getInstance() != null
+            val connected = OrcaAccessibilityService.getInstance() != null
             a11yEnabled = inSettings || connected
             a11yDegraded = inSettings && !connected
             // Only claim "revoked" once the user has actually granted it at
@@ -286,7 +286,7 @@ fun SystemPermissionsScreen(onBack: () -> Unit) {
 }
 
 private fun isAccessibilityEnabled(context: Context): Boolean {
-    val expected = "${context.packageName}/${IAccessibilityService::class.java.name}"
+    val expected = "${context.packageName}/${OrcaAccessibilityService::class.java.name}"
     val enabled = Settings.Secure.getString(
         context.contentResolver,
         Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,

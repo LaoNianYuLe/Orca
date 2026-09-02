@@ -163,9 +163,7 @@ class DebugServer(
                     }
                     // [T-android-debugserver-auth] Token via X-Orca-Token or
                     // Authorization: Bearer — either spelling accepted.
-                    // x-i-token is the pre-rebrand header, still honoured so
-                    // existing scripts and saved HTTP clients keep working.
-                    if (lower.startsWith("x-orca-token:") || lower.startsWith("x-i-token:")) {
+                    if (lower.startsWith("x-orca-token:")) {
                         providedToken = headerLine.substringAfter(":").trim()
                     }
                     if (lower.startsWith("authorization:")) {
@@ -338,7 +336,7 @@ class DebugServer(
         writer.print("Connection: close\r\n")
         writer.print("Access-Control-Allow-Origin: *\r\n")
         writer.print("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n")
-        writer.print("Access-Control-Allow-Headers: Content-Type, X-Orca-Token, X-I-Token, Authorization\r\n")
+        writer.print("Access-Control-Allow-Headers: Content-Type, X-Orca-Token, Authorization\r\n")
         writer.print("\r\n")
         writer.print(body)
         writer.flush()
@@ -348,7 +346,7 @@ class DebugServer(
         writer.print("HTTP/1.1 204 No Content\r\n")
         writer.print("Access-Control-Allow-Origin: *\r\n")
         writer.print("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n")
-        writer.print("Access-Control-Allow-Headers: Content-Type, X-Orca-Token, X-I-Token, Authorization\r\n")
+        writer.print("Access-Control-Allow-Headers: Content-Type, X-Orca-Token, Authorization\r\n")
         writer.print("Access-Control-Max-Age: 86400\r\n")
         writer.print("Connection: close\r\n")
         writer.print("\r\n")

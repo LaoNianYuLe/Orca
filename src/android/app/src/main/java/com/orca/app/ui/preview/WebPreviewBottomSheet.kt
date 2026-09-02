@@ -338,7 +338,7 @@ internal fun WebPreviewToolbar(
                 description = stringResource(R.string.webpreview_more),
                 onClick = { menuOpen = true },
             )
-            com.orca.app.ui.components.IMenu(
+            com.orca.app.ui.components.OrcaMenu(
                 expanded = menuOpen,
                 onDismissRequest = { menuOpen = false },
             ) {

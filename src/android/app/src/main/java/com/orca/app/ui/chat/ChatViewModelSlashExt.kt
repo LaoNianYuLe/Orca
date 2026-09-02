@@ -48,8 +48,8 @@ import com.orca.app.provider.ImageBudget
 import com.orca.app.provider.LLMProvider
 import com.orca.app.provider.ProviderFactory
 import com.orca.app.sandbox.ExecutionCoordinator
-import com.orca.app.terminal.IOpenUrlBroker
-import com.orca.app.terminal.IUrlMarker
+import com.orca.app.terminal.OrcaOpenUrlBroker
+import com.orca.app.terminal.OrcaUrlMarker
 import com.orca.app.tools.AgentTools
 import com.orca.app.tools.FileEditTool
 import com.orca.app.tools.FileReadTool
@@ -148,7 +148,7 @@ internal fun ChatViewModel.filteredSlashCommands(): List<SlashCommand> {
     // tagged [mcp] with a wrench icon to distinguish them from skills (⚡).
     // All servers enabled for this session are shown (not just the Top-20
     // disclosed in the system prompt). Tapping fills the composer with the
-    // server name; discovery/call happens model-side via i-mcp-cli.
+    // server name; discovery/call happens model-side via orca-mcp-cli.
     val mcpRows: List<SlashCommand> = mcpRepository?.servers?.value
         ?.filter { mcpRepository.isEnabledForSession(it.id, sid) }
         ?.sortedBy { it.id.lowercase() }

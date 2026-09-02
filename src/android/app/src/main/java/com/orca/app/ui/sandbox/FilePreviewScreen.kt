@@ -88,7 +88,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.OutputStream
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 private const val MAX_TEXT_PREVIEW_BYTES = 512_000 // 500 KB
 
@@ -616,7 +616,7 @@ private fun PdfOpenExternalFallback(item: FileItem, reason: String) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
-            ITextButton(onClick = { openExternally(context, item, "application/pdf") }) {
+            OrcaTextButton(onClick = { openExternally(context, item, "application/pdf") }) {
                 Text(stringResource(R.string.filepreview_open_externally))
             }
         }
@@ -909,7 +909,7 @@ private fun OfficeOpenExternal(item: FileItem) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(16.dp))
-            ITextButton(onClick = {
+            OrcaTextButton(onClick = {
                 val mime = MimeTypeMap.getSingleton()
                     .getMimeTypeFromExtension(item.file.extension.lowercase())
                     ?: "application/octet-stream"

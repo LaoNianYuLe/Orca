@@ -61,7 +61,7 @@ import com.orca.app.browser.BrowserTabPool
 import com.orca.app.browser.UserAgentProfile
 import com.orca.app.logging.AppLogger
 import kotlinx.coroutines.launch
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 import com.orca.app.ui.util.bringIntoViewOnFocus
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,7 +148,7 @@ fun BrowserSettingsSheet(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
-                ITextButton(onClick = onDismiss) { Text(stringResource(R.string.browser_settings_done)) }
+                OrcaTextButton(onClick = onDismiss) { Text(stringResource(R.string.browser_settings_done)) }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -211,7 +211,7 @@ fun BrowserSettingsSheet(
                     singleLine = false,
                     textStyle = MaterialTheme.typography.bodySmall,
                 )
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     tabPool.setUserAgentFromUI(UserAgentProfile.CUSTOM, customUA)
                 }) {
                     Text(stringResource(R.string.browser_settings_apply))
@@ -316,7 +316,7 @@ fun BrowserSettingsSheet(
                     textStyle = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.size(8.dp))
-                ITextButton(
+                OrcaTextButton(
                     onClick = {
                         val minutes = idleTimeoutText.toIntOrNull()
                             ?: BrowserTabPool.DEFAULT_IDLE_TIMEOUT_MINUTES
@@ -402,7 +402,7 @@ fun BrowserSettingsSheet(
 
             Spacer(Modifier.height(8.dp))
 
-            ITextButton(
+            OrcaTextButton(
                 onClick = { showClearConfirm = true },
                 enabled = hasCookies,
             ) {
@@ -417,7 +417,7 @@ fun BrowserSettingsSheet(
             title = { Text(stringResource(R.string.browser_settings_clear_all_dialog_title)) },
             text = { Text(stringResource(R.string.browser_settings_clear_all_dialog_message)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     CookieManager.getInstance().removeAllCookies(null)
                     WebStorage.getInstance().deleteAllData()
                     showClearConfirm = false
@@ -426,7 +426,7 @@ fun BrowserSettingsSheet(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showClearConfirm = false }) {
+                OrcaTextButton(onClick = { showClearConfirm = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },
@@ -572,7 +572,7 @@ private fun ViewportSection(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
             Spacer(Modifier.size(8.dp))
-            ITextButton(onClick = onApply) { Text(stringResource(R.string.browser_settings_apply)) }
+            OrcaTextButton(onClick = onApply) { Text(stringResource(R.string.browser_settings_apply)) }
         }
 
         // UA mismatch banner — same 768px breakpoint as iOS.

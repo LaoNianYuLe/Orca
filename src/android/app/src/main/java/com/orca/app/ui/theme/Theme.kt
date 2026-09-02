@@ -142,7 +142,7 @@ fun iFabColor(): Color = LocalChatPalette.current.fabAccent
 
 // App-wide shape system — larger corners for a modern, friendly feel
 // DropdownMenu uses extraSmall, Dialog uses extraLarge, BottomSheet uses extraLarge
-private val IShapes = Shapes(
+private val OrcaShapes = Shapes(
     extraSmall = RoundedCornerShape(12.dp),   // DropdownMenu, Tooltip, OutlinedTextField default
     small = RoundedCornerShape(12.dp),        // Chip, TextField
     medium = RoundedCornerShape(20.dp),       // Card, Snackbar
@@ -151,7 +151,7 @@ private val IShapes = Shapes(
 )
 
 @Composable
-fun ITheme(
+fun OrcaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     fontScale: Float = 1f,
     content: @Composable () -> Unit,
@@ -162,7 +162,7 @@ fun ITheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        shapes = IShapes,
+        shapes = OrcaShapes,
         typography = typography,
     ) {
         CompositionLocalProvider(LocalChatPalette provides chatPalette, content = content)

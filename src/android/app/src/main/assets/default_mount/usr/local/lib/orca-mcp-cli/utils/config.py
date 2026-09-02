@@ -19,7 +19,7 @@ stay exactly the mcpServers object form:
 import json
 import os
 
-CONFIG_DIR = "/var/i/mcp-servers"
+CONFIG_DIR = "/var/orca/mcp-servers"
 CONFIG_PATH = os.path.join(CONFIG_DIR, "servers.json")
 
 # Startup / handshake timeout for a STDIO MCP server's first `initialize` RPC.

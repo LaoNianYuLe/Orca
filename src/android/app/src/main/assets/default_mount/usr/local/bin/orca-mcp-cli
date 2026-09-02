@@ -6,13 +6,13 @@
 # /usr/local/lib/orca-mcp-cli is platform-neutral and is shipped identically
 # on iOS (iSH) and Android (PRoot/Alpine) — keep it POSIX + dependency-light.
 #
-# Data file: /var/i/mcp-servers/servers.json (mcpServers object format,
-# Claude-Desktop compatible). Logs: /var/i/mcp-servers/mcp-cli.log.
+# Data file: /var/orca/mcp-servers/servers.json (mcpServers object format,
+# Claude-Desktop compatible). Logs: /var/orca/mcp-servers/mcp-cli.log.
 # Diagnostics go to the log, never to stdout (stdout is reserved for the
 # JSON the agent parses).
 
-LOG="/var/i/mcp-servers/mcp-cli.log"
-mkdir -p /var/i/mcp-servers 2>/dev/null
+LOG="/var/orca/mcp-servers/mcp-cli.log"
+mkdir -p /var/orca/mcp-servers 2>/dev/null
 _log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG" 2>/dev/null; }
 
 # Ensure python3 is available.

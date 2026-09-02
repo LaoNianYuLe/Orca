@@ -44,7 +44,7 @@ import com.orca.app.config.audit.ConfigAuditEntry
 import com.orca.app.config.audit.ConfigAuditLog
 import com.orca.app.config.audit.ConfigAuditStatus
 import com.orca.app.config.ConfigBridge
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
@@ -164,7 +164,7 @@ fun ConfigAuditScreen(modifier: Modifier = Modifier) {
                 val successBody = stringResource(R.string.logs_config_revert_success_body)
                 val failedTitle = stringResource(R.string.logs_config_revert_failed_title)
                 val unknownErr = stringResource(R.string.logs_config_revert_unknown_error)
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     val target = entry
                     revertCandidate = null
                     scope.launch {
@@ -187,7 +187,7 @@ fun ConfigAuditScreen(modifier: Modifier = Modifier) {
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { revertCandidate = null }) {
+                OrcaTextButton(onClick = { revertCandidate = null }) {
                     Text(stringResource(R.string.logs_config_dialog_cancel))
                 }
             },
@@ -201,7 +201,7 @@ fun ConfigAuditScreen(modifier: Modifier = Modifier) {
             title = { Text(msg.title) },
             text = { Text(msg.body) },
             confirmButton = {
-                ITextButton(onClick = { revertResult = null }) {
+                OrcaTextButton(onClick = { revertResult = null }) {
                     Text(stringResource(R.string.logs_config_dialog_ok))
                 }
             },

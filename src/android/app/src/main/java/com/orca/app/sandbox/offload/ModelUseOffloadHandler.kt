@@ -151,7 +151,7 @@ class ModelUseOffloadHandler(
                 JSONObject().put("error", "invalid_output_path")
                     .put(
                         "message",
-                        "--output must be an absolute path (e.g. /var/i/workspace/out.jpg). " +
+                        "--output must be an absolute path (e.g. /var/orca/workspace/out.jpg). " +
                             "Got the relative path '$outputPath', which cannot be resolved because " +
                             "orca-model-use does not inherit the shell's working directory.",
                     )
@@ -408,7 +408,7 @@ class ModelUseOffloadHandler(
         if (outputPath != null) {
             // [T-android-model-use-session-scoped-write] Prefer the caller
             // session's own host dir; fall back to the global resolver only when
-            // sessionId is null or the path isn't a session-scoped /var/i
+            // sessionId is null or the path isn't a session-scoped /var/orca
             // subdir. Guaranteed absolute here (relative --output rejected above).
             val hostFile = sessionScopedHostFile(outputPath, sessionId)
                 ?: PRootKernel.resolveHostPath(outputPath)
@@ -440,8 +440,8 @@ class ModelUseOffloadHandler(
         } else if (response.mediaAttachments.isNotEmpty()) {
             // [T-android-model-use-session-scoped-write] Auto-save to the caller
             // session's attachments dir, not the global (last-writer-wins) mount.
-            val attachDir = sessionScopedHostFile("/var/i/attachments", sessionId)
-                ?: PRootKernel.resolveHostPath("/var/i/attachments")
+            val attachDir = sessionScopedHostFile("/var/orca/attachments", sessionId)
+                ?: PRootKernel.resolveHostPath("/var/orca/attachments")
             if (attachDir != null) {
                 attachDir.mkdirs()
                 for ((idx, media) in response.mediaAttachments.withIndex()) {
@@ -449,7 +449,7 @@ class ModelUseOffloadHandler(
                     val fileName = "model-use-$modelSlug-$ts-$idx.$ext"
                     val hostFile = File(attachDir, fileName)
                     hostFile.writeBytes(media.data)
-                    val responsePath = "/var/i/attachments/$fileName"
+                    val responsePath = "/var/orca/attachments/$fileName"
                     logModelUseWrite(responsePath, hostFile, sessionId)
                     mediaFiles.put(JSONObject().apply {
                         put("type", media.type.value)
@@ -1225,8 +1225,8 @@ class ModelUseOffloadHandler(
         } else if (response.mediaAttachments.isNotEmpty()) {
             // [T-android-model-use-session-scoped-write] Auto-save to the caller
             // session's attachments dir, not the global (last-writer-wins) mount.
-            val attachDir = sessionScopedHostFile("/var/i/attachments", sessionId)
-                ?: PRootKernel.resolveHostPath("/var/i/attachments")
+            val attachDir = sessionScopedHostFile("/var/orca/attachments", sessionId)
+                ?: PRootKernel.resolveHostPath("/var/orca/attachments")
             if (attachDir != null) {
                 attachDir.mkdirs()
                 for ((idx, media) in response.mediaAttachments.withIndex()) {
@@ -1234,7 +1234,7 @@ class ModelUseOffloadHandler(
                     val fileName = "model-use-$modelSlug-$ts-$idx.$ext"
                     val hostFile = File(attachDir, fileName)
                     hostFile.writeBytes(media.data)
-                    val responsePath = "/var/i/attachments/$fileName"
+                    val responsePath = "/var/orca/attachments/$fileName"
                     logModelUseWrite(responsePath, hostFile, sessionId)
                     mediaFiles.put(JSONObject().apply {
                         put("type", media.type.value)
@@ -1257,30 +1257,30 @@ class ModelUseOffloadHandler(
     }
 
     /**
-     * [T-android-model-use-session-scoped-write] Resolve a `/var/i/<sub>/...`
+     * [T-android-model-use-session-scoped-write] Resolve a `/var/orca/<sub>/...`
      * Linux path to the caller session's OWN host directory, bypassing the
      * global (last-writer-wins) PRootKernel.bindMounts map. That global map is
      * overwritten by ExecutionCoordinator.buildSessionBindMounts on every shell
-     * build, so PRootKernel.resolveHostPath("/var/i/attachments") returns
+     * build, so PRootKernel.resolveHostPath("/var/orca/attachments") returns
      * whichever session built a shell most recently — a model-use call from
      * session A could then write into session B's attachments dir while the
-     * response reports the abstract `/var/i/attachments/...` path, which A's
+     * response reports the abstract `/var/orca/attachments/...` path, which A's
      * shell (mounted to A's dir) can't read. Mirrors iOS da4b6c5d, which routes
      * the write to iAttachmentsPersistentDir(for: callerSid).
      *
      * Session-scoped subdirs are attachments/offloads/workspace/browser (see
-     * buildSessionBindMounts). For those, host dir = filesDir/i-sessions/
+     * buildSessionBindMounts). For those, host dir = filesDir/orca-sessions/
      * <sid>/<sub>/<rest>. Returns null when [sessionId] is null (caller then
      * falls back to the global resolveHostPath and logs the degrade) or the path
-     * isn't a session-scoped `/var/i/<sub>` path.
+     * isn't a session-scoped `/var/orca/<sub>` path.
      */
     private fun sessionScopedHostFile(linuxPath: String, sessionId: String?): File? {
         if (sessionId == null) return null
-        val m = Regex("^/var/i/(attachments|offloads|workspace|browser)(/.*)?$").find(linuxPath)
+        val m = Regex("^/var/orca/(attachments|offloads|workspace|browser)(/.*)?$").find(linuxPath)
             ?: return null
         val sub = m.groupValues[1]
         val rest = m.groupValues[2].removePrefix("/")
-        val base = File(context.filesDir, "i-sessions/$sessionId/$sub")
+        val base = File(context.filesDir, "orca-sessions/$sessionId/$sub")
         return if (rest.isEmpty()) base else File(base, rest)
     }
 
@@ -1291,7 +1291,7 @@ class ModelUseOffloadHandler(
         Log.i(
             "ModelUseImage",
             "[ModelUseWrite] path=$responsePath hostFile=${hostFile.absolutePath} " +
-                "sessionId=$sessionId globalAttachMount=${PRootKernel.bindMounts["/var/i/attachments"]}",
+                "sessionId=$sessionId globalAttachMount=${PRootKernel.bindMounts["/var/orca/attachments"]}",
         )
     }
 
@@ -1571,9 +1571,9 @@ class ModelUseOffloadHandler(
      *
      *  - `data:<mime>;base64,<...>` → inline base64
      *  - `file:///<host-path>` → direct host read
-     *  - `/var/i/<scope>/<path>` or `/<abs/linux/path>` → via
+     *  - `/var/orca/<scope>/<path>` or `/<abs/linux/path>` → via
      *    [PRootKernel.resolveHostPath] (which already handles
-     *    `/var/i/` bind mounts longest-prefix)
+     *    `/var/orca/` bind mounts longest-prefix)
      *  - `http(s)://` → throw with a hint to download via shell_execute
      *    first (matches iOS — avoids egressing user content)
      *  - anything else (relative paths, unknown schemes) → throw
@@ -1606,19 +1606,19 @@ class ModelUseOffloadHandler(
             throw ImageInputError(
                 "http(s):// image URLs are not supported by orca-model-use. " +
                     "Download first with `shell_execute` (curl/wget) into " +
-                    "/var/i/workspace/, then reference the local path."
+                    "/var/orca/workspace/, then reference the local path."
             )
         }
 
         // file:///abs/path → strip prefix, treat as host path; fall back
-        // to resolveHostPath so bind-mounted /var/i/* still works
-        // when callers write file:///var/i/... .
+        // to resolveHostPath so bind-mounted /var/orca/* still works
+        // when callers write file:///var/orca/... .
         val linuxPath = when {
             url.startsWith("file://") -> url.removePrefix("file://")
             url.startsWith("/") -> url
             else -> throw ImageInputError(
                 "Unsupported image_url '$url'. Use a data: URL, file:///host/path, " +
-                    "/var/i/<scope>/<path>, or an absolute Linux path."
+                    "/var/orca/<scope>/<path>, or an absolute Linux path."
             )
         }
         val hostFile: File = PRootKernel.resolveHostPath(linuxPath)
@@ -1802,12 +1802,12 @@ Examples:
   orca-model-use list
   orca-model-use list --modality image_input
   orca-model-use search gemini
-  orca-model-use run --model claude-sonnet-4-6 --input /var/i/workspace/prompt.json
+  orca-model-use run --model claude-sonnet-4-6 --input /var/orca/workspace/prompt.json
   orca-model-use run --model deepseek/deepseek-v4-flash --input msgs.json   # qualified form
   orca-model-use run --model deepseek-v4-flash --provider deepseek --input msgs.json   # equivalent
   echo 'What is 2+2?' | orca-model-use run --model gpt-4o
   orca-model-use run --model gemini-2.5-flash --system 'You are a poet' \
-                      --input msgs.json --output /var/i/workspace/out.txt
+                      --input msgs.json --output /var/orca/workspace/out.txt
 """
     }
 }

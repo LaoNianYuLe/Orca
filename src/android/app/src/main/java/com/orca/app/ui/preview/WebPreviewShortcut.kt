@@ -12,9 +12,9 @@ import com.orca.app.R
 import com.orca.app.logging.AppLogger
 
 /**
- * Helper that pins a `file:///var/i/...` HTML preview as a launcher
+ * Helper that pins a `file:///var/orca/...` HTML preview as a launcher
  * shortcut. Clicking the shortcut from the home screen sends a
- * `i://preview/html?path=...&title=...` deep link back to
+ * `orca://preview/html?path=...&title=...` deep link back to
  * [MainActivity], which [com.orca.app.deeplink.DeepLinkHandler] parses
  * into [com.orca.app.deeplink.DeepLinkAction.OpenHtmlPreview]; the
  * chat layer then opens the fullscreen WebPreview.
@@ -50,8 +50,8 @@ object WebPreviewShortcut {
             AppLogger.warning(TAG, "pin: empty path in $url")
             return
         }
-        // file:///var/i/browser/snake.html → /browser/snake.html
-        val resourcePath = absPath.removePrefix("/var/i").let {
+        // file:///var/orca/browser/snake.html → /browser/snake.html
+        val resourcePath = absPath.removePrefix("/var/orca").let {
             if (it.startsWith("/")) it else "/$it"
         }
 
@@ -60,7 +60,7 @@ object WebPreviewShortcut {
         // from a different session gets its own shortcut.
         val shortcutId = "html_preview_${(sessionId + resourcePath).hashCode().toUInt().toString(16)}"
 
-        // i://session/<sessionId>/<resource-path>?title=<title>
+        // orca://session/<sessionId>/<resource-path>?title=<title>
         val deepLink = Uri.Builder()
             .scheme("i")
             .authority("session")

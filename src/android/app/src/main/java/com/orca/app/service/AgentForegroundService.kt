@@ -710,7 +710,7 @@ class AgentForegroundService : Service() {
         )
 
         // T-bg-overlay phase 1: enrich the ongoing notification.
-        // Title:   "I is using <Tool>"  (or session-count summary when idle/between turns)
+        // Title:   "Orca is using <Tool>"  (or session-count summary when idle/between turns)
         // Text:    one-line "<sessionLabel> · <elapsed>" so the always-visible row stays compact
         // BigText: full status string from SessionActivityTracker.currentToolStatus when expanded
         // Progress: indeterminate while a tool is in flight (isToolRunning), hidden otherwise
@@ -721,7 +721,7 @@ class AgentForegroundService : Service() {
         // [T-android-live-update-completed] In the completed resting state the
         // title/status must stop describing work in progress. `toolName` is
         // already null by then (setInactive clears it), so the old code fell
-        // through to the generic "I is running" title while the icon fell
+        // through to the generic "Orca is running" title while the icon fell
         // through to the wrench (toolSmallIconRes' else branch) — a finished
         // task rendered exactly like a running one.
         val titleText = when {

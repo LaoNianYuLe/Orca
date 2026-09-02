@@ -54,7 +54,7 @@ import com.orca.app.sandbox.offload.SpeakOffloadHandler
 import com.orca.app.sandbox.offload.SpeechOffloadHandler
 import com.orca.app.sandbox.offload.WeatherOffloadHandler
 import com.orca.app.service.SessionActivityTracker
-import com.orca.app.ui.IImageFetcher
+import com.orca.app.ui.OrcaImageFetcher
 import kotlinx.coroutines.launch
 
 class OrcaApp : Application(), ImageLoaderFactory {
@@ -402,7 +402,7 @@ class OrcaApp : Application(), ImageLoaderFactory {
         // breaks the Application and produces the GH#147 crash loop.
         skillRepository = SkillRepository(this)
         mcpRepository = MCPRepository(this)
-        memoryRepository = MemoryRepository(java.io.File(filesDir, "i-global/memory"))
+        memoryRepository = MemoryRepository(java.io.File(filesDir, "orca-global/memory"))
         webAppShortcutRepository = WebAppShortcutRepository(database.webAppShortcutDao())
 
         // T-android-safemode-lateinit-crash: every repository the UI layer
@@ -460,14 +460,14 @@ class OrcaApp : Application(), ImageLoaderFactory {
         // DNS servers after Wi-Fi ↔ cellular swaps or VPN toggles.
         networkMonitor.start(this)
 
-        // Register global /var/i/{memory,skills,shared} bind mounts up-front
+        // Register global /var/orca/{memory,skills,shared} bind mounts up-front
         // so direct file I/O tools (file_read) resolve these paths even before
         // PRoot has booted or any shell has started.
         PRootKernel.registerGlobalBindMounts(this)
 
         // T219-1: load user-mounted external folders and seed PRoot's
         // bindMounts before the first proot invocation, so the very first
-        // `shell_execute` already has `/var/i/mounts/<name>/` visible.
+        // `shell_execute` already has `/var/orca/mounts/<name>/` visible.
         // Entries whose SAF tree URI didn't resolve to a real POSIX path
         // (cloud providers, unmounted SD card) are silently skipped by
         // bindMountSpecs.
@@ -488,7 +488,7 @@ class OrcaApp : Application(), ImageLoaderFactory {
         }
         // T219-6: route launch-time seeding through applyMountedFoldersSnapshot
         // so it (a) reads the live store consistently and (b) materializes the
-        // /var/i/mounts/<name> placeholder dirs that PRoot's `-b` needs.
+        // /var/orca/mounts/<name> placeholder dirs that PRoot's `-b` needs.
         // Note: this runs before PRootKernel.boot, so rootfs may not yet exist —
         // applyMountedFoldersSnapshot tolerates that case (mkdirs fails silently
         // and PRootKernel.boot calls applyMountedFoldersSnapshot again at the
@@ -512,28 +512,28 @@ class OrcaApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-speak", SpeakOffloadHandler(this))
         NativeOffloadServer.register("android-speech", SpeechOffloadHandler(this))
         NativeOffloadServer.register("android-weather", WeatherOffloadHandler(this))
-        // T323: UI-layer automation backed by IAccessibilityService.
+        // T323: UI-layer automation backed by OrcaAccessibilityService.
         NativeOffloadServer.register("android-a11y-cli", AccessibilityOffloadHandler(this))
-        NativeOffloadServer.registerWithLegacyAlias("orca-model-use", ModelUseOffloadHandler(this, providerRepository))
+        NativeOffloadServer.register("orca-model-use", ModelUseOffloadHandler(this, providerRepository))
         // T-config: orca-config — agent-facing settings management
         // (read/write registered ConfigFields with audit + revert).
         // Mirrors iOS `config_offload_register()` in ISHKernel.m.
-        NativeOffloadServer.registerWithLegacyAlias(
+        NativeOffloadServer.register(
             "orca-config",
             com.orca.app.sandbox.offload.ConfigOffloadHandler(),
         )
-        NativeOffloadServer.registerWithLegacyAlias("orca-browser-use", BrowserUseOffloadHandler(this))
+        NativeOffloadServer.register("orca-browser-use", BrowserUseOffloadHandler(this))
         // T188: orca-sessions-cli — agent-side query of chat history.
         // Registers next to the other i-* tools so PRootKernel.
         // installHandlerStubs() picks it up on the next rootfs boot
         // (writes a 17-byte exit-0 stub at /usr/local/bin/orca-sessions-cli
         // so PATH lookup succeeds; PRoot intercepts the execve before
         // the stub runs and routes to this handler).
-        NativeOffloadServer.registerWithLegacyAlias("orca-sessions-cli", SessionsOffloadHandler(chatRepository))
+        NativeOffloadServer.register("orca-sessions-cli", SessionsOffloadHandler(chatRepository))
         // [T-android-scheduled-tasks-full] orca-scheduled — create/list/run
         // timed AI tasks (new chat / follow-up / re-run), mirroring the in-app
         // Scheduled Tasks editor and the iOS Shortcuts intent set.
-        NativeOffloadServer.registerWithLegacyAlias(
+        NativeOffloadServer.register(
             "orca-scheduled",
             com.orca.app.sandbox.offload.ScheduledTaskOffloadHandler(this),
         )
@@ -551,7 +551,7 @@ class OrcaApp : Application(), ImageLoaderFactory {
         // `/usr/local/bin/orca-debug` stub is also absent (PRootKernel.
         // installHandlerStubs enumerates currently-registered handlers).
         if (BuildConfig.DEBUG) {
-            NativeOffloadServer.registerWithLegacyAlias(
+            NativeOffloadServer.register(
                 "orca-debug",
                 com.orca.app.sandbox.offload.DebugOffloadHandler(this),
             )
@@ -823,20 +823,20 @@ class OrcaApp : Application(), ImageLoaderFactory {
     }
 
     /**
-     * Coil global ImageLoader — registers [IImageFetcher] so `i://`
-     * URIs in Markdown images (e.g. `![alt](i://attachments/x.png)`)
-     * resolve to local files under /var/i/.
+     * Coil global ImageLoader — registers [OrcaImageFetcher] so `orca://`
+     * URIs in Markdown images (e.g. `![alt](orca://attachments/x.png)`)
+     * resolve to local files under /var/orca/.
      */
     override fun newImageLoader(): ImageLoader =
         ImageLoader.Builder(this)
             .components {
-                add(IImageFetcher.Factory())
-                add(IImageFetcher.UriFactory())
+                add(OrcaImageFetcher.Factory())
+                add(OrcaImageFetcher.UriFactory())
                 // T-image-cache-mtime-35133: include File.lastModified() in
                 // memory + disk cache key so Grok-style in-place rewrites of
-                // i://attachments/foo.jpg invalidate Coil's cached bitmap.
-                add(IImageFetcher.MtimeKeyer())
-                add(IImageFetcher.StringMtimeKeyer())
+                // orca://attachments/foo.jpg invalidate Coil's cached bitmap.
+                add(OrcaImageFetcher.MtimeKeyer())
+                add(OrcaImageFetcher.StringMtimeKeyer())
             }
             .build()
 

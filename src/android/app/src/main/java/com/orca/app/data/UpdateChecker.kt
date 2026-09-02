@@ -289,7 +289,7 @@ object UpdateChecker {
     }
 
     /**
-     * Stream the APK from [url] into `${cacheDir}/shared/i-update.apk`,
+     * Stream the APK from [url] into `${filesDir}/updates/orca-<version>.apk`,
      * surfacing progress (0..1) through [onProgress] roughly every 64 KiB.
      * Returns the on-disk [File] on success so the caller can hand it to
      * [installApk]. The path is intentionally inside `shared/` because that's
@@ -313,7 +313,7 @@ object UpdateChecker {
             val safeName = versionName
                 ?.replace(Regex("[^A-Za-z0-9._-]"), "_")
                 ?.takeIf { it.isNotEmpty() }
-                ?.let { "i-$it.apk" }
+                ?.let { "orca-$it.apk" }
                 ?: DOWNLOAD_FILENAME
             val outFile = File(outDir, safeName)
             // A previous, possibly-aborted download could leave a stale APK

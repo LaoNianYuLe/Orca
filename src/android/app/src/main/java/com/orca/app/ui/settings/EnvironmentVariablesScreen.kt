@@ -2,7 +2,7 @@ package com.orca.app.ui.settings
 
 import com.orca.app.R
 import com.orca.app.ui.components.DialogTextField
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -214,7 +214,7 @@ fun EnvironmentVariablesScreen(
             title = { Text("Delete ${entry?.key ?: "variable"}?") },
             text = { Text(stringResource(R.string.env_var_delete_confirm_text)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     deleteEntryId?.let { envVarRepository.delete(it) }
                     deleteEntryId = null
                 }) {
@@ -222,7 +222,7 @@ fun EnvironmentVariablesScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { deleteEntryId = null }) {
+                OrcaTextButton(onClick = { deleteEntryId = null }) {
                     Text(stringResource(R.string.common_cancel))
                 }
             },
@@ -331,10 +331,10 @@ private fun EnvVarFormSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                ITextButton(onClick = onDismiss) {
+                OrcaTextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.common_cancel))
                 }
-                ITextButton(
+                OrcaTextButton(
                     onClick = {
                         val success = if (isEditing) {
                             envVarRepository.update(editEntry!!.id, keyText, valueText, noteText)

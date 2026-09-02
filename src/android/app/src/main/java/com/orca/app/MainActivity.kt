@@ -52,7 +52,7 @@ import com.orca.app.ui.settings.PREF_APPEARANCE
 import com.orca.app.ui.settings.getAppearancePrefs
 import com.orca.app.ui.settings.fontScaleForLevel
 import com.orca.app.ui.settings.keepScreenAwakeEnabled
-import com.orca.app.ui.theme.ITheme
+import com.orca.app.ui.theme.OrcaTheme
 import com.orca.app.ui.theme.windowBackgroundColor
 
 private const val KEY_CURRENT_CHAT_SESSION_ID = "orca.current_chat_session_id"
@@ -549,7 +549,7 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
             }
 
-            ITheme(darkTheme = darkTheme, fontScale = fontScale) {
+            OrcaTheme(darkTheme = darkTheme, fontScale = fontScale) {
                 val navController = rememberNavController().also { this.navController = it }
                 val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
@@ -794,7 +794,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             is DeepLinkAction.OpenAlarmList -> {
-                // T297: i://views/alarm now opens the system Clock app
+                // T297: orca://views/alarm now opens the system Clock app
                 // directly via AlarmClock.ACTION_SHOW_ALARMS — the in-app
                 // AlarmListScreen was a one-button passthrough that did the
                 // exact same thing. The android-alarm tool envelope still

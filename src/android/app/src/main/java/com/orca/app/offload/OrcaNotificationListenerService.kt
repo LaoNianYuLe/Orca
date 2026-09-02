@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
  * runtime permission flow). [isEnabled] / [openSettings] help the caller
  * guide the user through that one-time grant.
  */
-class INotificationListenerService : NotificationListenerService() {
+class OrcaNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
@@ -48,7 +48,7 @@ class INotificationListenerService : NotificationListenerService() {
         private const val TAG = "NotifListener"
 
         @Volatile private var connected: Boolean = false
-        @Volatile private var instance: INotificationListenerService? = null
+        @Volatile private var instance: OrcaNotificationListenerService? = null
 
         /** Latches awaiting a specific (package, id) post. */
         private val postedLatches = ConcurrentHashMap<String, CountDownLatch>()

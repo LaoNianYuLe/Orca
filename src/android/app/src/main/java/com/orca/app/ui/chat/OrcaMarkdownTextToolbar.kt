@@ -51,11 +51,11 @@ import com.orca.app.R
  *   - **Copy Rich Text** — same lookup, exported as HTML+plain dual ClipData.
  *
  * The toolbar is driven by a [mutableStateOf]-backed state holder; pair it
- * with [IMarkdownTextToolbarHost] which renders the floating popup. The
+ * with [OrcaMarkdownTextToolbarHost] which renders the floating popup. The
  * split exists because [TextToolbar] is a non-composable platform interface
  * but our UI must live inside the composition.
  */
-internal class IMarkdownTextToolbar(
+internal class OrcaMarkdownTextToolbar(
     private val context: Context,
     private val registry: MessageBoundsRegistry,
     /**
@@ -209,12 +209,12 @@ internal class IMarkdownTextToolbar(
 }
 
 /**
- * Renders the floating toolbar controlled by [IMarkdownTextToolbar]. Place
+ * Renders the floating toolbar controlled by [OrcaMarkdownTextToolbar]. Place
  * exactly one instance under the same `CompositionLocalProvider` that supplies
  * the toolbar so it draws above the selected text.
  */
 @Composable
-internal fun IMarkdownTextToolbarHost(toolbar: IMarkdownTextToolbar) {
+internal fun OrcaMarkdownTextToolbarHost(toolbar: OrcaMarkdownTextToolbar) {
     val state = toolbar.state
     if (!state.visible) return
     val anchor = remember(state.rect) { state.rect.toIntRectRounded() }

@@ -1,7 +1,7 @@
 package com.orca.app.ui.settings
 
 import com.orca.app.R
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -68,7 +68,7 @@ private enum class HudState {
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ISkillsBrowserScreen(
+fun OrcaSkillsBrowserScreen(
     skillRepository: SkillRepository,
     onBack: () -> Unit,
 ) {
@@ -107,7 +107,7 @@ fun ISkillsBrowserScreen(
                     }
                 },
                 actions = {
-                    ITextButton(
+                    OrcaTextButton(
                         onClick = {
                             scope.launch {
                                 importSkillFromCurrentUrl(

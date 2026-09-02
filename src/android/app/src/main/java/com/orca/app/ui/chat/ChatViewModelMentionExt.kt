@@ -47,8 +47,8 @@ import com.orca.app.provider.ImageBudget
 import com.orca.app.provider.LLMProvider
 import com.orca.app.provider.ProviderFactory
 import com.orca.app.sandbox.ExecutionCoordinator
-import com.orca.app.terminal.IOpenUrlBroker
-import com.orca.app.terminal.IUrlMarker
+import com.orca.app.terminal.OrcaOpenUrlBroker
+import com.orca.app.terminal.OrcaUrlMarker
 import com.orca.app.tools.AgentTools
 import com.orca.app.tools.FileEditTool
 import com.orca.app.tools.FileReadTool

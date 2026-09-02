@@ -2,7 +2,7 @@ package com.orca.app.ui.settings
 
 import com.orca.app.R
 import com.orca.app.data.repository.AppIconRepository
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -491,7 +491,7 @@ fun AppearanceScreen(
                         .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    ITextButton(onClick = {
+                    OrcaTextButton(onClick = {
                         chatInputLevel = 0; messageLevel = 0; appBaseLevel = 0
                         prefs.edit()
                             .putInt(KEY_FONT_CHAT_INPUT, 0)

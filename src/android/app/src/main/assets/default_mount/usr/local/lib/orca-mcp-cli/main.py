@@ -18,13 +18,13 @@ Subcommands:
 
 All structured output is JSON on stdout (use --pretty for indentation).
 Errors print the unified envelope {"error","code","server"} and exit non-zero.
-Diagnostics go to /var/i/mcp-servers/mcp-cli.log, never to stdout.
+Diagnostics go to /var/orca/mcp-servers/mcp-cli.log, never to stdout.
 
 list / tools / ping / call run through a self-forked daemon that keeps MCP
 server connections warm (per-server 10-minute idle TTL); the first such call
 spawns the daemon, later calls reuse it. IPC is 127.0.0.1 loopback TCP (iSH's
 fakefs cannot host an AF_UNIX socket), with the daemon's ephemeral port
-published in /tmp/i-mcp-daemon.port. info / add / remove / enable / disable
+published in /tmp/orca-mcp-daemon.port. info / add / remove / enable / disable
 stay pure-local (servers.json only) and never touch the daemon.
 """
 
@@ -39,11 +39,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from transport.http import MCPError  # noqa: E402
 from utils import config  # noqa: E402
 
-LOG_PATH = "/var/i/mcp-servers/mcp-cli.log"
+LOG_PATH = "/var/orca/mcp-servers/mcp-cli.log"
 
-PID_FILE = "/tmp/i-mcp-daemon.pid"
-PORT_FILE = "/tmp/i-mcp-daemon.port"  # daemon publishes its 127.0.0.1 port here
-LOCK_FILE = "/tmp/i-mcp-daemon.lock"  # cold-start fork guard (one winner forks)
+PID_FILE = "/tmp/orca-mcp-daemon.pid"
+PORT_FILE = "/tmp/orca-mcp-daemon.port"  # daemon publishes its 127.0.0.1 port here
+LOCK_FILE = "/tmp/orca-mcp-daemon.lock"  # cold-start fork guard (one winner forks)
 CONN_TIMEOUT = 310.0  # socket recv timeout, slightly above the 300s RPC timeout
 LOCK_STALE_SECONDS = 12.0  # reclaim a cold-start lock older than this (crashed start)
 
@@ -203,7 +203,7 @@ def maybe_start_daemon():
         with open(PID_FILE, "w", encoding="utf-8") as f:
             f.write(str(os.getpid()))
         import logging
-        daemon_log = "/var/i/mcp-servers/mcp-daemon.log"
+        daemon_log = "/var/orca/mcp-servers/mcp-daemon.log"
         try:
             os.makedirs(os.path.dirname(daemon_log), exist_ok=True)
         except OSError:
@@ -554,8 +554,8 @@ Global flags:
   --help, -h                            Show this usage.
 
 Files:
-  Servers:  /var/i/mcp-servers/servers.json   (mcpServers object, Claude-Desktop compatible)
-  Log:      /var/i/mcp-servers/mcp-cli.log
+  Servers:  /var/orca/mcp-servers/servers.json   (mcpServers object, Claude-Desktop compatible)
+  Log:      /var/orca/mcp-servers/mcp-cli.log
 
 Examples:
   orca-mcp-cli list --pretty

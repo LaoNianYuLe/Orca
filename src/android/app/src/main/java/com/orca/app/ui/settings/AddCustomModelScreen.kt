@@ -22,7 +22,7 @@ import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.components.RowLabel
 import com.orca.app.ui.components.SectionTextField
 import com.orca.app.R
-import com.orca.app.ui.components.IButton
+import com.orca.app.ui.components.OrcaButton
 
 /**
  * Add Custom Model — adopts the SettingsScaffold/SettingsSection toolkit
@@ -74,7 +74,7 @@ fun AddCustomModelScreen(
         }
 
         Spacer(Modifier.height(20.dp))
-        IButton(
+        OrcaButton(
             onClick = {
                 val name = displayName.ifBlank { modelId }
                 val model = LLMModel(

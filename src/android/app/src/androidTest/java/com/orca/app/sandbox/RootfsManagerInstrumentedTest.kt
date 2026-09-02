@@ -93,7 +93,7 @@ class RootfsManagerInstrumentedTest {
         val archFile = File(manager.rootfsDir, ".arch")
         assertEquals("aarch64", archFile.readText().trim())
 
-        // Verify /var/i subdirs created
+        // Verify /var/orca subdirs created
         val expectedDirs = listOf("attachments", "offloads", "workspace", "skills", "memory")
         for (subdir in expectedDirs) {
             val dir = File(manager.rootfsDir, "var/i/$subdir")
@@ -184,7 +184,7 @@ class RootfsManagerInstrumentedTest {
         val sessionId = "test-session-${System.nanoTime()}"
         manager.ensureSessionDirs(sessionId)
 
-        val sessionBase = File(context.filesDir, "i-sessions/$sessionId")
+        val sessionBase = File(context.filesDir, "orca-sessions/$sessionId")
         assertTrue(sessionBase.exists())
 
         val expectedSubdirs = listOf("attachments", "offloads", "workspace", "browser")
@@ -204,7 +204,7 @@ class RootfsManagerInstrumentedTest {
         manager.ensureSessionDirs(sessionId)
         manager.ensureSessionDirs(sessionId) // Should not throw
 
-        val sessionBase = File(context.filesDir, "i-sessions/$sessionId")
+        val sessionBase = File(context.filesDir, "orca-sessions/$sessionId")
         assertTrue(sessionBase.exists())
         sessionBase.deleteRecursively()
     }

@@ -122,10 +122,10 @@ class RootfsManager private constructor(private val context: Context) {
             // Write arch marker
             archFile.writeText(ARCH)
 
-            // Pre-create /var/i directories. Mirrors iOS
+            // Pre-create /var/orca directories. Mirrors iOS
             // RootfsManager.swift:76-80 (attachments/offloads/workspace/skills/
             // shared) plus Android-specific `memory` kept from prior parity work.
-            // T219-6: also pre-create `mounts/` so PRoot's `-b host:/var/i/mounts/<name>`
+            // T219-6: also pre-create `mounts/` so PRoot's `-b host:/var/orca/mounts/<name>`
             // has the parent directory to bind into; without this, PRoot silently
             // skips bind mounts whose target path doesn't exist.
             val iSubdirs = listOf("attachments", "offloads", "workspace", "skills", "memory", "shared", "mounts")
@@ -244,7 +244,7 @@ class RootfsManager private constructor(private val context: Context) {
      * Ensure session-specific directories exist on the host filesystem.
      */
     fun ensureSessionDirs(sessionId: String) {
-        val sessionBase = File(context.filesDir, "i-sessions/$sessionId")
+        val sessionBase = File(context.filesDir, "orca-sessions/$sessionId")
         val subdirs = listOf("attachments", "offloads", "workspace", "browser")
         for (subdir in subdirs) {
             File(sessionBase, subdir).mkdirs()
@@ -382,6 +382,8 @@ class RootfsManager private constructor(private val context: Context) {
     private fun removeStalePreRebrandFiles(): Int {
         val stale = listOf(
             "etc/profile.d/i.sh",
+            "usr/local/bin/i-open",
+            "usr/local/bin/i-mcp-cli",
             // Superseded by usr/local/lib/orca-mcp-cli. Left in place it would
             // just be dead weight, but lockMcpCliLibReadOnly() marked it
             // read-only on every prior boot, so the write bits have to come

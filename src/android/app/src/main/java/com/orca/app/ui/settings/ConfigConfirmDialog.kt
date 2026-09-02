@@ -41,7 +41,7 @@ import com.orca.app.config.ConfigRisk
 import com.orca.app.config.confirm.ConfigConfirmationGate
 import com.orca.app.config.confirm.PendingConfigChange
 import com.orca.app.config.confirm.PendingConfigChangeItem
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Root-level confirmation dialog for every orca-config write.
@@ -114,7 +114,7 @@ private fun ConfigConfirmDialog(change: PendingConfigChange) {
         },
         confirmButton = {
             val applyText = if (approvedCount == 0) "Reject All" else "Apply"
-            ITextButton(
+            OrcaTextButton(
                 onClick = { ConfigConfirmationGate.userApprove(workingItems.toList()) },
                 enabled = workingItems.isNotEmpty(),
             ) {
@@ -122,7 +122,7 @@ private fun ConfigConfirmDialog(change: PendingConfigChange) {
             }
         },
         dismissButton = {
-            ITextButton(onClick = { ConfigConfirmationGate.userReject() }) {
+            OrcaTextButton(onClick = { ConfigConfirmationGate.userReject() }) {
                 Text("Cancel")
             }
         },

@@ -70,15 +70,15 @@ class PRootKernelInstrumentedTest {
 
     @Test
     fun addBindMountStoresMapping() {
-        PRootKernel.addBindMount("/var/i/workspace", "/data/host/workspace")
-        assertEquals("/data/host/workspace", PRootKernel.bindMounts["/var/i/workspace"])
+        PRootKernel.addBindMount("/var/orca/workspace", "/data/host/workspace")
+        assertEquals("/data/host/workspace", PRootKernel.bindMounts["/var/orca/workspace"])
     }
 
     @Test
     fun removeBindMountRemovesMapping() {
-        PRootKernel.addBindMount("/var/i/workspace", "/data/host/workspace")
-        PRootKernel.removeBindMount("/var/i/workspace")
-        assertNull(PRootKernel.bindMounts["/var/i/workspace"])
+        PRootKernel.addBindMount("/var/orca/workspace", "/data/host/workspace")
+        PRootKernel.removeBindMount("/var/orca/workspace")
+        assertNull(PRootKernel.bindMounts["/var/orca/workspace"])
     }
 
     @Test
@@ -145,12 +145,12 @@ class PRootKernelInstrumentedTest {
         }
         PRootKernel.boot(context)
 
-        PRootKernel.addBindMount("/var/i/workspace", "/data/user/0/com.orca.app/workspace")
+        PRootKernel.addBindMount("/var/orca/workspace", "/data/user/0/com.orca.app/workspace")
 
-        val cmd = PRootKernel.buildProotCommand("ls /var/i/workspace")
+        val cmd = PRootKernel.buildProotCommand("ls /var/orca/workspace")
 
         // Should contain -b host:linux format
-        val bindStr = "/data/user/0/com.orca.app/workspace:/var/i/workspace"
+        val bindStr = "/data/user/0/com.orca.app/workspace:/var/orca/workspace"
         assertTrue("Should contain bind mount arg", cmd.contains(bindStr))
     }
 
@@ -180,18 +180,18 @@ class PRootKernelInstrumentedTest {
 
     @Test
     fun resolveHostPathMatchesExactMount() {
-        PRootKernel.addBindMount("/var/i/workspace", "/host/workspace")
+        PRootKernel.addBindMount("/var/orca/workspace", "/host/workspace")
 
-        val result = PRootKernel.resolveHostPath("/var/i/workspace")
+        val result = PRootKernel.resolveHostPath("/var/orca/workspace")
         assertNotNull(result)
         assertEquals("/host/workspace", result!!.path)
     }
 
     @Test
     fun resolveHostPathMatchesSubpath() {
-        PRootKernel.addBindMount("/var/i/workspace", "/host/workspace")
+        PRootKernel.addBindMount("/var/orca/workspace", "/host/workspace")
 
-        val result = PRootKernel.resolveHostPath("/var/i/workspace/file.txt")
+        val result = PRootKernel.resolveHostPath("/var/orca/workspace/file.txt")
         assertNotNull(result)
         assertEquals("/host/workspace/file.txt", result!!.path)
     }
@@ -199,20 +199,20 @@ class PRootKernelInstrumentedTest {
     @Test
     fun resolveHostPathUsesLongestPrefixMatch() {
         PRootKernel.addBindMount("/var", "/host/var")
-        PRootKernel.addBindMount("/var/i/workspace", "/host/workspace")
+        PRootKernel.addBindMount("/var/orca/workspace", "/host/workspace")
 
-        val result = PRootKernel.resolveHostPath("/var/i/workspace/deep/file.txt")
+        val result = PRootKernel.resolveHostPath("/var/orca/workspace/deep/file.txt")
         assertNotNull(result)
         assertEquals("/host/workspace/deep/file.txt", result!!.path)
     }
 
     @Test
     fun resolveHostPathDoesNotMatchPartialPrefix() {
-        PRootKernel.addBindMount("/var/i/work", "/host/work")
+        PRootKernel.addBindMount("/var/orca/work", "/host/work")
 
-        // "/var/i/workspace" should NOT match "/var/i/work" (no / after "work")
-        val result = PRootKernel.resolveHostPath("/var/i/workspace/file.txt")
-        // Should fallback to rootfs or null, not match /var/i/work
+        // "/var/orca/workspace" should NOT match "/var/orca/work" (no / after "work")
+        val result = PRootKernel.resolveHostPath("/var/orca/workspace/file.txt")
+        // Should fallback to rootfs or null, not match /var/orca/work
         assertNotEquals("/host/work/space/file.txt", result?.path ?: "")
     }
 

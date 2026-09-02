@@ -46,7 +46,7 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Bottom sheet showing memory state for the current session.
@@ -279,7 +279,7 @@ private fun DetailToolbar(
             }
         }
         if (showSave) {
-            ITextButton(onClick = onSave) {
+            OrcaTextButton(onClick = onSave) {
                 Text(stringResource(R.string.memory_action_save))
             }
         }

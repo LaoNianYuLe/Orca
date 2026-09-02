@@ -538,8 +538,8 @@
     <string name="perm_agent_policy">Разрешение агента</string>
     <string name="perm_a11y_system_ready">Служба включена</string>
     <string name="perm_a11y_system_disabled">Служба не включена</string>
-    <string name="perm_allow_i_config">Разрешить i-config</string>
-    <string name="perm_i_config_desc">Когда отключено, агент не может считывать или изменять какие-либо настройки через i-config. История изменений в Журналы → Изменения настроек остаётся доступной. Агент получит ошибку permission_denied и сможет вместо этого направить вас через глубокие ссылки.</string>
+    <string name="perm_allow_orca_config">Разрешить orca-config</string>
+    <string name="perm_orca_config_desc">Когда отключено, агент не может считывать или изменять какие-либо настройки через orca-config. История изменений в Журналы → Изменения настроек остаётся доступной. Агент получит ошибку permission_denied и сможет вместо этого направить вас через глубокие ссылки.</string>
     <string name="perm_section_privacy">Конфиденциальность</string>
     <string name="perm_section_media">Медиа</string>
     <string name="perm_section_system">Система</string>
@@ -933,7 +933,7 @@
     <string name="settings_dynamic_island_footer">Показывать статус агента на чипе состояния Android 16. Когда включено, заменяет плавающий оверлей, чтобы не было двух индикаторов сразу.</string>
     <string name="settings_dynamic_island_unsupported">Ваша версия системы пока не поддерживает Live Updates (нужен Android 16+ с включённой функцией).</string>
     <string name="agent_loop_section_title">Доступные модели в цикле агента</string>
-    <string name="agent_loop_section_footer">Перечисленные здесь модели и группы можно вызывать из терминала через i-model-use. Только они видны агенту.</string>
+    <string name="agent_loop_section_footer">Перечисленные здесь модели и группы можно вызывать из терминала через orca-model-use. Только они видны агенту.</string>
     <string name="agent_loop_section_empty_hint">Модели и группы не добавлены</string>
     <string name="agent_loop_section_add_models">Добавить модели</string>
     <string name="agent_loop_section_add_groups">Добавить группы</string>
@@ -970,7 +970,7 @@
     <string name="chat_clear_dialog_body">Удалить все сообщения из этой сессии? Файлы в рабочей области, вложения и выгрузки сохранятся.</string>
     <string name="chat_clear_dialog_confirm">Очистить</string>
     <string name="settings_shared_folders">Общие папки</string>
-    <string name="settings_shared_folders_subtitle">Просмотр общей папки /var/i, навыков и памяти</string>
+    <string name="settings_shared_folders_subtitle">Просмотр общей папки /var/orca, навыков и памяти</string>
     <string name="shared_folders_title">Общие папки</string>
     <string name="shared_folders_info_banner">Эти каталоги видны внутри Linux-песочницы. Навыки и Память поддерживаются инструментами ИИ-агента — не редактируйте вручную.</string>
     <string name="shared_folder_name_shared">Общее</string>
@@ -979,9 +979,9 @@
     <string name="shared_folder_detail_title">Сведения о папке</string>
     <string name="shared_folder_browse_files">Просмотр файлов</string>
     <string name="settings_mount_external_folders">Подключить внешние папки</string>
-    <string name="settings_mount_external_folders_subtitle">Привязать выбранные папки к /var/i/mounts/</string>
+    <string name="settings_mount_external_folders_subtitle">Привязать выбранные папки к /var/orca/mounts/</string>
     <string name="mount_folders_title">Подключённые папки</string>
-    <string name="mount_folders_info_banner">Выбранные папки монтируются по привязке в /var/i/mounts/&lt;name&gt;. Одновременно можно подключить до 10 папок.</string>
+    <string name="mount_folders_info_banner">Выбранные папки монтируются по привязке в /var/orca/mounts/&lt;name&gt;. Одновременно можно подключить до 10 папок.</string>
     <string name="mount_picker_intro_title">Выберите папку</string>
     <string name="mount_picker_intro_message">Android не позволяет подключить всё внутреннее хранилище — выберите конкретную папку внутри, например «Документы» или «Загрузки».\n\nДалее откроется системный выбор файлов. Если папка показывает «Не удалось использовать эту папку», зайдите в её подпапку или вернитесь сюда жестом «Назад».</string>
     <string name="mount_picker_intro_continue">Выбрать</string>
@@ -991,7 +991,7 @@
     <string name="mount_add_dialog_title">Добавить подключение</string>
     <string name="mount_add_source_path">Исходный путь</string>
     <string name="mount_add_name_label">Имя подключения</string>
-    <string name="mount_add_name_hint">Это будет имя папки в /var/i/mounts/</string>
+    <string name="mount_add_name_hint">Это будет имя папки в /var/orca/mounts/</string>
     <string name="mount_add_allow_writes">Разрешить запись</string>
     <string name="mount_add_allow_writes_desc">Если выключено, инструменты file_write/file_edit отклоняют запись; оболочка всё равно может это обойти.</string>
     <string name="mount_add_confirm">Добавить</string>
@@ -1242,7 +1242,7 @@
     <string name="mcp_add">Добавить сервер MCP</string>
     <string name="mcp_edit">Изменить сервер MCP</string>
     <string name="mcp_section_servers">Серверы</string>
-    <string name="mcp_section_footer">Серверы MCP позволяют агенту вызывать внешние инструменты через i-mcp-cli. Конфигурация хранится в /var/i/mcp-servers/servers.json (совместимо с Claude Desktop).</string>
+    <string name="mcp_section_footer">Серверы MCP позволяют агенту вызывать внешние инструменты через orca-mcp-cli. Конфигурация хранится в /var/orca/mcp-servers/servers.json (совместимо с Claude Desktop).</string>
     <string name="mcp_empty_title">Нет серверов MCP</string>
     <string name="mcp_empty_action">Добавьте сервер кнопкой +.</string>
     <string name="mcp_transport_http">HTTP</string>

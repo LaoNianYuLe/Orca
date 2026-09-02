@@ -43,7 +43,7 @@ import com.orca.app.browser.BrowserHistoryStore
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,13 +84,13 @@ fun BrowserHistorySheet(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
-                ITextButton(
+                OrcaTextButton(
                     onClick = { showClearConfirm = true },
                     enabled = historyStore.getEntries().isNotEmpty(),
                 ) {
                     Text(stringResource(R.string.browser_history_clear), color = MaterialTheme.colorScheme.error)
                 }
-                ITextButton(onClick = onDismiss) {
+                OrcaTextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.browser_history_done))
                 }
             }
@@ -196,7 +196,7 @@ fun BrowserHistorySheet(
             title = { Text(stringResource(R.string.browser_history_clear_dialog_title)) },
             text = { Text(stringResource(R.string.browser_history_clear_dialog_message)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     historyStore.clear()
                     showClearConfirm = false
                 }) {
@@ -204,7 +204,7 @@ fun BrowserHistorySheet(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showClearConfirm = false }) {
+                OrcaTextButton(onClick = { showClearConfirm = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },

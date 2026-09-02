@@ -292,7 +292,7 @@ object ScheduledAgentRunner {
         sessionId: String,
         preview: String,
     ) {
-        val deepLink = Uri.parse("i://session/$sessionId")
+        val deepLink = Uri.parse("orca://session/$sessionId")
         val openIntent = Intent(Intent.ACTION_VIEW, deepLink).apply {
             setPackage(context.packageName)
         }

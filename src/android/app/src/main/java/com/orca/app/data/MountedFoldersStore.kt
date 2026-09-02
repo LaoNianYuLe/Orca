@@ -31,7 +31,7 @@ import java.util.UUID
  *     survives process death and reboots once persisted, so there's no
  *     "activation" step — access is always available while the permission
  *     grant is held.
- *   - The shell-level bind-mount at `/var/i/mounts/<name>` is NOT
+ *   - The shell-level bind-mount at `/var/orca/mounts/<name>` is NOT
  *     implemented in this pass. DocumentFile doesn't expose POSIX paths,
  *     so exposing these trees inside the PRoot / iSH rootfs needs a
  *     FUSE bridge or a periodic mirror pass. Spec §2.9.4 calls out the
@@ -39,7 +39,7 @@ import java.util.UUID
  *     and leave the shell mount as a follow-up.
  *
  * Persistence: `filesDir/orca-config/mounted-folders.json`. The path is
- * intentionally outside `i-global/` so it can't leak into the
+ * intentionally outside `orca-global/` so it can't leak into the
  * DocumentsProvider-exposed tree.
  */
 class MountedFoldersStore(private val context: Context) {
@@ -302,7 +302,7 @@ class MountedFoldersStore(private val context: Context) {
     fun probeWritable(hostPath: String): Boolean {
         val dir = File(hostPath)
         if (!dir.isDirectory) return false
-        val probe = File(dir, ".i-probe-${UUID.randomUUID()}")
+        val probe = File(dir, ".orca-probe-${UUID.randomUUID()}")
         return runCatching {
             probe.outputStream().use { it.write(0) }
             true

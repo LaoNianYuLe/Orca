@@ -397,7 +397,7 @@
     <!-- T336 follow-up: ASK_ONCE 在进程生命周期内只问一次,改文案避免误导 -->
     <string name="perm_level_ask_once">本次启动询问</string>
     <string name="perm_level_not_allowed">不允许</string>
-    <!-- T296: Permissions screen — section headers, i-config switch, tool titles -->
+    <!-- T296: Permissions screen — section headers, orca-config switch, tool titles -->
     <string name="perm_section_config_tool">配置工具</string>
     <!-- T336: 每个集成 CLI 一个独立 SectionCard,展示 CLI 描述 / Agent 权限 / 系统授权状态 / 跳转入口 -->
     <string name="perm_tool_a11y_cli">android-a11y-cli</string>
@@ -413,8 +413,8 @@
     <string name="perm_agent_policy">Agent 权限</string>
     <string name="perm_a11y_system_ready">已启用</string>
     <string name="perm_a11y_system_disabled">未启用</string>
-    <string name="perm_allow_i_config">允许 i-config</string>
-    <string name="perm_i_config_desc">禁用后，智能体将无法通过 i-config 读取或修改任何设置。日志 → 配置变更 中的变更历史仍可查看。智能体会收到 permission_denied 错误，并通过深度链接引导你操作。</string>
+    <string name="perm_allow_orca_config">允许 orca-config</string>
+    <string name="perm_orca_config_desc">禁用后，智能体将无法通过 orca-config 读取或修改任何设置。日志 → 配置变更 中的变更历史仍可查看。智能体会收到 permission_denied 错误，并通过深度链接引导你操作。</string>
     <string name="perm_section_privacy">隐私</string>
     <string name="perm_section_media">媒体</string>
     <string name="perm_section_system">系统</string>
@@ -1058,7 +1058,7 @@
 
     <!-- T182 agent loop section i18n -->
     <string name="agent_loop_section_title">智能体循环可用模型</string>
-    <string name="agent_loop_section_footer">这里列出的模型和分组可以在终端通过 i-model-use 调用。只有这些对智能体可见。</string>
+    <string name="agent_loop_section_footer">这里列出的模型和分组可以在终端通过 orca-model-use 调用。只有这些对智能体可见。</string>
     <string name="agent_loop_section_empty_hint">尚未添加模型或分组</string>
     <string name="agent_loop_section_add_models">添加模型</string>
     <string name="agent_loop_section_add_groups">添加分组</string>
@@ -1111,7 +1111,7 @@
 
     <!-- T235 — 共享文件夹（固定: 共享 / 技能 / 记忆） -->
     <string name="settings_shared_folders">共享文件夹</string>
-    <string name="settings_shared_folders_subtitle">浏览 /var/i 下的共享、技能、记忆目录</string>
+    <string name="settings_shared_folders_subtitle">浏览 /var/orca 下的共享、技能、记忆目录</string>
     <string name="shared_folders_title">共享文件夹</string>
     <string name="shared_folders_info_banner">这些目录在 Linux 沙箱内可见，技能与记忆由 AI 代理工具自动维护，请勿手动修改。</string>
     <string name="shared_folder_name_shared">共享</string>
@@ -1122,9 +1122,9 @@
 
     <!-- T219-2 — 挂载外部文件夹 -->
     <string name="settings_mount_external_folders">挂载外部文件夹</string>
-    <string name="settings_mount_external_folders_subtitle">将选定文件夹绑定到 /var/i/mounts/</string>
+    <string name="settings_mount_external_folders_subtitle">将选定文件夹绑定到 /var/orca/mounts/</string>
     <string name="mount_folders_title">已挂载文件夹</string>
-    <string name="mount_folders_info_banner">所选文件夹会被绑定到 /var/i/mounts/&lt;name&gt;。最多可同时挂载 10 个文件夹。</string>
+    <string name="mount_folders_info_banner">所选文件夹会被绑定到 /var/orca/mounts/&lt;name&gt;。最多可同时挂载 10 个文件夹。</string>
     <string name="mount_picker_intro_title">选择要挂载的文件夹</string>
     <string name="mount_picker_intro_message">Android 不允许挂载整个内部存储，请选择其中一个具体的文件夹，例如「文档」或「下载」。\n\n接下来打开的是系统文件选择器。如果某个文件夹提示「无法使用此文件夹」，请进入它的子文件夹，或用系统返回手势回到这里。</string>
     <string name="mount_picker_intro_continue">去选择</string>
@@ -1134,7 +1134,7 @@
     <string name="mount_add_dialog_title">新增挂载</string>
     <string name="mount_add_source_path">源路径</string>
     <string name="mount_add_name_label">挂载名称</string>
-    <string name="mount_add_name_hint">将作为 /var/i/mounts/ 下的文件夹名</string>
+    <string name="mount_add_name_hint">将作为 /var/orca/mounts/ 下的文件夹名</string>
     <string name="mount_add_allow_writes">允许写入</string>
     <string name="mount_add_allow_writes_desc">关闭后，file_write/file_edit 工具将拒绝写入；但 shell 仍可绕过此限制。</string>
     <string name="mount_add_confirm">添加</string>
@@ -1338,7 +1338,7 @@
     <string name="mcp_add">添加 MCP 服务器</string>
     <string name="mcp_edit">编辑 MCP 服务器</string>
     <string name="mcp_section_servers">服务器</string>
-    <string name="mcp_section_footer">MCP 服务器让 AI 通过 i-mcp-cli 调用外部工具。配置保存在 /var/i/mcp-servers/servers.json（与 Claude Desktop 兼容）。</string>
+    <string name="mcp_section_footer">MCP 服务器让 AI 通过 orca-mcp-cli 调用外部工具。配置保存在 /var/orca/mcp-servers/servers.json（与 Claude Desktop 兼容）。</string>
     <string name="mcp_empty_title">暂无 MCP 服务器</string>
     <string name="mcp_empty_action">点击 + 按钮添加服务器。</string>
     <string name="mcp_transport_http">HTTP</string>

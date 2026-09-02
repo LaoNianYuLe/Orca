@@ -122,7 +122,7 @@ class ToolOverlayController(private val context: Context) {
     private var layoutParams: WindowManager.LayoutParams? = null
     // [T-android-overlay-reply-status-34599] Session ID associated with
     // the current overlay capsule. The whole-capsule tap builds a
-    // `i://session/<id>` deep-link to land back in the right chat;
+    // `orca://session/<id>` deep-link to land back in the right chat;
     // null falls through to "just bring MainActivity forward" so we
     // never strand the user when no session id was published.
     private var pendingSessionId: String? = null
@@ -650,12 +650,12 @@ class ToolOverlayController(private val context: Context) {
             ).apply {
                 // [T-android-overlay-reply-status-34599] When we have a
                 // tracked session, route the tap through the existing
-                // `i://session/<id>` deep-link so MainActivity's
+                // `orca://session/<id>` deep-link so MainActivity's
                 // DeepLinkHandler navigates to that chat. When sid is
                 // null (e.g. completion observed before any session was
                 // pushed), fall back to plain "bring to front".
                 if (!sid.isNullOrBlank()) {
-                    data = Uri.parse("i://session/$sid")
+                    data = Uri.parse("orca://session/$sid")
                 }
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP or
@@ -746,7 +746,7 @@ class ToolOverlayController(private val context: Context) {
 
     /**
      * Mirrors [AgentForegroundService.toolDisplayLabel] but trims the
-     * "I is using " prefix — the overlay capsule is tight, so we just
+     * "Orca is using " prefix — the overlay capsule is tight, so we just
      * show the tool kind ("Shell", "Browser", …).
      */
     private fun toolDisplayLabel(toolName: String?): String = when (toolName) {

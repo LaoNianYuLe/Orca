@@ -9,7 +9,7 @@ import android.os.Build
 import android.view.Display
 import android.view.accessibility.AccessibilityNodeInfo
 import com.orca.app.accessibility.AccessibilityRecoveryManager
-import com.orca.app.accessibility.IAccessibilityService
+import com.orca.app.accessibility.OrcaAccessibilityService
 import com.orca.app.accessibility.NodeRegistry
 import com.orca.app.logging.AppLogger
 import com.orca.app.sandbox.NativeOffloadHandler
@@ -20,7 +20,7 @@ import org.json.JSONObject
 
 /**
  * `android-a11y-cli` — UI-layer automation surface backed by
- * [IAccessibilityService]. Mirrors the design doc
+ * [OrcaAccessibilityService]. Mirrors the design doc
  * `docs/.../android-accessibility-cli-design.md`.
  *
  * Output envelope `{ ok, data }` / `{ ok:false, error:{code,message} }`
@@ -185,10 +185,10 @@ First-run: enable "Orca" under Settings → Accessibility, then `service ping`.
         return when (args.positional.getOrNull(1)) {
             null -> NativeOffloadResult(2, SERVICE_HELP)
             "status" -> {
-                val svc = IAccessibilityService.getInstance()
+                val svc = OrcaAccessibilityService.getInstance()
                 val data = JSONObject()
                     .put("running", svc != null)
-                    .put("serviceName", IAccessibilityService.SERVICE_ID)
+                    .put("serviceName", OrcaAccessibilityService.SERVICE_ID)
                     .put("capabilities", JSONArray().apply {
                         put("retrieveWindowContent"); put("performGestures"); put("watchEvents")
                     })
@@ -196,7 +196,7 @@ First-run: enable "Orca" under Settings → Accessibility, then `service ping`.
                 ok(args, data)
             }
             "ping" -> {
-                if (IAccessibilityService.getInstance() != null)
+                if (OrcaAccessibilityService.getInstance() != null)
                     NativeOffloadResult(0, "✓ Accessibility service is running\n")
                 else
                     NativeOffloadResult(77, "✗ Accessibility service is not running — go to Settings → Accessibility → Orca to enable\n")
@@ -464,7 +464,7 @@ First-run: enable "Orca" under Settings → Accessibility, then `service ping`.
         return tapXYRaw(svc, x, y, args)
     }
 
-    private fun tapXYRaw(svc: IAccessibilityService, x: Int, y: Int, args: OffloadArgs): NativeOffloadResult {
+    private fun tapXYRaw(svc: OrcaAccessibilityService, x: Int, y: Int, args: OffloadArgs): NativeOffloadResult {
         val duration = args.getLong("duration") ?: if (args.hasFlag("long")) 1000L else 50L
         val path = Path().apply {
             moveTo(x.toFloat(), y.toFloat())
@@ -586,7 +586,7 @@ First-run: enable "Orca" under Settings → Accessibility, then `service ping`.
         }
     }
 
-    private fun resolveTargetEditable(svc: IAccessibilityService, args: OffloadArgs): AccessibilityNodeInfo? {
+    private fun resolveTargetEditable(svc: OrcaAccessibilityService, args: OffloadArgs): AccessibilityNodeInfo? {
         args.get("node")?.let { id -> return svc.nodeRegistry.get(id) }
         for (root in svc.rootNodes()) {
             val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
@@ -808,7 +808,7 @@ First-run: enable "Orca" under Settings → Accessibility, then `service ping`.
         return ok(args, JSONObject().put("stable", false).put("timedOut", true))
     }
 
-    private fun treeSignature(svc: IAccessibilityService): Int {
+    private fun treeSignature(svc: OrcaAccessibilityService): Int {
         var h = 0
         for (root in svc.rootNodes()) {
             h = h * 31 + (root.text?.hashCode() ?: 0)
@@ -857,8 +857,8 @@ First-run: enable "Orca" under Settings → Accessibility, then `service ping`.
         val textContains = args.get("text-contains")
         val sb = StringBuilder()
         val deadline = System.currentTimeMillis() + duration.coerceAtMost(120_000L)
-        val collected = java.util.concurrent.ConcurrentLinkedQueue<IAccessibilityService.RecordedEvent>()
-        val listener: (IAccessibilityService.RecordedEvent) -> Unit = { collected.offer(it) }
+        val collected = java.util.concurrent.ConcurrentLinkedQueue<OrcaAccessibilityService.RecordedEvent>()
+        val listener: (OrcaAccessibilityService.RecordedEvent) -> Unit = { collected.offer(it) }
         svc.addEventListener(listener)
         try {
             while (System.currentTimeMillis() < deadline) {
@@ -1083,8 +1083,8 @@ First-run: enable "Orca" under Settings → Accessibility, then `service ping`.
 
     private class NotRunning(msg: String) : RuntimeException(msg)
 
-    private fun svcOrThrow(): IAccessibilityService =
-        IAccessibilityService.getInstance()
+    private fun svcOrThrow(): OrcaAccessibilityService =
+        OrcaAccessibilityService.getInstance()
             ?: throw NotRunning("Accessibility service is not running. Enable Orca under Settings → Accessibility.")
 
     private fun ok(args: OffloadArgs, data: Any): NativeOffloadResult {

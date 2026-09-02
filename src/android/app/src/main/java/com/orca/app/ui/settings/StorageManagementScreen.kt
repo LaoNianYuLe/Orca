@@ -1,7 +1,7 @@
 package com.orca.app.ui.settings
 
 import com.orca.app.R
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.content.Context
 import android.text.format.Formatter
@@ -283,7 +283,7 @@ fun SessionStorageDetailScreen(
                 Text("This will delete ${Formatter.formatFileSize(context, totalSize)} of files. This action cannot be undone.")
             },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     showClearDialog = false
                     isClearing = true
                     scope.launch {
@@ -303,7 +303,7 @@ fun SessionStorageDetailScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                OrcaTextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }

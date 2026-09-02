@@ -4,41 +4,41 @@ import android.net.Uri
 import com.orca.app.ui.navigation.Routes
 
 /**
- * Parses i:// deep link URIs into navigation actions.
+ * Parses orca:// deep link URIs into navigation actions.
  *
  * Supported routes (matching iOS):
- *   i://share                              → open share flow
- *   i://views/alarm                        → open alarm list
- *   i://open_terminal?init_command=...      → open terminal with command
- *   i://session/<id>                        → open specific session
- *   i://settings                            → Settings home
- *   i://settings/providers                  → Provider list
- *   i://settings/providers/<instanceId>     → Provider detail
- *   i://settings/model-groups               → Model Groups (incl. Agent Loop section)
- *   i://settings/model-groups/<groupId>     → Model Group detail
- *   i://settings/usage                      → Token usage
- *   i://settings/skills                     → Skills management
- *   i://settings/memory                     → Memory management
- *   i://settings/storage                    → Storage management
- *   i://settings/mount-external             → Mount External Folders list
- *   i://settings/mounts                     → alias for mount-external
- *   i://settings/shared-folders             → Shared Folders list (T235)
- *   i://settings/shared_folders             → alias for shared-folders
- *   i://settings/logs                       → Log management
- *   i://settings/appearance                 → Appearance
- *   i://settings/background                 → Background settings
- *   i://settings/about                      → About
- *   i://settings/permissions                → Permissions
- *   i://settings/environments[?create_key=...&create_value=...&create_note=...]
+ *   orca://share                              → open share flow
+ *   orca://views/alarm                        → open alarm list
+ *   orca://open_terminal?init_command=...      → open terminal with command
+ *   orca://session/<id>                        → open specific session
+ *   orca://settings                            → Settings home
+ *   orca://settings/providers                  → Provider list
+ *   orca://settings/providers/<instanceId>     → Provider detail
+ *   orca://settings/model-groups               → Model Groups (incl. Agent Loop section)
+ *   orca://settings/model-groups/<groupId>     → Model Group detail
+ *   orca://settings/usage                      → Token usage
+ *   orca://settings/skills                     → Skills management
+ *   orca://settings/memory                     → Memory management
+ *   orca://settings/storage                    → Storage management
+ *   orca://settings/mount-external             → Mount External Folders list
+ *   orca://settings/mounts                     → alias for mount-external
+ *   orca://settings/shared-folders             → Shared Folders list (T235)
+ *   orca://settings/shared_folders             → alias for shared-folders
+ *   orca://settings/logs                       → Log management
+ *   orca://settings/appearance                 → Appearance
+ *   orca://settings/background                 → Background settings
+ *   orca://settings/about                      → About
+ *   orca://settings/permissions                → Permissions
+ *   orca://settings/environments[?create_key=...&create_value=...&create_note=...]
  *                                               → Environment variables
- *   i://settings/rootfs                     → Rootfs management (mirror config lives here)
- *   i://settings/mirrors                    → alias for rootfs (mirrors live inside Rootfs UI)
+ *   orca://settings/rootfs                     → Rootfs management (mirror config lives here)
+ *   orca://settings/mirrors                    → alias for rootfs (mirrors live inside Rootfs UI)
  *
  * Unknown settings paths fall back to Settings home rather than
  * Unknown — matches iOS's "best-effort land somewhere reasonable"
  * behavior so an LLM-generated link can never strand the user.
  *
- * Resource-class URIs (`i://workspace/...`, `i://skills/...`,
+ * Resource-class URIs (`orca://workspace/...`, `orca://skills/...`,
  * etc.) are intentionally NOT handled here — they resolve to on-disk
  * files and go through `ChatLinkResolver` at the chat-view layer. This
  * parser only handles *navigation* targets that change the app's top-
@@ -59,9 +59,9 @@ sealed class DeepLinkAction {
      *  - [NewVoiceChat] — new chat + auto-trigger voice input mic on first compose
      *  - [NewCameraChat] — new chat + auto-launch camera attachment on first compose
      *
-     * Encoded as `i://action/<name>` so the static shortcuts XML can
+     * Encoded as `orca://action/<name>` so the static shortcuts XML can
      * point to them via plain Intent.data without any custom extras —
-     * matches the existing i:// deep-link conventions.
+     * matches the existing orca:// deep-link conventions.
      */
     data object NewChat : DeepLinkAction()
     data object NewVoiceChat : DeepLinkAction()
@@ -81,9 +81,9 @@ sealed class DeepLinkAction {
      * Launch the in-chat HTML preview, fullscreen, for a pinned home-screen
      * shortcut.
      *
-     * Encoded as `i://session/<sessionId>/<resource-path>` —
+     * Encoded as `orca://session/<sessionId>/<resource-path>` —
      * [sessionId] selects which chat to land in; [resourcePath] is the
-     * resource path under `/var/i/` (e.g. `/browser/snake.html`).
+     * resource path under `/var/orca/` (e.g. `/browser/snake.html`).
      * [title] is the cached page title at pin time, used as the fallback
      * while WebView re-reports its own.
      */
@@ -98,7 +98,7 @@ sealed class DeepLinkAction {
 
 object DeepLinkHandler {
     fun parse(uri: Uri?): DeepLinkAction {
-        if (uri == null || uri.scheme != "i") return DeepLinkAction.Unknown
+        if (uri == null || uri.scheme != "orca") return DeepLinkAction.Unknown
         val host = uri.host ?: return DeepLinkAction.Unknown
         val path = uri.path.orEmpty()
 
@@ -122,8 +122,8 @@ object DeepLinkHandler {
             }
             "settings" -> parseSettingsPath(uri)
             "session" -> {
-                // i://session/<sessionId>                → OpenSession
-                // i://session/<sessionId>/<resource-path> → OpenHtmlPreview
+                // orca://session/<sessionId>                → OpenSession
+                // orca://session/<sessionId>/<resource-path> → OpenHtmlPreview
                 val segments = path.removePrefix("/")
                     .split('/')
                     .filter { it.isNotEmpty() }
@@ -144,7 +144,7 @@ object DeepLinkHandler {
 
     /**
      * `init_command` arrives from an untrusted source: any web page can fire
-     * `i://open_terminal?init_command=…` with no user confirmation.
+     * `orca://open_terminal?init_command=…` with no user confirmation.
      *
      * TerminalScreen only ever means to *pre-fill* the prompt so the user can
      * read the command before running it. Two byte classes break that promise
@@ -166,7 +166,7 @@ object DeepLinkHandler {
     }
 
     /**
-     * T183: walk a `i://settings/<path>` URI to the right NavHost
+     * T183: walk a `orca://settings/<path>` URI to the right NavHost
      * route. Two cases stay distinct:
      *
      *  - `environments?create_key=…` — keeps the dedicated
@@ -227,7 +227,7 @@ object DeepLinkHandler {
                 // iOS parity (AIChatView.swift L1407-1411): only `create_key`
                 // is required. Missing `create_value`/`create_note` default
                 // to empty string so a link like
-                //   i://settings/environments?create_key=GH_TOKEN&create_value=
+                //   orca://settings/environments?create_key=GH_TOKEN&create_value=
                 // (where `create_value=` is present-but-blank) still opens
                 // the prefilled form. Without create_key, plain navigation
                 // to the Env Vars list.

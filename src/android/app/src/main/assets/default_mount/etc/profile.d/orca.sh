@@ -5,7 +5,7 @@
 # prompt stays stable regardless of what /etc/hostname ends up containing
 # on an already-provisioned rootfs. iOS does the same in
 # deps/prepare_alpine_rootfs.sh, but still bakes the pre-rebrand "i" —
-# this now reads `root@orca:/var/i#` on Android and `root@i:/var/i#` on
+# this now reads `root@orca:/var/orca#` on Android and `root@i:/var/orca#` on
 # iOS until that script is updated too.
 export PS1='\u@orca:\w\$ '
 
