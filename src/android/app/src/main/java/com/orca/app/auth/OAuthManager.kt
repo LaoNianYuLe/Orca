@@ -140,8 +140,14 @@ abstract class OAuthManager(
     suspend fun startLogin(onComplete: (Boolean) -> Unit) {
         callbackServer?.stop()
         callbackServer = OAuthCallbackServer(callbackPort) { code, state ->
-            if (state != null && state != currentState) {
-                Log.w(TAG, "State mismatch")
+            // buildAuthorizationUrl always sends `state`, so a callback without
+            // one is not from this flow. The old check skipped verification when
+            // state was null, which let anything able to reach the loopback
+            // server — or to fire the exported redirect activity — get an
+            // attacker-chosen code exchanged for tokens by simply omitting it.
+            val expected = currentState
+            if (expected == null || state == null || state != expected) {
+                Log.w(TAG, "Rejecting OAuth callback: state missing or mismatched")
                 onComplete(false)
                 return@OAuthCallbackServer
             }

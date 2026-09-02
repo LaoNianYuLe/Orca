@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto Backup rules for API 30 and below (android:fullBackupContent).
+  API 31+ uses data_extraction_rules.xml; keep the two lists in sync.
+
+  Two reasons something is excluded here:
+
+  1. Secrets. Everything under EncryptedSharedPreferences is useless off-device
+     anyway — the master key lives in AndroidKeystore, which is never backed up,
+     so a restored ciphertext blob can only fail to decrypt. Shipping it just
+     hands an attacker with `adb backup` an offline copy for no benefit.
+  2. Bulk / machine-local state. The Alpine rootfs is hundreds of MB of
+     extracted Linux userland that must be rebuilt per device, and the debug
+     server token authenticates LAN callers.
+-->
+<full-backup-content>
+    <!-- EncryptedSharedPreferences stores: API keys, OAuth tokens, env-var values. -->
+    <exclude domain="sharedpref" path="provider_secrets.xml" />
+    <exclude domain="sharedpref" path="oauth_prefs.xml" />
+    <exclude domain="sharedpref" path="mcp_oauth_secrets.xml" />
+    <exclude domain="sharedpref" path="env_var_values.xml" />
+    <exclude domain="sharedpref" path="i_device_identity.xml" />
+
+    <!-- Tink keyset backing every store above. Worthless without the Keystore key. -->
+    <exclude domain="sharedpref" path="__androidx_security_crypto_encrypted_prefs__.xml" />
+
+    <!-- Legacy cleartext fallback written by older builds; never restore it. -->
+    <exclude domain="sharedpref" path="provider_secrets_plain_fallback.xml" />
+    <exclude domain="sharedpref" path="oauth_prefs_plain_fallback.xml" />
+    <exclude domain="sharedpref" path="mcp_oauth_secrets_plain_fallback.xml" />
+    <exclude domain="sharedpref" path="env_var_values_plain_fallback.xml" />
+    <exclude domain="sharedpref" path="i_device_identity_plain_fallback.xml" />
+
+    <!-- PRoot sandbox userland — device-specific and very large. -->
+    <exclude domain="file" path="alpine-rootfs" />
+
+    <!-- Per-install auth token for the debug RPC server. -->
+    <exclude domain="file" path="debug_server_token" />
+</full-backup-content>
