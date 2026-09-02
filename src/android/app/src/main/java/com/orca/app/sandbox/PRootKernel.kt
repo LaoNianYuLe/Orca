@@ -219,12 +219,6 @@ object PRootKernel {
     // and remove our own wrappers (vs a user/busybox binary of the same name).
     private const val GUARD_MARKER = "orca-mount-readonly-guard"
 
-    // Wrappers written before the rebrand carry the old sentinel. Cleanup has
-    // to recognise those too, or a guard installed by an earlier version stays
-    // in the rootfs rejecting writes to a mount the user has since made
-    // writable — with nothing in the UI to explain why.
-    private val GUARD_MARKERS = listOf(GUARD_MARKER, "i-mount-readonly-guard")
-
     /**
      * Reference to the user-mounted folders store, set by [OrcaApp] at
      * launch (the file is owned by T219-1 / worker A — we cannot touch it
@@ -884,7 +878,7 @@ object PRootKernel {
             runCatching { configFile.delete() }
             for (name in guardedCmds) {
                 val w = File(binDir, name)
-                if (w.exists() && GUARD_MARKERS.any { w.readText().contains(it) }) w.delete()
+                if (w.exists() && w.readText().contains(GUARD_MARKER)) w.delete()
             }
             Log.i(TAG, "installMountWriteGuards: no read-only mounts, guards cleared")
             return

@@ -20,8 +20,6 @@
     <exclude domain="sharedpref" path="mcp_oauth_secrets.xml" />
     <exclude domain="sharedpref" path="env_var_values.xml" />
     <exclude domain="sharedpref" path="orca_device_identity.xml" />
-    <!-- pre-rebrand name: still on disk until BrandMigration runs -->
-    <exclude domain="sharedpref" path="i_device_identity.xml" />
 
     <!-- Tink keyset backing every store above. Worthless without the Keystore key. -->
     <exclude domain="sharedpref" path="__androidx_security_crypto_encrypted_prefs__.xml" />
@@ -32,7 +30,6 @@
     <exclude domain="sharedpref" path="mcp_oauth_secrets_plain_fallback.xml" />
     <exclude domain="sharedpref" path="env_var_values_plain_fallback.xml" />
     <exclude domain="sharedpref" path="orca_device_identity_plain_fallback.xml" />
-    <exclude domain="sharedpref" path="i_device_identity_plain_fallback.xml" />
 
     <!-- PRoot sandbox userland — device-specific and very large. -->
     <exclude domain="file" path="alpine-rootfs" />

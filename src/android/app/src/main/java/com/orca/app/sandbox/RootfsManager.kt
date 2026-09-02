@@ -352,13 +352,6 @@ class RootfsManager private constructor(private val context: Context) {
         // --isolated or via a venv). Safe: this is a single-tenant sandbox.
         val markerRemoved = removeExternallyManagedMarker()
 
-        // The overlay only ever adds or overwrites, so a file that was renamed
-        // in the assets leaves its old copy behind in an already-provisioned
-        // rootfs. For profile.d that is not merely untidy: /etc/profile sources
-        // every *.sh in there, so a stale i.sh would keep exporting the old PS1
-        // and BROWSER alongside the new orca.sh.
-        val staleRemoved = removeStalePreRebrandFiles()
-
         // [T-mcp-cli-readonly-android] Make the shipped orca-mcp-cli Python lib
         // read-only inside the guest so a user can't `vi`-tamper the bundled
         // scripts (mirrors iOS #707). Scoped to /usr/local/lib/orca-mcp-cli/
@@ -369,40 +362,7 @@ class RootfsManager private constructor(private val context: Context) {
         val lockedCount = lockMcpCliLibReadOnly()
 
         val elapsedMs = (System.nanoTime() - startNs) / 1_000_000.0
-        Log.i(TAG, "[DefaultMount] Done. $fileCount file(s) overlaid, $markerRemoved EXTERNALLY-MANAGED marker(s) removed, $staleRemoved stale pre-rebrand file(s) removed, $lockedCount orca-mcp-cli lib path(s) locked read-only in %.1fms".format(elapsedMs))
-    }
-
-    /**
-     * Delete guest files that the rebrand renamed, so an existing rootfs does
-     * not end up serving both the old and the new copy.
-     *
-     * Only app-managed paths are listed here — every entry is something
-     * default_mount owns and rewrites on each boot, never user content.
-     */
-    private fun removeStalePreRebrandFiles(): Int {
-        val stale = listOf(
-            "etc/profile.d/i.sh",
-            "usr/local/bin/i-open",
-            "usr/local/bin/i-mcp-cli",
-            // Superseded by usr/local/lib/orca-mcp-cli. Left in place it would
-            // just be dead weight, but lockMcpCliLibReadOnly() marked it
-            // read-only on every prior boot, so the write bits have to come
-            // back before it can be deleted.
-            "usr/local/lib/i-mcp-cli",
-        )
-        var removed = 0
-        for (relative in stale) {
-            val target = File(rootfsDir, relative)
-            if (!target.exists()) continue
-            target.walkBottomUp().forEach { it.setWritable(true, false) }
-            if (target.deleteRecursively()) {
-                removed++
-                Log.i(TAG, "[DefaultMount] Removed stale pre-rebrand path: $relative")
-            } else {
-                Log.w(TAG, "[DefaultMount] Could not remove stale path: $relative")
-            }
-        }
-        return removed
+        Log.i(TAG, "[DefaultMount] Done. $fileCount file(s) overlaid, $markerRemoved EXTERNALLY-MANAGED marker(s) removed, $lockedCount orca-mcp-cli lib path(s) locked read-only in %.1fms".format(elapsedMs))
     }
 
     /**

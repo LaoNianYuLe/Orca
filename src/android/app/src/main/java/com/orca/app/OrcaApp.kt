@@ -242,12 +242,6 @@ class OrcaApp : Application(), ImageLoaderFactory {
             return
         }
 
-        // Must precede every prefs read and database open below: the rebrand
-        // renamed the files those calls resolve to, so an existing install only
-        // keeps its data if the move happens first. Skipped in the :acra process
-        // by the early-return above, which is correct — it never opens them.
-        com.orca.app.util.BrandMigration.runIfNeeded(this)
-
         // T-android-safemode-lateinit-crash: hand AppLogger a Context before
         // any early-return below can skip AppLogger.init(). This costs
         // nothing (no I/O, no prefs, no capture) and is what lets the in-app
