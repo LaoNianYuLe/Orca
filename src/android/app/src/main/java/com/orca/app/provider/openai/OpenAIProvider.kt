@@ -3135,10 +3135,10 @@ class OpenAIProvider private constructor(
                 val digest = java.security.MessageDigest.getInstance("SHA-256")
                     .digest(text.toByteArray(Charsets.UTF_8))
                 val hex = digest.joinToString("") { "%02x".format(it) }
-                return "i-${hex.take(32)}"
+                return "orca-${hex.take(32)}"
             }
         }
-        return "i-${java.util.UUID.randomUUID().toString().lowercase()}"
+        return "orca-${java.util.UUID.randomUUID().toString().lowercase()}"
     }
 
     /**

@@ -26,8 +26,8 @@ object BrandMigration {
 
     private const val TAG = "BrandMigration"
     private const val MARKER_PREFS = "orca_brand_migration"
-    private const val KEY_DONE = "i_to_orca_done"
-    private const val KEY_LOGS = "i_to_orca_logs"
+    private const val KEY_DONE = "files_done"
+    private const val KEY_LOGS = "logs_done"
 
     /** Plain SharedPreferences: safe to move as files. */
     private val PLAIN_PREFS = listOf(

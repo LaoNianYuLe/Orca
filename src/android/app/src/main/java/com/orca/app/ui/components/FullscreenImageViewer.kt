@@ -483,7 +483,7 @@ internal suspend fun shareImage(context: Context, model: Any) {
 internal suspend fun saveToGallery(context: Context, bitmap: Bitmap): Boolean =
     withContext(Dispatchers.IO) {
         try {
-            val filename = "i_${System.currentTimeMillis()}.png"
+            val filename = "orca_${System.currentTimeMillis()}.png"
             val stream: OutputStream?
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val values = ContentValues().apply {

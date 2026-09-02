@@ -94,7 +94,7 @@ object PRootKernel {
         customEnvironment.putIfAbsent("HOME", "/root")
 
         // URL interception: seed $BROWSER directly into every process envp
-        // so non-login shells (which never source /etc/profile.d/i.sh)
+        // so non-login shells (which never source /etc/profile.d/orca.sh)
         // still route webbrowser.open()/etc into the host OpenOffloadHandler.
         // Mirrors iOS ISHShellExecutor.m:333.
         customEnvironment["BROWSER"] = "/usr/local/bin/orca-open"   // T195: force override; user dotfile BROWSER= would otherwise win
@@ -130,7 +130,7 @@ object PRootKernel {
         // and PRoot rejects the second link with EPERM. Force uv to symlink
         // package files instead so the sentinels are never used as link
         // sources. Reported as i/i#7.
-        // Mirrored in default_mount/etc/profile.d/i.sh for login shells.
+        // Mirrored in default_mount/etc/profile.d/orca.sh for login shells.
         customEnvironment.putIfAbsent("UV_LINK_MODE", "symlink")
 
         // Inject device timezone so Alpine userspace sees local time.

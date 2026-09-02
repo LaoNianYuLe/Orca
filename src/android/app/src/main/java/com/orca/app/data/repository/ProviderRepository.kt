@@ -83,7 +83,7 @@ class ProviderRepository(private val context: Context) {
 
     // [T-android-provider-room-store] Per-row provider config DB. Lives in
     // its own provider.db file so a downgrade to a build that doesn't know
-    // about provider tables can't crash the main i.db open. The legacy
+    // about provider tables can't crash the main orca.db open. The legacy
     // SharedPreferences JSON mirror under "provider_config / config" is
     // still written on every save so older builds keep reading current
     // config — losing nothing on downgrade. See [loadConfig] for the

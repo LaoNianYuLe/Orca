@@ -754,7 +754,7 @@ class OrcaApp : Application(), ImageLoaderFactory {
 
     /**
      * T268: replay any pre-T266 internal alarm/timer entries from
-     * i_alarms_prefs through SET_ALARM / SET_TIMER, then clear the
+     * orca_alarms_prefs through SET_ALARM / SET_TIMER, then clear the
      * prefs blob so subsequent launches no-op. Past-dated entries are
      * dropped (the OS never re-fires them anyway). Idempotent: if the
      * blob is missing or empty the function returns immediately.

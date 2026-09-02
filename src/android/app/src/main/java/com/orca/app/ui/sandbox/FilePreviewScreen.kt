@@ -1124,7 +1124,7 @@ private suspend fun saveImageToGallery(context: Context, src: File): Boolean =
         try {
             val ext = src.extension.lowercase().ifEmpty { "png" }
             val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "image/png"
-            val filename = "i_${System.currentTimeMillis()}.$ext"
+            val filename = "orca_${System.currentTimeMillis()}.$ext"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val values = ContentValues().apply {
                     put(MediaStore.Images.Media.DISPLAY_NAME, filename)
