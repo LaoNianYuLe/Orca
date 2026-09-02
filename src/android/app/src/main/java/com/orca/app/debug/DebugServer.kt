@@ -97,7 +97,7 @@ class DebugServer(
                 val ss = ServerSocket(port, 10)
                 serverSocket = ss
                 Log.i(TAG, "Debug server listening on port $port (all interfaces)")
-                Log.i(TAG, "Remote (non-loopback) clients must send X-I-Token: $authToken")
+                Log.i(TAG, "Remote (non-loopback) clients must send X-Orca-Token: $authToken")
 
                 while (!stopped) {
                     try {
@@ -161,9 +161,11 @@ class DebugServer(
                     if (lower.startsWith("accept:")) {
                         accept = lower.substringAfter(":").trim()
                     }
-                    // [T-android-debugserver-auth] Token via X-I-Token or
+                    // [T-android-debugserver-auth] Token via X-Orca-Token or
                     // Authorization: Bearer — either spelling accepted.
-                    if (lower.startsWith("x-i-token:")) {
+                    // x-i-token is the pre-rebrand header, still honoured so
+                    // existing scripts and saved HTTP clients keep working.
+                    if (lower.startsWith("x-orca-token:") || lower.startsWith("x-i-token:")) {
                         providedToken = headerLine.substringAfter(":").trim()
                     }
                     if (lower.startsWith("authorization:")) {
@@ -179,7 +181,7 @@ class DebugServer(
                 val isLoopback = s.inetAddress?.isLoopbackAddress == true
                 if (!isAuthorized(isLoopback, providedToken, authToken)) {
                     Log.w(TAG, "401 unauthorized ${if (isLoopback) "loopback" else s.inetAddress?.hostAddress ?: "?"} (missing/wrong token)")
-                    sendResponse(writer, 401, rpcHandler.errorJSON(-32000, "Unauthorized — send X-I-Token (see `adb shell run-as com.orca.app cat files/debug_server_token`)"))
+                    sendResponse(writer, 401, rpcHandler.errorJSON(-32000, "Unauthorized — send X-Orca-Token (see `adb shell run-as com.orca.app cat files/debug_server_token`)"))
                     return
                 }
 
@@ -336,7 +338,7 @@ class DebugServer(
         writer.print("Connection: close\r\n")
         writer.print("Access-Control-Allow-Origin: *\r\n")
         writer.print("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n")
-        writer.print("Access-Control-Allow-Headers: Content-Type, X-I-Token, Authorization\r\n")
+        writer.print("Access-Control-Allow-Headers: Content-Type, X-Orca-Token, X-I-Token, Authorization\r\n")
         writer.print("\r\n")
         writer.print(body)
         writer.flush()
@@ -346,7 +348,7 @@ class DebugServer(
         writer.print("HTTP/1.1 204 No Content\r\n")
         writer.print("Access-Control-Allow-Origin: *\r\n")
         writer.print("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n")
-        writer.print("Access-Control-Allow-Headers: Content-Type, X-I-Token, Authorization\r\n")
+        writer.print("Access-Control-Allow-Headers: Content-Type, X-Orca-Token, X-I-Token, Authorization\r\n")
         writer.print("Access-Control-Max-Age: 86400\r\n")
         writer.print("Connection: close\r\n")
         writer.print("\r\n")

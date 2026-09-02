@@ -15,7 +15,7 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * T188 — `i-sessions-cli` offload handler. Lets the in-shell agent
+ * T188 — `orca-sessions-cli` offload handler. Lets the in-shell agent
  * query historical chat sessions and messages without round-tripping
  * back through the LLM. Three subcommands:
  *
@@ -39,7 +39,7 @@ class SessionsOffloadHandler(
 ) : NativeOffloadHandler {
 
     override fun handle(request: NativeOffloadRequest): NativeOffloadResult {
-        // argv[0] is the program name ("i-sessions-cli"); subcommand
+        // argv[0] is the program name ("orca-sessions-cli"); subcommand
         // and options follow. Drop argv[0] before parsing so positional[0]
         // is the subcommand name. `full` is declared boolean so
         // `--full <token>` never greedily consumes the next token as a value
@@ -118,7 +118,7 @@ class SessionsOffloadHandler(
                 "search",
                 "INVALID_ARGS",
                 "--keywords is required for search. " +
-                    "Example: i-sessions-cli search --keywords \"API error\"",
+                    "Example: orca-sessions-cli search --keywords \"API error\"",
             )
             return NativeOffloadResult(
                 EXIT_INVALID_ARGS,
@@ -288,7 +288,7 @@ class SessionsOffloadHandler(
 
     companion object {
         private const val TAG = "SessionsOffload"
-        private const val TOOL_NAME = "i-sessions-cli"
+        private const val TOOL_NAME = "orca-sessions-cli"
         private const val DEFAULT_LIMIT = 50
         private const val MAX_LIMIT = 100
 
@@ -300,10 +300,10 @@ class SessionsOffloadHandler(
             timeZone = TimeZone.getDefault()
         }
 
-        private const val HELP_TEXT = """i-sessions-cli - Query historical chat sessions and messages
+        private const val HELP_TEXT = """orca-sessions-cli - Query historical chat sessions and messages
 
 USAGE:
-  i-sessions-cli <command> [options]
+  orca-sessions-cli <command> [options]
 
 COMMANDS:
   list      List recent sessions (default: 50, max: 100)
@@ -344,15 +344,15 @@ WORKFLOW:
   4. Use --offset to paginate through long conversations
 
 EXAMPLES:
-  i-sessions-cli list
-  i-sessions-cli list --limit 10
-  i-sessions-cli list --keywords python flask
-  i-sessions-cli list --start 2025-01-01 --end 2025-03-31
-  i-sessions-cli search --keywords "API error" --limit 20
-  i-sessions-cli search --keywords deploy --ids abc123,def456
-  i-sessions-cli messages --id <session_id>
-  i-sessions-cli messages --id <session_id> --full
-  i-sessions-cli messages --id <session_id> --offset 20 --limit 10
+  orca-sessions-cli list
+  orca-sessions-cli list --limit 10
+  orca-sessions-cli list --keywords python flask
+  orca-sessions-cli list --start 2025-01-01 --end 2025-03-31
+  orca-sessions-cli search --keywords "API error" --limit 20
+  orca-sessions-cli search --keywords deploy --ids abc123,def456
+  orca-sessions-cli messages --id <session_id>
+  orca-sessions-cli messages --id <session_id> --full
+  orca-sessions-cli messages --id <session_id> --offset 20 --limit 10
 """
     }
 }

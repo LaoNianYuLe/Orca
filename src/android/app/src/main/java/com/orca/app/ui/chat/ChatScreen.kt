@@ -560,7 +560,7 @@ fun ChatScreen(
     }
 
     // T311: publish "this is the active chat" while ChatScreen is composed,
-    // so `i-config session.*` reads/writes target it. Mirrors iOS
+    // so `orca-config session.*` reads/writes target it. Mirrors iOS
     // `AIChatViewModel.activeSessionId` which is updated on appear / disappear.
     // [T-HANG-DIAG] capture the application context so we can read the
     // current hang count from non-composable scopes below. LocalContext is
@@ -2083,7 +2083,7 @@ fun ChatScreen(
     var chatInputLevel by remember { mutableStateOf(appearancePrefs.getInt(com.orca.app.ui.settings.KEY_FONT_CHAT_INPUT, 0)) }
     var toolPreviewEnabled by remember { mutableStateOf(appearancePrefs.getBoolean(com.orca.app.ui.settings.KEY_TOOL_PREVIEW, true)) }
     // T-chat-title-pill: live-toggled by Settings → Appearance and by
-    // `i-config set appearance.show_chat_title …`. Default ON.
+    // `orca-config set appearance.show_chat_title …`. Default ON.
     var showChatTitlePill by remember { mutableStateOf(appearancePrefs.getBoolean(com.orca.app.ui.settings.KEY_SHOW_CHAT_TITLE, true)) }
     // T-chat-title-pill-edit: state for the in-chat edit-title sheet (the
     // exact same SessionEditSheet hosted by the session list home screen,
@@ -2221,7 +2221,7 @@ fun ChatScreen(
     }
 
     // Auto-present the in-app preview when a shell tool's stdout emits an
-    // OSC IOpenURL marker (via /usr/local/bin/i-open). The broker is
+    // OSC IOpenURL marker (via /usr/local/bin/orca-open). The broker is
     // populated by ChatViewModel's shell lineCallback; forwarding the URL
     // into `urlClickHandler` routes it exactly like a chat-link tap —
     // http(s)/about → UrlPreviewSheet, i:// deep links → DeepLinkHandler,

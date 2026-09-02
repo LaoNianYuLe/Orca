@@ -55,7 +55,7 @@ class EnvVarsCollection(
                 path = "envvars.$forId.value",
                 displayName = "Value",
                 description = "Hidden — manage via Settings → Environment Variables.",
-                reason = "Env var values are stored in encrypted prefs and never exposed to i-config",
+                reason = "Env var values are stored in encrypted prefs and never exposed to orca-config",
             ),
         )
     }

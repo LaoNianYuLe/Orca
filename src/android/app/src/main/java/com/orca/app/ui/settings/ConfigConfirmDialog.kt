@@ -44,7 +44,7 @@ import com.orca.app.config.confirm.PendingConfigChangeItem
 import com.orca.app.ui.components.ITextButton
 
 /**
- * Root-level confirmation dialog for every i-config write.
+ * Root-level confirmation dialog for every orca-config write.
  * Mirrors iOS `ConfigConfirmSheet`. Mounted in [com.orca.app.MainActivity]
  * so it shows over any active screen. Bound to
  * [ConfigConfirmationGate.pending].

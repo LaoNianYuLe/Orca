@@ -461,7 +461,7 @@ class PhotosOffloadHandler(private val context: Context) : NativeOffloadHandler 
      *
      * [GH#139] This used to write to `<filesDir>/photos-export/` and return
      * only `host_path`. That path is inside no PRoot bind mount, so the
-     * Linux sandbox cannot read it and `i-open` rejects it (it accepts
+     * Linux sandbox cannot read it and `orca-open` rejects it (it accepts
      * only http/https/about/i URLs) — the agent could list photo
      * metadata but never actually look at an exported photo. An older
      * comment here claimed the handler "doesn't see the session id"; that
@@ -557,21 +557,21 @@ class PhotosOffloadHandler(private val context: Context) : NativeOffloadHandler 
                 .put("export_size", size)
             // [GH#139] Hand back the paths the agent can actually USE: the
             // sandbox path for shell tools, and the i:// URL that
-            // `i-open` accepts for in-chat preview / model rendering.
+            // `orca-open` accepts for in-chat preview / model rendering.
             if (sandboxVisible) {
                 data.put("linux_path", "/var/i/offloads/${outFile.name}")
                     .put("i_url", "i://offloads/${outFile.name}")
                     .put(
                         "note",
                         "Exported into this chat's offloads dir. Use `linux_path` from shell " +
-                            "tools, or `i_url` with i-open to preview it in chat.",
+                            "tools, or `i_url` with orca-open to preview it in chat.",
                     )
             } else {
                 data.put(
                     "note",
                     "No chat session for this offload (interactive terminal), so the export " +
                         "went to app-private storage: `host_path` is NOT reachable from the " +
-                        "Linux sandbox and i-open cannot open it. Run the export from a " +
+                        "Linux sandbox and orca-open cannot open it. Run the export from a " +
                         "chat to get a /var/i/offloads path.",
                 )
             }

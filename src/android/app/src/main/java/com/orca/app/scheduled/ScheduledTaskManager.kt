@@ -170,7 +170,7 @@ class ScheduledTaskManager(private val context: Context) {
         private const val TAG = "ScheduledTaskManager"
         const val ACTION_FIRE = "com.orca.app.scheduled.FIRE"
         const val EXTRA_TASK_ID = "task_id"
-        const val CHANNEL_ID = "i_scheduled_tasks"
+        const val CHANNEL_ID = "orca_scheduled_tasks"
         private const val CHANNEL_NAME = "Scheduled Tasks"
     }
 }

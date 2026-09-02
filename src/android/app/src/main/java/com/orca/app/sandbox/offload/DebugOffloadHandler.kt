@@ -16,7 +16,7 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 
 /**
- * i-debug — DEBUG-ONLY CLI wrapper for the local DebugServer JSON-RPC
+ * orca-debug — DEBUG-ONLY CLI wrapper for the local DebugServer JSON-RPC
  * endpoint at 127.0.0.1:5321.
  *
  * Lets a user (or agent) in the PRoot shell drive the in-app debug RPC
@@ -37,7 +37,7 @@ class DebugOffloadHandler(@Suppress("UNUSED_PARAMETER") context: Context) : Nati
             return NativeOffloadResult(if (request.argv.size <= 1) 2 else 0, HELP)
         }
 
-        // Per-subcommand --help: `i-debug ls --help` prints the same
+        // Per-subcommand --help: `orca-debug ls --help` prints the same
         // top-level help so the user discovers the full surface either
         // way. Cheaper than per-subcommand help strings; the help text
         // already enumerates every subcommand's flags.
@@ -51,7 +51,7 @@ class DebugOffloadHandler(@Suppress("UNUSED_PARAMETER") context: Context) : Nati
         val rpc: RpcCall = try {
             buildRpcCall(sub, args)
         } catch (e: BadArgsException) {
-            return NativeOffloadResult(2, "i-debug $sub: ${e.message}\n")
+            return NativeOffloadResult(2, "orca-debug $sub: ${e.message}\n")
         }
 
         return try {
@@ -148,7 +148,7 @@ class DebugOffloadHandler(@Suppress("UNUSED_PARAMETER") context: Context) : Nati
             "model-use", "modelUse" -> RpcCall("debug.modelUse.exec", buildExecForwarder(rest, args))
 
             // Generic escape hatch — call any registered method directly.
-            // `i-debug call <method> [--params '<json>']`
+            // `orca-debug call <method> [--params '<json>']`
             "call" -> {
                 val method = rest.firstOrNull()
                     ?: throw BadArgsException("missing <method>")
@@ -161,7 +161,7 @@ class DebugOffloadHandler(@Suppress("UNUSED_PARAMETER") context: Context) : Nati
                 RpcCall(method, params)
             }
 
-            else -> throw BadArgsException("unknown subcommand '$sub' (try `i-debug --help`)")
+            else -> throw BadArgsException("unknown subcommand '$sub' (try `orca-debug --help`)")
         }
     }
 
@@ -294,10 +294,10 @@ class DebugOffloadHandler(@Suppress("UNUSED_PARAMETER") context: Context) : Nati
          */
         private val BOOLEAN_FLAGS = setOf("recursive", "base64")
 
-        private const val HELP = """i-debug — CLI for the in-app DebugServer JSON-RPC (debug builds only)
+        private const val HELP = """orca-debug — CLI for the in-app DebugServer JSON-RPC (debug builds only)
 
 Usage:
-  i-debug <subcommand> [options]
+  orca-debug <subcommand> [options]
 
 SUBCOMMANDS:
   discover                           List all registered RPC methods (rpc.discover)
@@ -314,7 +314,7 @@ SUBCOMMANDS:
 
 Android-only (DEBUG_ONLY_METHODS in DebugMethodRegistry):
   shizuku <argv...>                  Invoke android-shizuku-cli (debug.shizuku.exec)
-  model-use <argv...>                Invoke i-model-use (debug.modelUse.exec)
+  model-use <argv...>                Invoke orca-model-use (debug.modelUse.exec)
 
 Escape hatch (for any method not listed above):
   call <method> [--params '<json>']  Invoke an arbitrary registered method
@@ -326,12 +326,12 @@ GLOBAL OPTIONS:
                                      iOS-style envelope (when present)
 
 EXAMPLES:
-  i-debug discover
-  i-debug appInfo
-  i-debug ls /sdcard --recursive --maxDepth 2
-  i-debug read /etc/passwd --offset 0 --limit 100
-  i-debug exec uname -a
-  i-debug call debug.logs.list --params '{}'
+  orca-debug discover
+  orca-debug appInfo
+  orca-debug ls /sdcard --recursive --maxDepth 2
+  orca-debug read /etc/passwd --offset 0 --limit 100
+  orca-debug exec uname -a
+  orca-debug call debug.logs.list --params '{}'
 
 The handler talks to 127.0.0.1:$DEBUG_SERVER_PORT (DebugServer). If the server
 isn't running you'll see `debug_server_unreachable` — Release builds don't

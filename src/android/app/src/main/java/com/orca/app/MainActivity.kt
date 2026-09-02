@@ -55,7 +55,7 @@ import com.orca.app.ui.settings.keepScreenAwakeEnabled
 import com.orca.app.ui.theme.ITheme
 import com.orca.app.ui.theme.windowBackgroundColor
 
-private const val KEY_CURRENT_CHAT_SESSION_ID = "i.current_chat_session_id"
+private const val KEY_CURRENT_CHAT_SESSION_ID = "orca.current_chat_session_id"
 
 class MainActivity : ComponentActivity() {
 
@@ -620,7 +620,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                // T-config: root-level i-config confirm dialog.
+                // T-config: root-level orca-config confirm dialog.
                 // Bound to ConfigConfirmationGate.pending — the gate
                 // fires whenever a CLI write is awaiting user OK. The
                 // dialog is rendered on top of any active screen, so

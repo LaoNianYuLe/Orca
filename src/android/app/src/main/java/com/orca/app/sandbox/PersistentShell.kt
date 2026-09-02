@@ -236,11 +236,20 @@ class PersistentShell(
         // but refresh it here in case the system timezone changed between boot
         // and now.
         env["TZ"] = PRootKernel.posixTz()
-        if (debugOffload) env["I_NOFF_DEBUG"] = "1"
+        // Both spellings: the reader is in the vendored proot C sources, not in
+        // this tree, so the old name stays until that side is confirmed.
+        if (debugOffload) {
+            env["ORCA_NOFF_DEBUG"] = "1"
+            env["I_NOFF_DEBUG"] = "1"
+        }
         // T340: forward the chat session id to native_offload handlers via
         // proot env. NativeOffloadServer reads this off `request.env` and
         // hands it to OffloadPermissionManager so ASK_ONCE grants/denials
         // are scoped per chat session, not globally.
+        env["ORCA_CHAT_SESSION_ID"] = sessionId
+        // Pre-rebrand spelling, still exported: guest-side scripts a user
+        // wrote against the old name would otherwise silently read empty and
+        // fall back to global permission scope.
         env["I_CHAT_SESSION_ID"] = sessionId
 
         for ((key, value) in PRootKernel.customEnvironment) {

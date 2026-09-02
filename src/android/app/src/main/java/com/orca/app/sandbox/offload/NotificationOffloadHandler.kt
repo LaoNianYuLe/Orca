@@ -549,7 +549,7 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
 
     companion object {
         private const val TAG = "NotificationOffload"
-        private const val CHANNEL_ID = "i_agent_notifications"
+        private const val CHANNEL_ID = "orca_agent_notifications"
         private const val CHANNEL_NAME = "Agent Notifications"
         private var channelCreated = false
 

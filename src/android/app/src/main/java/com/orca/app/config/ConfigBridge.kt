@@ -55,14 +55,14 @@ object ConfigBridge {
         put("user_message", "The setting '$path' isn't available on this device: $reason")
     }
 
-    /** Standardised "i-config disabled" envelope. Includes user_message. */
+    /** Standardised "orca-config disabled" envelope. Includes user_message. */
     fun disabledErrorEnvelope(): JSONObject = JSONObject().apply {
         put("ok", false)
         put("error", "permission_denied")
-        put("reason", "i-config is disabled in Settings → Permissions.")
+        put("reason", "orca-config is disabled in Settings → Permissions.")
         put(
             "user_message",
-            "Orca tried to change a setting but i-config is currently disabled. " +
+            "Orca tried to change a setting but orca-config is currently disabled. " +
                 "You can enable it at [Settings → Permissions](i://settings/permissions), " +
                 "then ask me again. Or change the setting yourself directly through the relevant Settings screen."
         )
@@ -199,7 +199,7 @@ object ConfigBridge {
         if (field.access == ConfigAccess.HIDDEN) return JSONObject().apply {
             put("ok", false)
             put("error", "permission_denied")
-            put("reason", "'$path' is intentionally not exposed to i-config.")
+            put("reason", "'$path' is intentionally not exposed to orca-config.")
         }
         // [T-android-config-feature-unavailable] The device/OS lacks the
         // feature entirely — answer precisely instead of reporting a value the
@@ -253,7 +253,7 @@ object ConfigBridge {
         if (page > totalPages) {
             val pgWord = if (totalPages == 1) "page" else "pages"
             return "Page $page is out of range (only $totalPages $pgWord available). " +
-                "Try: i-config get $path$filterFragment --page $totalPages"
+                "Try: orca-config get $path$filterFragment --page $totalPages"
         }
         if (totalPages <= 1) {
             val itemWord = if (total == 1) "item" else "items"
@@ -261,7 +261,7 @@ object ConfigBridge {
         }
         if (page < totalPages) {
             return "Showing page $page of $totalPages ($pageCount of $total items). " +
-                "To get more, use: i-config get $path$filterFragment --page ${page + 1} --page-size $pageSize"
+                "To get more, use: orca-config get $path$filterFragment --page ${page + 1} --page-size $pageSize"
         }
         return "Showing page $page of $totalPages ($pageCount of $total items). This is the last page."
     }
@@ -401,7 +401,7 @@ object ConfigBridge {
 
             if (field.access != ConfigAccess.READWRITE) {
                 val reason = if (field.access == ConfigAccess.HIDDEN) {
-                    "'$rawPath' is intentionally not exposed to i-config."
+                    "'$rawPath' is intentionally not exposed to orca-config."
                 } else {
                     "'$rawPath' is read-only."
                 }
@@ -947,7 +947,7 @@ object ConfigBridge {
         val res = runBlocking {
             performWriteBatch(
                 items = items,
-                caption = "i-config audit revert ${entry.id.take(8)}",
+                caption = "orca-config audit revert ${entry.id.take(8)}",
                 actorRaw = actorRaw,
                 sessionId = sessionId,
                 skipConfirmation = skipConfirmation,

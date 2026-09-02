@@ -17,7 +17,7 @@ import com.orca.app.logging.AppLogger
 
 /**
  * [T-android-config-confirm-timeout] Posts a local notification when a
- * i-config change is waiting for user approval AND the app is backgrounded,
+ * orca-config change is waiting for user approval AND the app is backgrounded,
  * so the user knows to return before the (now 120s) timeout. Android port of
  * iOS `ConfigConfirmationGate.notifyIfBackgrounded` (T-config-confirm-timeout-bg).
  *
@@ -128,7 +128,7 @@ class ConfigConfirmNotifier(
 
     companion object {
         private const val TAG = "ConfigConfirmNotifier"
-        const val CHANNEL_ID = "i_config_confirm"
+        const val CHANNEL_ID = "orca_config_confirm"
         private const val NOTIFICATION_TAG = "config-confirm"
     }
 }

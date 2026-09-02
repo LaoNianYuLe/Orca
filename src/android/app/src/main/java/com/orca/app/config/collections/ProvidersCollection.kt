@@ -31,7 +31,7 @@ import com.orca.app.data.repository.ProviderRepository
  *     via [envVars]); reads throw permission_denied (forwarded by the
  *     bridge as `error: permission_denied`, NOT `read_failed`).
  *   - oauthToken stays HiddenField on every axis — OAuth tokens come
- *     from a multi-step browser flow that i-config cannot drive.
+ *     from a multi-step browser flow that orca-config cannot drive.
  */
 class ProvidersCollection(
     private val repo: ProviderRepository,
@@ -67,7 +67,7 @@ class ProvidersCollection(
                 path = "providers.$forId.oauthToken",
                 displayName = "OAuth Token",
                 description = "Hidden — completed via the in-app OAuth flow.",
-                reason = "OAuth tokens cannot be set via i-config — use Settings UI",
+                reason = "OAuth tokens cannot be set via orca-config — use Settings UI",
             ),
         )
     }
@@ -367,7 +367,7 @@ class ProvidersCollection(
             revertable = false,
             reader = {
                 throw ConfigError.PermissionDenied(
-                    "API keys are never read back via i-config. To change one, write a new value."
+                    "API keys are never read back via orca-config. To change one, write a new value."
                 )
             },
             writer = { v ->

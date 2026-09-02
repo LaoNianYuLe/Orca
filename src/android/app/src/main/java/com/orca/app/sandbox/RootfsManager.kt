@@ -352,21 +352,59 @@ class RootfsManager private constructor(private val context: Context) {
         // --isolated or via a venv). Safe: this is a single-tenant sandbox.
         val markerRemoved = removeExternallyManagedMarker()
 
-        // [T-mcp-cli-readonly-android] Make the shipped i-mcp-cli Python lib
+        // The overlay only ever adds or overwrites, so a file that was renamed
+        // in the assets leaves its old copy behind in an already-provisioned
+        // rootfs. For profile.d that is not merely untidy: /etc/profile sources
+        // every *.sh in there, so a stale i.sh would keep exporting the old PS1
+        // and BROWSER alongside the new orca.sh.
+        val staleRemoved = removeStalePreRebrandFiles()
+
+        // [T-mcp-cli-readonly-android] Make the shipped orca-mcp-cli Python lib
         // read-only inside the guest so a user can't `vi`-tamper the bundled
-        // scripts (mirrors iOS #707). Scoped to /usr/local/lib/i-mcp-cli/
-        // ONLY — the wrapper at /usr/local/bin/i-mcp-cli stays executable +
+        // scripts (mirrors iOS #707). Scoped to /usr/local/lib/orca-mcp-cli/
+        // ONLY — the wrapper at /usr/local/bin/orca-mcp-cli stays executable +
         // writable (app-managed). Re-applied on every boot AFTER the copy; the
         // copyAssetDir leaf-copy above re-opens read-only files writable first,
         // so the next app-upgrade overlay still overwrites cleanly.
         val lockedCount = lockMcpCliLibReadOnly()
 
         val elapsedMs = (System.nanoTime() - startNs) / 1_000_000.0
-        Log.i(TAG, "[DefaultMount] Done. $fileCount file(s) overlaid, $markerRemoved EXTERNALLY-MANAGED marker(s) removed, $lockedCount i-mcp-cli lib path(s) locked read-only in %.1fms".format(elapsedMs))
+        Log.i(TAG, "[DefaultMount] Done. $fileCount file(s) overlaid, $markerRemoved EXTERNALLY-MANAGED marker(s) removed, $staleRemoved stale pre-rebrand file(s) removed, $lockedCount orca-mcp-cli lib path(s) locked read-only in %.1fms".format(elapsedMs))
     }
 
     /**
-     * [T-mcp-cli-readonly-android] Set the `/usr/local/lib/i-mcp-cli/`
+     * Delete guest files that the rebrand renamed, so an existing rootfs does
+     * not end up serving both the old and the new copy.
+     *
+     * Only app-managed paths are listed here — every entry is something
+     * default_mount owns and rewrites on each boot, never user content.
+     */
+    private fun removeStalePreRebrandFiles(): Int {
+        val stale = listOf(
+            "etc/profile.d/i.sh",
+            // Superseded by usr/local/lib/orca-mcp-cli. Left in place it would
+            // just be dead weight, but lockMcpCliLibReadOnly() marked it
+            // read-only on every prior boot, so the write bits have to come
+            // back before it can be deleted.
+            "usr/local/lib/i-mcp-cli",
+        )
+        var removed = 0
+        for (relative in stale) {
+            val target = File(rootfsDir, relative)
+            if (!target.exists()) continue
+            target.walkBottomUp().forEach { it.setWritable(true, false) }
+            if (target.deleteRecursively()) {
+                removed++
+                Log.i(TAG, "[DefaultMount] Removed stale pre-rebrand path: $relative")
+            } else {
+                Log.w(TAG, "[DefaultMount] Could not remove stale path: $relative")
+            }
+        }
+        return removed
+    }
+
+    /**
+     * [T-mcp-cli-readonly-android] Set the `/usr/local/lib/orca-mcp-cli/`
      * subtree read-only for the guest: directories 0555 (read+execute, no
      * write), files 0444 (read-only). Java's File API has no octal chmod, so
      * we use setWritable(false, false) + setReadable(true, false)
@@ -377,7 +415,7 @@ class RootfsManager private constructor(private val context: Context) {
      * upgrade path working across boots.
      */
     private fun lockMcpCliLibReadOnly(): Int {
-        val libDir = File(rootfsDir, "usr/local/lib/i-mcp-cli")
+        val libDir = File(rootfsDir, "usr/local/lib/orca-mcp-cli")
         if (!libDir.isDirectory) return 0
         var count = 0
         // walkBottomUp so child files are locked before their parent dir loses
@@ -425,7 +463,7 @@ class RootfsManager private constructor(private val context: Context) {
             val dest = File(targetBase, prefix)
             dest.parentFile?.mkdirs()
             // [T-mcp-cli-readonly-android] A prior boot may have set this file
-            // (and its dir) read-only — the i-mcp-cli lib subtree, locked
+            // (and its dir) read-only — the orca-mcp-cli lib subtree, locked
             // below. Re-open both writable before overwriting, otherwise an app
             // upgrade can't replace the shipped file: truncating an existing
             // file needs write on the FILE, and creating a new one needs write

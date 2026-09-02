@@ -77,7 +77,7 @@ fun OffloadPermissionScreen(
             }
         },
     ) {
-        // T-config: master switch for the i-config CLI surface.
+        // T-config: master switch for the orca-config CLI surface.
         SettingsSection(
             header = stringResource(R.string.perm_section_config_tool),
             footer = stringResource(R.string.perm_i_config_desc),
@@ -156,7 +156,7 @@ fun OffloadPermissionScreen(
                 ITextButton(onClick = {
                     OffloadPermissionManager.resetAll()
                     com.orca.app.config.OrcaConfigPermissionStore.setEnabled(true)
-                    AppLogger.info("PermissionsScreen", "user confirmed Reset All — all tool permissions cleared, i-config switch reset to default")
+                    AppLogger.info("PermissionsScreen", "user confirmed Reset All — all tool permissions cleared, orca-config switch reset to default")
                     showResetConfirm = false
                 }) {
                     Text(stringResource(R.string.perm_reset_confirm))

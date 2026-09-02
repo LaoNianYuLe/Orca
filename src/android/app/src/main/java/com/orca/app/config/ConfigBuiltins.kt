@@ -86,7 +86,7 @@ internal object ConfigBuiltins {
         r.register(
             ClosureField(
                 path = "permissions.iConfig.enabled",
-                displayName = "Allow i-config",
+                displayName = "Allow orca-config",
                 description = "Master switch. Read-only here — toggle via Settings → Permissions.",
                 valueSchema = ConfigSchema.Bool,
                 access = ConfigAccess.READONLY,
@@ -239,7 +239,7 @@ internal object ConfigBuiltins {
     }
 
     /** Convert the `model_binding` JSON the chat layer writes into the
-     *  `entry:<uuid>` / `group:<id>` form the iOS i-config surface uses.
+     *  `entry:<uuid>` / `group:<id>` form the iOS orca-config surface uses.
      *  Returns empty string when the session has no explicit binding (the
      *  default group/entry fallback applies on next load). */
     private fun formatBinding(bindingJson: String?): String {
@@ -339,7 +339,7 @@ internal object ConfigBuiltins {
         // appearance-prefs section starts.)
         // T311: chat.toolPreview / inputFontSize / messageFontSize live in
         // `appearance_prefs` — same SharedPreferences AppearanceScreen.kt
-        // reads/writes, so flipping via i-config flows back into the
+        // reads/writes, so flipping via orca-config flows back into the
         // settings UI and into ChatScreen's `OnSharedPreferenceChangeListener`
         // (Compose recomposes immediately, no manual cache invalidation
         // needed on Android — there is no analogue to iOS
@@ -468,7 +468,7 @@ internal object ConfigBuiltins {
         )
         // [T-android-config-feature-unavailable] Live Updates / "dynamic
         // island". Settings → Background renders this toggle DISABLED with an
-        // "unsupported" footer unless the device is capable, so i-config
+        // "unsupported" footer unless the device is capable, so orca-config
         // must not be a side door around that gate: on an incapable device the
         // path stays registered (help/list still describe it) but every read
         // and write is refused with `feature_unavailable`.
@@ -512,7 +512,7 @@ internal object ConfigBuiltins {
         // capture pipeline. The previous PrefsBoolField wrote a sibling
         // `logging`/`logging_enabled` key that AppLogger never reads
         // (AppLogger uses `logging_prefs`/`logging_enabled`), so toggling via
-        // i-config did nothing. Default mirrors AppLogger's own default
+        // orca-config did nothing. Default mirrors AppLogger's own default
         // (false — opt-in), aligning with iOS.
         r.register(
             ClosureField(
@@ -553,14 +553,14 @@ internal object ConfigBuiltins {
             timeZone = TimeZone.getTimeZone("UTC")
         }
 
-        // Aggregate read-only summary so `i-config get providers`
+        // Aggregate read-only summary so `orca-config get providers`
         // returns a useful list of configured instances. Credentials
         // (apiKey / oauthToken) are deliberately omitted.
         r.register(
             ReadOnlyField(
                 path = "providers",
                 displayName = "LLM provider instances (summary)",
-                description = "Read-only list of configured providers (id, label, type, credential type, enabled, base URL). Credentials are not included. Use `i-config add providers <json>` to create a new provider (payload mirrors a provider-export `config` block, with optional `apiKey` as literal or `\$\$ENV_VAR`).",
+                description = "Read-only list of configured providers (id, label, type, credential type, enabled, base URL). Credentials are not included. Use `orca-config add providers <json>` to create a new provider (payload mirrors a provider-export `config` block, with optional `apiKey` as literal or `\$\$ENV_VAR`).",
                 valueSchema = ConfigSchema.Json,
                 reader = {
                     val instances = providerRepo.config.value.instances
@@ -585,7 +585,7 @@ internal object ConfigBuiltins {
             )
         )
 
-        // Aggregate read-only summary so `i-config get models`
+        // Aggregate read-only summary so `orca-config get models`
         // returns every model entry along with its provider context.
         r.register(
             ReadOnlyField(
@@ -618,7 +618,7 @@ internal object ConfigBuiltins {
             )
         )
 
-        // Aggregate read-only summary so `i-config get envvars`
+        // Aggregate read-only summary so `orca-config get envvars`
         // returns every env var key with its non-secret metadata.
         r.register(
             ReadOnlyField(
@@ -666,7 +666,7 @@ internal object ConfigBuiltins {
             )
         )
 
-        // Aggregate read-only summary so `i-config get groups`
+        // Aggregate read-only summary so `orca-config get groups`
         // returns every model group with its expanded entries.
         r.register(
             ReadOnlyField(
@@ -773,14 +773,14 @@ internal object ConfigBuiltins {
             ClosureField(
                 path = "defaults.agentLoopEntries",
                 displayName = "Agent loop model entries",
-                description = "Model entries available via i-model-use. Replace with full list to set; use .append/.remove for single-element ops.",
+                description = "Model entries available via orca-model-use. Replace with full list to set; use .append/.remove for single-element ops.",
                 valueSchema = ConfigSchema.Array(ConfigSchema.Str()),
                 risk = ConfigRisk.SENSITIVE,
                 revertable = true,
                 reader = {
                     // [T-android-agentloop-dirty-data-skip] Filter out ids that no
                     // longer match a real model entry (legacy bare-UUID / deleted
-                    // rows). Surfacing them confuses i-model-use and the
+                    // rows). Surfacing them confuses orca-model-use and the
                     // round-trip set/append flow; skip silently.
                     val valid = repo.config.value.modelEntries.map { it.id }.toSet()
                     ConfigValue.Arr(
@@ -814,7 +814,7 @@ internal object ConfigBuiltins {
             ClosureField(
                 path = "defaults.agentLoopGroups",
                 displayName = "Agent loop groups",
-                description = "Whole groups exposed via i-model-use.",
+                description = "Whole groups exposed via orca-model-use.",
                 valueSchema = ConfigSchema.Array(ConfigSchema.Str()),
                 risk = ConfigRisk.SENSITIVE,
                 revertable = true,
@@ -867,7 +867,7 @@ internal object ConfigBuiltins {
         // precise [ConfigError.InvalidValue].
 
         // Re-read SOUL.md every call so concurrent writes from Settings
-        // UI don't race with i-config writes. Parse falls back to
+        // UI don't race with orca-config writes. Parse falls back to
         // the canonical default content if the file was somehow deleted
         // between launches — same behavior as the Settings page.
         fun loadCurrent(): com.orca.app.agent.SoulFile =

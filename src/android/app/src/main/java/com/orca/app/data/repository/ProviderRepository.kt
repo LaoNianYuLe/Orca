@@ -1424,7 +1424,7 @@ class ProviderRepository(private val context: Context) {
     }
 
     /**
-     * Resolve the effective model entries visible to the agent loop (i-model-use).
+     * Resolve the effective model entries visible to the agent loop (orca-model-use).
      * Expands groups to their members, unions with individual entries, dedupes by ID,
      * and filters to entries of enabled provider instances. Mirrors iOS
      * ProviderConfigStore.resolvedAgentLoopEntries.

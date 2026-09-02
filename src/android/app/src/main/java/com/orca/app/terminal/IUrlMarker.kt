@@ -2,7 +2,7 @@ package com.orca.app.terminal
 
 /**
  * Parses the OSC 1337 `IOpenURL` escape sequence emitted by the rootfs
- * shim at `/usr/local/bin/i-open`. The shim stands in for `xdg-open`,
+ * shim at `/usr/local/bin/orca-open`. The shim stands in for `xdg-open`,
  * `sensible-browser`, `www-browser`, and `$BROWSER`; whenever an in-sandbox
  * command tries to open a URL, it prints:
  *

@@ -98,7 +98,42 @@ object BrandMigration {
 
         if (migrateDeviceIdentity(context)) moved++
         if (migrateConfigEnabledKey(context)) moved++
+        moved += deleteLegacyNotificationChannels(context)
         return moved
+    }
+
+    /**
+     * Drop the pre-rebrand notification channels.
+     *
+     * A channel id is registered with the system, not with the app: posting
+     * under a new id creates a second channel and leaves the old one listed in
+     * Android's notification settings forever, so the user sees two entries for
+     * the same thing. Deleting is the only way to retire one.
+     *
+     * The user's per-channel choices (importance, sound, vibration) do not
+     * carry over and cannot be — the platform deliberately refuses to let an
+     * app reconstruct settings the user lowered. Anyone who had customised a
+     * channel gets it back at its default importance once.
+     */
+    private fun deleteLegacyNotificationChannels(context: Context): Int {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) return 0
+        val manager = context.getSystemService(android.app.NotificationManager::class.java)
+            ?: return 0
+        val legacy = listOf(
+            "i_alarms",
+            "i_agent_notifications",
+            "i_task_completed",
+            "i_scheduled_tasks",
+            "i_config_confirm",
+        )
+        var deleted = 0
+        for (id in legacy) {
+            if (manager.getNotificationChannel(id) == null) continue
+            runCatching { manager.deleteNotificationChannel(id) }
+                .onSuccess { deleted++; Log.i(TAG, "deleted legacy channel $id") }
+                .onFailure { Log.w(TAG, "could not delete channel $id: ${it.message}") }
+        }
+        return deleted
     }
 
     /**

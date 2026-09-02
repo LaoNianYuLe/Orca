@@ -182,6 +182,6 @@ class BackgroundTaskNotifier(
 
     companion object {
         private const val TAG = "TaskNotifier"
-        const val CHANNEL_ID = "i_task_completed"
+        const val CHANNEL_ID = "orca_task_completed"
     }
 }

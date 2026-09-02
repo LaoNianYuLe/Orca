@@ -97,7 +97,7 @@ object PRootKernel {
         // so non-login shells (which never source /etc/profile.d/i.sh)
         // still route webbrowser.open()/etc into the host OpenOffloadHandler.
         // Mirrors iOS ISHShellExecutor.m:333.
-        customEnvironment["BROWSER"] = "/usr/local/bin/i-open"   // T195: force override; user dotfile BROWSER= would otherwise win
+        customEnvironment["BROWSER"] = "/usr/local/bin/orca-open"   // T195: force override; user dotfile BROWSER= would otherwise win
 
         // ash-specific: ENV points at a file the shell sources on startup.
         // Our /etc/profile sources /etc/profile.d/*.sh, so non-login shells
@@ -217,7 +217,13 @@ object PRootKernel {
 
     // Sentinel in the read-only write-guard wrapper scripts so we can recognize
     // and remove our own wrappers (vs a user/busybox binary of the same name).
-    private const val GUARD_MARKER = "i-mount-readonly-guard"
+    private const val GUARD_MARKER = "orca-mount-readonly-guard"
+
+    // Wrappers written before the rebrand carry the old sentinel. Cleanup has
+    // to recognise those too, or a guard installed by an earlier version stays
+    // in the rootfs rejecting writes to a mount the user has since made
+    // writable — with nothing in the UI to explain why.
+    private val GUARD_MARKERS = listOf(GUARD_MARKER, "i-mount-readonly-guard")
 
     /**
      * Reference to the user-mounted folders store, set by [OrcaApp] at
@@ -878,7 +884,7 @@ object PRootKernel {
             runCatching { configFile.delete() }
             for (name in guardedCmds) {
                 val w = File(binDir, name)
-                if (w.exists() && w.readText().contains(GUARD_MARKER)) w.delete()
+                if (w.exists() && GUARD_MARKERS.any { w.readText().contains(it) }) w.delete()
             }
             Log.i(TAG, "installMountWriteGuards: no read-only mounts, guards cleared")
             return

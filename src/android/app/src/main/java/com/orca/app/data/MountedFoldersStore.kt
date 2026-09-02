@@ -38,7 +38,7 @@ import java.util.UUID
  *     tradeoffs; we ship MVP scaffolding (persistence + CRUD + StateFlow)
  *     and leave the shell mount as a follow-up.
  *
- * Persistence: `filesDir/i-config/mounted-folders.json`. The path is
+ * Persistence: `filesDir/orca-config/mounted-folders.json`. The path is
  * intentionally outside `i-global/` so it can't leak into the
  * DocumentsProvider-exposed tree.
  */
@@ -66,7 +66,7 @@ class MountedFoldersStore(private val context: Context) {
     }
 
     private val storeFile: File by lazy {
-        File(context.filesDir, "i-config/mounted-folders.json").apply {
+        File(context.filesDir, "orca-config/mounted-folders.json").apply {
             parentFile?.mkdirs()
         }
     }

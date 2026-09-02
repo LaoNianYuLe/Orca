@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Master switch controlling whether the agent can use the
- * `i-config` CLI at all. Disabling short-circuits every CLI call
+ * `orca-config` CLI at all. Disabling short-circuits every CLI call
  * before any field lookup, ConfirmationGate enqueue, or audit write.
  *
- * The flag itself is intentionally not settable through i-config:
+ * The flag itself is intentionally not settable through orca-config:
  * the registry registers a hidden placeholder on the same path so any
  * agent attempt to flip the switch returns `permission_denied`.
  *

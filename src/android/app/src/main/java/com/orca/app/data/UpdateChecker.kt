@@ -41,7 +41,7 @@ object UpdateChecker {
     // published". The 0.1-preview release is published as a prerelease on
     // I/I with a OrcaApp-*.apk asset attached.
     private const val REPO = "I"
-    private const val DOWNLOAD_FILENAME = "i-update.apk"
+    private const val DOWNLOAD_FILENAME = "orca-update.apk"
     /**
      * Sub-directory of `filesDir` where we stage downloaded update APKs. We
      * moved off `cacheDir/shared/` (the original location) so the OS can't

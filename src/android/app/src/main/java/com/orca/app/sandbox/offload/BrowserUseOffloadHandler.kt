@@ -21,7 +21,7 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * i-browser-use — expose the agent's browser_use tool as a CLI inside the
+ * orca-browser-use — expose the agent's browser_use tool as a CLI inside the
  * PRoot sandbox.
  *
  * Output contract mirrors iOS `BrowserUseOffload.m` / `NativeOffloadUtils.m`:
@@ -89,7 +89,7 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
             runBlocking {
                 withTimeout(EXECUTE_TIMEOUT_MS) {
                     // [T-browser-readaction-follow-tab-and-yolo-android] The CLI
-                    // (`i-browser-use`) is a serial human/script driver:
+                    // (`orca-browser-use`) is a serial human/script driver:
                     // navigate → execute_js / get_text / … all expect the page
                     // just navigated to, not a fanned-out grace tab. Drive in
                     // YOLO single-tab mode so every tab-less action sticks to the
@@ -166,7 +166,7 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
         // set_cookies: a JSON array of cookie objects. Either inline via
         // --cookies '<json>' or, to dodge busybox-ash shell mangling of the
         // JSON's quotes / braces / colons, from a file via --cookies-file <path>
-        // (mirrors `i-config set --file`). Parse failures throw so the
+        // (mirrors `orca-config set --file`). Parse failures throw so the
         // handler surfaces an explicit invalid_args error instead of silently
         // dropping the array (which used to reach set_cookies as empty).
         val cookiesFile = args.get("cookies-file", "cookies_file")
@@ -261,7 +261,7 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
                     val linuxPath = "$VAR_I_BROWSER/$filename"
                     persistedImagePath = linuxPath
                     out.put("image_path", linuxPath)
-                    out.put("i_url", "i://browser/$filename")
+                    out.put("orca_url", "i://browser/$filename")
                 } else {
                     Log.w(TAG, "Failed to persist screenshot to ${dest.absolutePath}")
                 }
@@ -386,7 +386,7 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
 
     companion object {
         private const val TAG = "BrowserUseOffload"
-        private const val TOOL_NAME = "i-browser-use"
+        private const val TOOL_NAME = "orca-browser-use"
         private const val VAR_I_BROWSER = "/var/i/browser"
         private const val EXECUTE_TIMEOUT_MS = 90_000L
 
@@ -406,12 +406,12 @@ class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler 
         private const val ERR_INTERNAL = "internal_error"
 
         private val HELP = """
-i-browser-use - Drive the in-app WebView from the shell
+orca-browser-use - Drive the in-app WebView from the shell
 
 USAGE:
-  i-browser-use <action> [options]
-  i-browser-use --json '<json>'
-  i-browser-use --help
+  orca-browser-use <action> [options]
+  orca-browser-use --json '<json>'
+  orca-browser-use --help
 
 ACTIONS:
   navigate        --url <url>
@@ -472,12 +472,12 @@ OUTPUT:
     fetched_i_url i://browser/<filename> for the download
 
 EXAMPLES:
-  i-browser-use navigate --url https://example.com
-  i-browser-use screenshot
-  i-browser-use click --selector '.btn-primary'
-  i-browser-use type --selector 'input[name=q]' --text 'hello'
-  i-browser-use execute_js --script 'return document.title'
-  i-browser-use --json '{"action":"navigate","url":"https://x.com"}'
+  orca-browser-use navigate --url https://example.com
+  orca-browser-use screenshot
+  orca-browser-use click --selector '.btn-primary'
+  orca-browser-use type --selector 'input[name=q]' --text 'hello'
+  orca-browser-use execute_js --script 'return document.title'
+  orca-browser-use --json '{"action":"navigate","url":"https://x.com"}'
 """.trimIndent() + "\n"
     }
 }

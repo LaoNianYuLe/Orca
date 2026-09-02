@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Process-wide broker for URLs captured from shell stdout via the OSC
- * `IOpenURL` marker (emitted by `/usr/local/bin/i-open`). The active
+ * `IOpenURL` marker (emitted by `/usr/local/bin/orca-open`). The active
  * chat screen collects [pendingUrl] and routes the captured URL into its
  * existing link-tap handler, which in turn dispatches:
  *
@@ -49,7 +49,7 @@ object IOpenUrlBroker {
     fun setTerminalVisible(visible: Boolean) { _terminalVisible.value = visible }
 
     /**
-     * Schemes `i-open` may emit and that the host knows how to route.
+     * Schemes `orca-open` may emit and that the host knows how to route.
      *   * `http` / `https` / `about` → in-app WebView preview
      *   * `i`                    → deep link or in-app file preview
      */

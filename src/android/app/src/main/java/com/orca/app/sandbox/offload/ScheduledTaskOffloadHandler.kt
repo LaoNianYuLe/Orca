@@ -15,23 +15,23 @@ import org.json.JSONObject
 import java.util.Calendar
 
 /**
- * [T-android-scheduled-tasks-full] i-scheduled — CLI surface for the
+ * [T-android-scheduled-tasks-full] orca-scheduled — CLI surface for the
  * Scheduled Tasks feature, exposing the same option set as the editor UI and
  * the iOS Shortcuts intents so the agent can create / inspect / fire timed
  * AI actions from a prompt.
  *
- *   i-scheduled list
- *   i-scheduled create --label L --time HH:MM --prompt "..."
+ *   orca-scheduled list
+ *   orca-scheduled create --label L --time HH:MM --prompt "..."
  *                          [--repeat once|daily|weekdays|custom --days mon,tue,...]
  *                          [--target new|follow-up|rerun]
  *                          [--session <id>] [--message <id>]
  *                          [--model <modelId>]
  *                          [--start YYYY-MM-DD] [--end YYYY-MM-DD]
  *                          [--disabled]
- *   i-scheduled delete --id <taskId>
- *   i-scheduled enable  --id <taskId>
- *   i-scheduled disable --id <taskId>
- *   i-scheduled run     --id <taskId>     (fire immediately, off-schedule)
+ *   orca-scheduled delete --id <taskId>
+ *   orca-scheduled enable  --id <taskId>
+ *   orca-scheduled disable --id <taskId>
+ *   orca-scheduled run     --id <taskId>     (fire immediately, off-schedule)
  *
  * Target modes mirror iOS App Intents:
  *   new        ≈ SendPrompt(no session)   — run prompt in a fresh chat
@@ -60,13 +60,13 @@ class ScheduledTaskOffloadHandler(private val context: Context) : NativeOffloadH
                 "enable" -> handleSetEnabled(args, true)
                 "disable" -> handleSetEnabled(args, false)
                 "run" -> handleRun(args)
-                else -> NativeOffloadResult(2, "i-scheduled: unknown subcommand '$sub'\n$HELP")
+                else -> NativeOffloadResult(2, "orca-scheduled: unknown subcommand '$sub'\n$HELP")
             }
         } catch (e: IllegalArgumentException) {
-            NativeOffloadResult(2, "i-scheduled: ${e.message}")
+            NativeOffloadResult(2, "orca-scheduled: ${e.message}")
         } catch (e: Throwable) {
             AppLogger.warning(TAG, "handle failed: ${e.message}")
-            NativeOffloadResult(1, "i-scheduled: ${e.message}")
+            NativeOffloadResult(1, "orca-scheduled: ${e.message}")
         }
     }
 
@@ -110,21 +110,21 @@ class ScheduledTaskOffloadHandler(private val context: Context) : NativeOffloadH
 
     private fun handleDelete(args: OffloadArgs): NativeOffloadResult {
         val id = args.get("id") ?: throw IllegalArgumentException("--id required")
-        if (manager.get(id) == null) return NativeOffloadResult(1, "i-scheduled: no task with id=$id")
+        if (manager.get(id) == null) return NativeOffloadResult(1, "orca-scheduled: no task with id=$id")
         manager.delete(id)
         return NativeOffloadResult(0, JSONObject().put("deleted", id).toString())
     }
 
     private fun handleSetEnabled(args: OffloadArgs, enabled: Boolean): NativeOffloadResult {
         val id = args.get("id") ?: throw IllegalArgumentException("--id required")
-        if (manager.get(id) == null) return NativeOffloadResult(1, "i-scheduled: no task with id=$id")
+        if (manager.get(id) == null) return NativeOffloadResult(1, "orca-scheduled: no task with id=$id")
         manager.setEnabled(id, enabled)
         return NativeOffloadResult(0, JSONObject().put("id", id).put("enabled", enabled).toString())
     }
 
     private fun handleRun(args: OffloadArgs): NativeOffloadResult {
         val id = args.get("id") ?: throw IllegalArgumentException("--id required")
-        val task = manager.get(id) ?: return NativeOffloadResult(1, "i-scheduled: no task with id=$id")
+        val task = manager.get(id) ?: return NativeOffloadResult(1, "orca-scheduled: no task with id=$id")
         // Fire immediately, off-schedule. Blocks until the agent loop finishes
         // (ScheduledAgentRunner waits internally). Mirrors the editor "Run now".
         val sessionId = runBlocking {
@@ -216,7 +216,7 @@ class ScheduledTaskOffloadHandler(private val context: Context) : NativeOffloadH
     companion object {
         private const val TAG = "ScheduledTaskOffload"
         private val HELP = """
-            i-scheduled — manage timed AI tasks (mirrors the in-app Scheduled Tasks).
+            orca-scheduled — manage timed AI tasks (mirrors the in-app Scheduled Tasks).
 
             (no subcommand)  Same as `list` (default subcommand)
             list

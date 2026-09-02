@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * SQLite-backed rolling log of config changes. Mirrors iOS
  * `ConfigAuditLog`.
  *
- * Storage: a dedicated `i-config-audit.db` next to the chat db.
+ * Storage: a dedicated `orca-config-audit.db` next to the chat db.
  * Keeping it separate means the audit table never gets caught in
  * sync-dirty queries and can be wiped independently if it ever
  * corrupts. Capacity: most-recent 1000 rows; older rows are pruned in

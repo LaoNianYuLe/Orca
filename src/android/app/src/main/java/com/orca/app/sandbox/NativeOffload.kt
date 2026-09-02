@@ -90,6 +90,25 @@ object NativeOffloadServer {
         Log.d(TAG, "register '$name' (total=${handlers.size})")
     }
 
+    /**
+     * Register an `orca-*` tool under its current name and its pre-rebrand
+     * `i-*` alias.
+     *
+     * These names are the argv[0] the agent types in the guest shell, so they
+     * outlive any single app version: they are baked into existing chat
+     * transcripts the model reads back as context, and into whatever scripts a
+     * user wrote inside their own rootfs. Dropping the old spelling would turn
+     * those into exit-127 "no handler" failures.
+     *
+     * The alias costs nothing to keep — [PRootKernel.installHandlerStubs]
+     * enumerates registered names, so both stubs appear automatically.
+     */
+    fun registerWithLegacyAlias(name: String, handler: NativeOffloadHandler) {
+        register(name, handler)
+        val legacy = name.removePrefix("orca-")
+        if (legacy != name) register("i-$legacy", handler)
+    }
+
     @Synchronized
     fun start(rootfsDir: File) {
         rootfsTmpDir = File(rootfsDir, "tmp")
@@ -290,7 +309,8 @@ object NativeOffloadServer {
                     argv = argv,
                     env = env,
                     cwd = cwd,
-                    sessionId = env["I_CHAT_SESSION_ID"]?.takeIf { it.isNotEmpty() },
+                    sessionId = (env["ORCA_CHAT_SESSION_ID"] ?: env["I_CHAT_SESSION_ID"])
+                        ?.takeIf { it.isNotEmpty() },
                 ))
             } catch (e: Exception) {
                 Log.w(TAG, "handler '$name' threw: ${e.message}", e)

@@ -58,7 +58,7 @@ object ScheduledAgentRunner {
      *   ~10s broadcast budget and gets the whole process ANR-killed, along
      *   with every PRoot sandbox child. The alarm path passing the default
      *   `true` was exactly that bug. Waiting is only safe off a broadcast —
-     *   e.g. the i-scheduled CLI, which runs in its own offload thread.
+     *   e.g. the orca-scheduled CLI, which runs in its own offload thread.
      * @return the session id once the action has been DISPATCHED (resolved +
      *   prompt sent), or null when the runner couldn't even start (no provider,
      *   target chat gone, OrcaApp not initialized).

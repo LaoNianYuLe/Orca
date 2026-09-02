@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""i-mcp-cli — MCP client CLI for the I agent (iSH / PRoot).
+"""orca-mcp-cli — MCP client CLI for the Orca agent (iSH / PRoot).
 
 Subcommands:
   list [--all] [--pretty]                       list configured servers
@@ -510,9 +510,9 @@ def cmd_set_enabled(args, pretty, enabled):
     _emit({"server": name, "enabled": enabled}, pretty)
 
 
-USAGE = """i-mcp-cli — MCP (Model Context Protocol) client for the I agent.
+USAGE = """orca-mcp-cli — MCP (Model Context Protocol) client for the Orca agent.
 
-Usage: i-mcp-cli <command> [args] [--pretty]
+Usage: orca-mcp-cli <command> [args] [--pretty]
 
 Commands:
   list [--all]                          List configured servers (--all includes disabled).
@@ -558,13 +558,13 @@ Files:
   Log:      /var/i/mcp-servers/mcp-cli.log
 
 Examples:
-  i-mcp-cli list --pretty
-  i-mcp-cli tools notion
-  i-mcp-cli call notion search --input '{"q":"x"}'
-  i-mcp-cli add --name notion --url https://mcp.notion.so/mcp --header "Authorization: Bearer $NOTION_TOKEN"
-  i-mcp-cli add --name github --command npx --args "-y @modelcontextprotocol/server-github" --env "GITHUB_TOKEN=$GITHUB_TOKEN"
-  i-mcp-cli add --name atlassian --command uvx --args "mcp-atlassian" --startup-timeout 120
-  i-mcp-cli add --name gworkspace --url https://my-gws-mcp.example.com/mcp \
+  orca-mcp-cli list --pretty
+  orca-mcp-cli tools notion
+  orca-mcp-cli call notion search --input '{"q":"x"}'
+  orca-mcp-cli add --name notion --url https://mcp.notion.so/mcp --header "Authorization: Bearer $NOTION_TOKEN"
+  orca-mcp-cli add --name github --command npx --args "-y @modelcontextprotocol/server-github" --env "GITHUB_TOKEN=$GITHUB_TOKEN"
+  orca-mcp-cli add --name atlassian --command uvx --args "mcp-atlassian" --startup-timeout 120
+  orca-mcp-cli add --name gworkspace --url https://my-gws-mcp.example.com/mcp \
       --oauth-client-id "1234.apps.googleusercontent.com" --oauth-client-secret "GOCSPX-..." \
       --oauth-auth-endpoint "https://accounts.google.com/o/oauth2/auth" \
       --oauth-token-endpoint "https://oauth2.googleapis.com/token" \
@@ -629,7 +629,7 @@ def main():
         else:
             # Keep the JSON error on stdout for programmatic callers; add a
             # human hint on stderr pointing at --help.
-            sys.stderr.write("Run 'i-mcp-cli --help' for usage.\n")
+            sys.stderr.write("Run 'orca-mcp-cli --help' for usage.\n")
             _fail("unknown subcommand: %s" % cmd, "PARSE_ERROR", None, pretty)
     except MCPError as exc:
         _fail(exc.message, exc.code, None, pretty)

@@ -195,7 +195,7 @@ class OpenAIProvider private constructor(
 
     /**
      * Arbitrary extra fields merged into the /images/generations JSON body, so
-     * `i-model-use` can pass provider-specific params our fixed schema never
+     * `orca-model-use` can pass provider-specific params our fixed schema never
      * modeled (e.g. Volcengine Seedream's `image` for image-to-image,
      * `watermark`, `tools`). User keys WIN over our defaults (response_format)
      * but never replace the resolved `model`. Empty = no passthrough. Set
@@ -556,7 +556,7 @@ class OpenAIProvider private constructor(
         var usage: LLMUsage? = null
         // [T-codex-gpt-image2-oauth-android] Collect model-generated media
         // (gpt-image-2 images) so non-streaming callers — notably
-        // i-model-use (ModelUseOffloadHandler) — get them on
+        // orca-model-use (ModelUseOffloadHandler) — get them on
         // LLMResponse.mediaAttachments and can write the image to --output.
         val media = mutableListOf<LLMMediaAttachment>()
         streamMessage(
@@ -1596,7 +1596,7 @@ class OpenAIProvider private constructor(
     /**
      * [T-android-image-edit-endpoint] Call `/images/edits` for image-to-image
      * (reference-image) generation. Android previously had no such endpoint, so
-     * i-model-use returned `image_edit_not_supported` for every
+     * orca-model-use returned `image_edit_not_supported` for every
      * input-image + pure-image-generator call — the gap this closes. Mirrors
      * iOS `OpenAIProvider.editImage`.
      *
@@ -2391,7 +2391,7 @@ class OpenAIProvider private constructor(
         val trace = ThinkingRuleResolver.apply(body, ctx)
         // [T-thinking-rules-observability] Design §8 / GH I#100: which rule
         // actually won must be inspectable, or a rule layer just replaces one hidden
-        // variable with a more complicated one. i-config exposure is Phase 2.
+        // variable with a more complicated one. orca-config exposure is Phase 2.
         com.orca.app.logging.AppLogger.info(
             "Thinking",
             "[resolve] model=${model.id} level=${level.name} ${trace.logLine}",
@@ -2674,7 +2674,7 @@ class OpenAIProvider private constructor(
          * message — the same contract [buildRequestBody] implements.
          *
          * This parameter did not exist, and that was a silent data loss: every
-         * caller that supplies images this way (i-model-use's `image_url`
+         * caller that supplies images this way (orca-model-use's `image_url`
          * blocks, VisionGroupResolver.describeOnce, any direct
          * sendMessage(imageParts=…)) had its pixels dropped on the floor the
          * moment the provider was on the Responses path, with no error. The
@@ -2963,7 +2963,7 @@ class OpenAIProvider private constructor(
                         } else if (attachTopLevelImages) {
                             // [T-android-responses-toplevel-images] Structured
                             // message with no ImageData parts, but images were
-                            // supplied top-level (i-model-use / Vision
+                            // supplied top-level (orca-model-use / Vision
                             // Group). Previously this fell into the text-only
                             // branch below and the pixels vanished.
                             val contentArray = JSONArray()
@@ -2999,7 +2999,7 @@ class OpenAIProvider private constructor(
                 }
             } else if (msg.audioParts.isNotEmpty()) {
                 // [GH#67] Legacy (non-contentParts) message carrying audio —
-                // the i-model-use path. The Responses API keeps the SAME
+                // the orca-model-use path. The Responses API keeps the SAME
                 // nested input_audio shape as Chat Completions ({data,
                 // format}), unlike input_image which flattens image_url to a
                 // string. Text rides along as input_text.
@@ -3036,7 +3036,7 @@ class OpenAIProvider private constructor(
                 // [T-android-responses-toplevel-images] THE reported bug's path.
                 // A plain (contentParts-free) user message plus top-level
                 // images — what VisionGroupResolver.describeOnce and
-                // i-model-use's image_url blocks produce. This builder had
+                // orca-model-use's image_url blocks produce. This builder had
                 // no imageParts parameter at all, so the message was emitted as
                 // a bare text string and the pixels never reached the wire. The
                 // vision model then answered "no image was provided", with no

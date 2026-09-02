@@ -1,12 +1,13 @@
-# IApp shell configuration
+# Orca shell configuration
 # Loaded by /etc/profile via the profile.d mechanism (login shells only).
 
-# T294: prompt parity with iOS — `root@i:/var/i#`. iOS bakes the
-# literal "i" into PS1 (deps/prepare_alpine_rootfs.sh) rather than
-# relying on \h, so the prompt is stable regardless of what /etc/hostname
-# happens to contain. We do the same on Android so a fresh install
-# matches without needing a rootfs rebuild.
-export PS1='\u@i:\w\$ '
+# T294: the host label is baked into PS1 rather than read via \h, so the
+# prompt stays stable regardless of what /etc/hostname ends up containing
+# on an already-provisioned rootfs. iOS does the same in
+# deps/prepare_alpine_rootfs.sh, but still bakes the pre-rebrand "i" —
+# this now reads `root@orca:/var/i#` on Android and `root@i:/var/i#` on
+# iOS until that script is updated too.
+export PS1='\u@orca:\w\$ '
 
 # Enable ash command history with arrow keys
 export HISTFILE="$HOME/.ash_history"
@@ -25,7 +26,7 @@ export PAGER=less
 # www-browser / x-www-browser / gnome-open / kde-open wrappers live as
 # real files in default_mount/usr/local/bin/ and are overlaid on every
 # boot.
-export BROWSER=/usr/local/bin/i-open
+export BROWSER=/usr/local/bin/orca-open
 
 # T222: PRoot's link2symlink extension creates .l2s.* sentinel files alongside
 # every hardlinked file. uv's default `hardlink` mode tries to re-link these

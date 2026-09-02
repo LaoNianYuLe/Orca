@@ -11,7 +11,7 @@ import org.json.JSONObject
 import java.io.File
 
 /**
- * `i-config` offload handler. Mirrors iOS `ConfigOffload.m`.
+ * `orca-config` offload handler. Mirrors iOS `ConfigOffload.m`.
  *
  * Subcommands: list-topics, topic-help, get, set, set-batch,
  * audit-list, audit-get, audit-revert. The shell-friendly flags
@@ -46,10 +46,10 @@ class ConfigOffloadHandler : NativeOffloadHandler {
         const val EXIT_PERMISSION_DENIED = 126
 
         const val HELP_TEXT =
-            "i-config - read or change Orca app settings (logged + revertable)\n" +
+            "orca-config - read or change Orca app settings (logged + revertable)\n" +
                 "\n" +
                 "USAGE:\n" +
-                "  i-config <subcommand> [args]\n" +
+                "  orca-config <subcommand> [args]\n" +
                 "\n" +
                 "DISCOVERY:\n" +
                 "  list-topics                  Show all configurable topics.\n" +
@@ -158,7 +158,7 @@ class ConfigOffloadHandler : NativeOffloadHandler {
         }
         val out = JSONObject().apply {
             put("ok", true)
-            put("tool", "i-config")
+            put("tool", "orca-config")
             put("subcommand", "list-topics")
             put("data", JSONObject().apply { put("topics", ConfigBridge.allTopics()) })
         }
@@ -179,7 +179,7 @@ class ConfigOffloadHandler : NativeOffloadHandler {
         }
         val out = JSONObject().apply {
             put("ok", true)
-            put("tool", "i-config")
+            put("tool", "orca-config")
             put("subcommand", "topic-help")
             put("data", JSONObject().apply {
                 put("topic", topic)

@@ -151,7 +151,7 @@ fun TerminalScreen(
         onDispose { IOpenUrlBroker.setTerminalVisible(false) }
     }
 
-    // OSC 1337 IOpenURL emitted by `/usr/local/bin/i-open` is parsed
+    // OSC 1337 IOpenURL emitted by `/usr/local/bin/orca-open` is parsed
     // by TerminalEmulator and forwarded to IOpenUrlBroker. From the
     // standalone terminal we only route web schemes (http(s)/about) into an
     // in-app WebView preview; i://-style chat resources need ChatScreen's

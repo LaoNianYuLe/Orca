@@ -187,12 +187,12 @@ class OrcaApp : Application(), ImageLoaderFactory {
     val networkMonitor: NetworkMonitor = NetworkMonitor()
 
     /**
-     * Application-scoped BrowserTabPool for shell-invoked `i-browser-use`.
+     * Application-scoped BrowserTabPool for shell-invoked `orca-browser-use`.
      * Separate from the per-ChatViewModel pool so browser state driven from
      * within an ish shell doesn't collide with the agent's own tabs.
      */
     val sharedBrowserTabPool: BrowserTabPool by lazy {
-        BrowserTabPool(this).also { it.setSession("i-browser-use") }
+        BrowserTabPool(this).also { it.setSession("orca-browser-use") }
     }
 
     override fun attachBaseContext(base: Context) {
@@ -431,7 +431,7 @@ class OrcaApp : Application(), ImageLoaderFactory {
         com.orca.app.agent.SoulStore.ensureExists(this)
         com.orca.app.agent.SoulStore.refreshCache(this)
 
-        // T-config: i-config CLI surface — registry / audit log /
+        // T-config: orca-config CLI surface — registry / audit log /
         // master-switch store. Initialized eagerly here so
         // ConfigRegistry.get() is safe from any thread for the rest of
         // the process. Mirrors iOS ConfigRegistry.shared.registerBuiltinsIfNeeded().
@@ -514,27 +514,27 @@ class OrcaApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-weather", WeatherOffloadHandler(this))
         // T323: UI-layer automation backed by IAccessibilityService.
         NativeOffloadServer.register("android-a11y-cli", AccessibilityOffloadHandler(this))
-        NativeOffloadServer.register("i-model-use", ModelUseOffloadHandler(this, providerRepository))
-        // T-config: i-config — agent-facing settings management
+        NativeOffloadServer.registerWithLegacyAlias("orca-model-use", ModelUseOffloadHandler(this, providerRepository))
+        // T-config: orca-config — agent-facing settings management
         // (read/write registered ConfigFields with audit + revert).
         // Mirrors iOS `config_offload_register()` in ISHKernel.m.
-        NativeOffloadServer.register(
-            "i-config",
+        NativeOffloadServer.registerWithLegacyAlias(
+            "orca-config",
             com.orca.app.sandbox.offload.ConfigOffloadHandler(),
         )
-        NativeOffloadServer.register("i-browser-use", BrowserUseOffloadHandler(this))
-        // T188: i-sessions-cli — agent-side query of chat history.
+        NativeOffloadServer.registerWithLegacyAlias("orca-browser-use", BrowserUseOffloadHandler(this))
+        // T188: orca-sessions-cli — agent-side query of chat history.
         // Registers next to the other i-* tools so PRootKernel.
         // installHandlerStubs() picks it up on the next rootfs boot
-        // (writes a 17-byte exit-0 stub at /usr/local/bin/i-sessions-cli
+        // (writes a 17-byte exit-0 stub at /usr/local/bin/orca-sessions-cli
         // so PATH lookup succeeds; PRoot intercepts the execve before
         // the stub runs and routes to this handler).
-        NativeOffloadServer.register("i-sessions-cli", SessionsOffloadHandler(chatRepository))
-        // [T-android-scheduled-tasks-full] i-scheduled — create/list/run
+        NativeOffloadServer.registerWithLegacyAlias("orca-sessions-cli", SessionsOffloadHandler(chatRepository))
+        // [T-android-scheduled-tasks-full] orca-scheduled — create/list/run
         // timed AI tasks (new chat / follow-up / re-run), mirroring the in-app
         // Scheduled Tasks editor and the iOS Shortcuts intent set.
-        NativeOffloadServer.register(
-            "i-scheduled",
+        NativeOffloadServer.registerWithLegacyAlias(
+            "orca-scheduled",
             com.orca.app.sandbox.offload.ScheduledTaskOffloadHandler(this),
         )
         // T322: android-shizuku-cli — privileged Android control via Shizuku.
@@ -548,11 +548,11 @@ class OrcaApp : Application(), ImageLoaderFactory {
         // T-android-i-debug-cli: shell-side CLI wrapper around the in-app
         // DebugServer (127.0.0.1:5321) JSON-RPC. DEBUG-only — Release builds
         // ship neither the DebugServer nor this handler, so the
-        // `/usr/local/bin/i-debug` stub is also absent (PRootKernel.
+        // `/usr/local/bin/orca-debug` stub is also absent (PRootKernel.
         // installHandlerStubs enumerates currently-registered handlers).
         if (BuildConfig.DEBUG) {
-            NativeOffloadServer.register(
-                "i-debug",
+            NativeOffloadServer.registerWithLegacyAlias(
+                "orca-debug",
                 com.orca.app.sandbox.offload.DebugOffloadHandler(this),
             )
         }
@@ -600,7 +600,7 @@ class OrcaApp : Application(), ImageLoaderFactory {
         }
 
         // [T-android-config-confirm-timeout] Wire the config-confirm background
-        // notifier into the (Context-free) gate, so a i-config approval that
+        // notifier into the (Context-free) gate, so a orca-config approval that
         // is waiting while the app is backgrounded nudges the user before the
         // 120s timeout. Mirrors iOS ConfigConfirmationGate.notifyIfBackgrounded.
         val configConfirmNotifier = com.orca.app.notification.ConfigConfirmNotifier(
