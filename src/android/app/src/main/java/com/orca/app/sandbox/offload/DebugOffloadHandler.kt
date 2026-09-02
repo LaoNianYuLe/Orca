@@ -26,7 +26,7 @@ import java.net.SocketTimeoutException
  * `--compact` / `-q` / `--quiet` flags work the same way as every other
  * `android-*` / `i-*` offload.
  *
- * Registration is guarded by `BuildConfig.DEBUG` in IApp.kt so the
+ * Registration is guarded by `BuildConfig.DEBUG` in OrcaApp.kt so the
  * Release APK contains no trace of this command.
  */
 class DebugOffloadHandler(@Suppress("UNUSED_PARAMETER") context: Context) : NativeOffloadHandler {

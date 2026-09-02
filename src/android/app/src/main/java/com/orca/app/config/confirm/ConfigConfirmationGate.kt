@@ -47,7 +47,7 @@ object ConfigConfirmationGate {
     /**
      * [T-android-config-confirm-timeout] Posts a "config change awaiting
      * approval" notification when a change is pending and the app is
-     * backgrounded. Injected by IApp.onCreate (kept out of this global
+     * backgrounded. Injected by OrcaApp.onCreate (kept out of this global
      * object so it stays Context-free and unit-testable). Returns true when a
      * notification was actually posted, so [notifiedIds] only records ids we
      * really notified.
@@ -158,7 +158,7 @@ object ConfigConfirmationGate {
     /**
      * [T-android-config-confirm-timeout] Notify for whatever is currently
      * front-of-queue. Called from the app's foreground → background transition
-     * (IApp lifecycle callback): a dialog that was showing in the
+     * (OrcaApp lifecycle callback): a dialog that was showing in the
      * foreground and is left behind when the user switches away should still
      * nudge them. Once-per-id via [notifiedIds]; the notifier itself no-ops
      * when the app is (still) foreground.

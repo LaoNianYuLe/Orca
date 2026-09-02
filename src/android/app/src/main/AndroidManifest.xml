@@ -152,7 +152,7 @@
     </queries>
 
     <application
-        android:name=".IApp"
+        android:name=".OrcaApp"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_rules"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -166,13 +166,13 @@
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@style/Theme.I">
+        android:theme="@style/Theme.Orca">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.I"
+            android:theme="@style/Theme.Orca"
             android:windowSoftInputMode="adjustResize">
             <!-- T-android-dynamic-app-icon: LAUNCHER intent-filter moved
                  to the <activity-alias> entries below so the user can pick
@@ -256,7 +256,7 @@
         <activity
             android:name=".share.ShareReceiverActivity"
             android:exported="true"
-            android:theme="@style/Theme.I">
+            android:theme="@style/Theme.Orca">
             <!-- T157: widen mime to */* so I appears in the system share
                  sheet for any file type (xml/pdf/zip/audio/video/…). The
                  narrower text/plain + image/* + application/* set hid I
@@ -353,7 +353,7 @@
             android:exported="true"
             android:taskAffinity=""
             android:excludeFromRecents="false"
-            android:theme="@style/Theme.I">
+            android:theme="@style/Theme.Orca">
             <intent-filter>
                 <action android:name="com.orca.app.action.OPEN_WEBAPP" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -524,7 +524,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/i_accessibility_service" />
+                android:resource="@xml/orca_accessibility_service" />
         </service>
 
     </application>

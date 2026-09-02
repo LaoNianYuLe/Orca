@@ -259,7 +259,7 @@ object CrashFrequencyDetector {
             }
             pendingShareFiles = recent.sortedByDescending { it.lastModified() }
             // T-android-crash-detected-halt: enter safe-mode BEFORE the
-            // rest of IApp.onCreate finishes and any Activity / VM
+            // rest of OrcaApp.onCreate finishes and any Activity / VM
             // starts restoring sessions. Cleared once the user dismisses
             // the share dialog in [maybeShowOnActivity].
             setSafeMode(true)
@@ -286,7 +286,7 @@ object CrashFrequencyDetector {
      * change / second resume doesn't re-prompt.
      *
      * [onClosed] fires after any of the three exit paths (Share /
-     * Dismiss / Cancel). When IApp.onCreate has early-returned (safe
+     * Dismiss / Cancel). When OrcaApp.onCreate has early-returned (safe
      * mode), MainActivity passes `finish()` here so the half-init app
      * doesn't linger on screen.
      */

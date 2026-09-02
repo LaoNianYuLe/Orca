@@ -223,7 +223,7 @@ object SessionActivityTracker {
     private val pendingErrorFlag = mutableSetOf<String>()
 
     /**
-     * T180-bg-notif: completion listener. Wired in IApp.onCreate to
+     * T180-bg-notif: completion listener. Wired in OrcaApp.onCreate to
      * a [com.orca.app.notification.BackgroundTaskNotifier] so when
      * an agent loop ends while the app is backgrounded, the user gets a
      * tap-to-open-session notification — mirrors iOS

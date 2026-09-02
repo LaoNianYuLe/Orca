@@ -92,7 +92,7 @@ internal object ConfigBuiltins {
                 access = ConfigAccess.READONLY,
                 risk = ConfigRisk.DESTRUCTIVE,
                 revertable = false,
-                reader = { ConfigValue.Bool(IConfigPermissionStore.isEnabled) },
+                reader = { ConfigValue.Bool(OrcaConfigPermissionStore.isEnabled) },
                 writer = { _ ->
                     throw ConfigError.PermissionDenied(
                         "Master switch — toggle via Settings → Permissions only"

@@ -248,14 +248,14 @@ fun AppNavigation(
 ) {
     val context = LocalContext.current
 
-    // T219-5: use the application-scoped singleton from IApp so UI
+    // T219-5: use the application-scoped singleton from OrcaApp so UI
     // add/remove shares state with PRootKernel and the lifecycle re-probe
     // path. Pre-T219-5 this `remember { MountedFoldersStore(...) }` created
     // a SECOND independent instance — UI list updated but PRoot never
     // saw the change because PRootKernel.mountedFoldersStore pointed at
-    // the application-scoped singleton in IApp.
+    // the application-scoped singleton in OrcaApp.
     val mountedFoldersStore = remember {
-        (context.applicationContext as com.orca.app.IApp).mountedFoldersStore
+        (context.applicationContext as com.orca.app.OrcaApp).mountedFoldersStore
     }
 
     // Handle initial deep link after composition

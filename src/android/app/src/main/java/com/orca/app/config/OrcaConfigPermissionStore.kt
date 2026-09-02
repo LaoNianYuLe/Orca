@@ -15,9 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * the registry registers a hidden placeholder on the same path so any
  * agent attempt to flip the switch returns `permission_denied`.
  *
- * Mirrors iOS `IConfigPermissionStore`.
+ * Mirrors iOS `OrcaConfigPermissionStore`.
  */
-object IConfigPermissionStore {
+object OrcaConfigPermissionStore {
     private const val PREFS = "i_config_permission"
     private const val KEY = "i_config_enabled"
 
@@ -32,7 +32,7 @@ object IConfigPermissionStore {
     /** Hot-path read used by the offload bridge before any work. */
     val isEnabled: Boolean get() = _enabled.value
 
-    /** Call once early — typically from IApp.onCreate. Idempotent. */
+    /** Call once early — typically from OrcaApp.onCreate. Idempotent. */
     fun init(context: Context) {
         if (prefs != null) return
         val p = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

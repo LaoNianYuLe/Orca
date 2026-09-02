@@ -731,7 +731,7 @@ class DebugRPCHandler(private val context: Context) {
 
     private fun metaObject(): JSONObject {
         return JSONObject().apply {
-            put("app", "IApp")
+            put("app", "OrcaApp")
             put("version", BuildConfig.VERSION_NAME)
             put("build", BuildConfig.VERSION_CODE)
             put("device", "${Build.MANUFACTURER} ${Build.MODEL}")
@@ -977,7 +977,7 @@ class DebugRPCHandler(private val context: Context) {
 
     /**
      * Stub for parity with iOS `debug.cloudSync`. Android does not have an
-     * iCloud-equivalent built into IApp, so we report disabled and an
+     * iCloud-equivalent built into OrcaApp, so we report disabled and an
      * empty device list rather than fail the call. Lets cross-platform
      * harnesses skip the check uniformly.
      */
@@ -1171,7 +1171,7 @@ class DebugRPCHandler(private val context: Context) {
         } else argvTail
 
         AppLogger.info("DebugRPC", "debug.modelUse.exec argv=${finalArgv.joinToString(" ")}")
-        val app = context.applicationContext as com.orca.app.IApp
+        val app = context.applicationContext as com.orca.app.OrcaApp
         val handler = com.orca.app.sandbox.offload.ModelUseOffloadHandler(context, app.providerRepository)
         val request = com.orca.app.sandbox.NativeOffloadRequest(
             pid = -1,
@@ -1209,7 +1209,7 @@ class DebugRPCHandler(private val context: Context) {
         }
 
         AppLogger.info("DebugRPC", "debug.sessions.exec argv=${argvTail.joinToString(" ")}")
-        val app = context.applicationContext as com.orca.app.IApp
+        val app = context.applicationContext as com.orca.app.OrcaApp
         val handler = com.orca.app.sandbox.offload.SessionsOffloadHandler(app.chatRepository)
         val request = com.orca.app.sandbox.NativeOffloadRequest(
             pid = -1,

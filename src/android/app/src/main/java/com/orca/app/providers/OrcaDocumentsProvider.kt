@@ -26,8 +26,8 @@ import java.io.FileNotFoundException
  * pre-existing in-flight edits this commit can't touch — once that file
  * gets its own cleanup commit, add:
  * ```xml
- * <provider android:name=".providers.IDocumentsProvider"
- *     android:authorities="com.i.i.documents"
+ * <provider android:name=".providers.OrcaDocumentsProvider"
+ *     android:authorities="com.orca.app.documents"
  *     android:exported="true"
  *     android:grantUriPermissions="true"
  *     android:permission="android.permission.MANAGE_DOCUMENTS">
@@ -39,11 +39,11 @@ import java.io.FileNotFoundException
  * Until then this class compiles cleanly but is unreachable by the
  * Files app.
  */
-class IDocumentsProvider : DocumentsProvider() {
+class OrcaDocumentsProvider : DocumentsProvider() {
 
     companion object {
-        const val AUTHORITY = "com.i.i.documents"
-        private const val ROOT_ID = "i-root"
+        const val AUTHORITY = "com.orca.app.documents"
+        private const val ROOT_ID = "orca-root"
         private const val ROOT_DOC_ID = ""        // empty = providerRoot
         private val TOP_LEVEL = listOf("memory", "skills", "shared")
         private val READ_ONLY_TOP = setOf("memory", "skills")

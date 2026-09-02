@@ -6,7 +6,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.widget.Toast
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import com.orca.app.logging.AppLogger
 import com.orca.app.provider.voice.VoiceOutputRequest
@@ -325,7 +325,7 @@ class ReadAloudPlayer(context: Context) {
 
     private suspend fun speakOne(text: String) {
         val entry = runCatching {
-            (appContext as? IApp)?.providerRepository?.resolveVoiceOutputEntry()
+            (appContext as? OrcaApp)?.providerRepository?.resolveVoiceOutputEntry()
         }.getOrNull()
 
         if (entry != null) {
@@ -392,7 +392,7 @@ class ReadAloudPlayer(context: Context) {
         // Each bail-out logs its reason: these gates used to return false
         // silently, which made "no sound" undiagnosable from a user device
         // (the daily log files showed nothing at all).
-        val repo = (appContext as? IApp)
+        val repo = (appContext as? OrcaApp)
             ?.takeIf { it.subsystemsReady() }
             ?.providerRepository
             ?: return false.also { AppLogger.error(TAG, "provider TTS skipped: repository unavailable") }

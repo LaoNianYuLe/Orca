@@ -264,7 +264,7 @@ class DebugServer(
         } catch (_: Exception) {
             "?"
         }
-        return """{"app":"IApp","platform":"android","version":"$version",""" +
+        return """{"app":"OrcaApp","platform":"android","version":"$version",""" +
             """"rpc":"jsonrpc-2.0","auth":"token-lan","transport":"plaintext",""" +
             """"rpc_path":"/","skill_path":"/skill"}"""
     }

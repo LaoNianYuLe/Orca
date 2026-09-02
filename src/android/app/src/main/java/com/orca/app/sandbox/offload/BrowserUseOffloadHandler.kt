@@ -1,7 +1,7 @@
 package com.orca.app.sandbox.offload
 
 import android.util.Log
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.browser.BrowserAction
 import com.orca.app.browser.BrowserActionInput
 import com.orca.app.browser.BrowserActionResult
@@ -36,7 +36,7 @@ import java.util.TimeZone
  * the shell indefinitely. Exits 0 for success, 1 for runtime errors, 2 for
  * bad arguments. Bare invocation prints help and exits 0 (matches iOS).
  */
-class BrowserUseOffloadHandler(private val app: IApp) : NativeOffloadHandler {
+class BrowserUseOffloadHandler(private val app: OrcaApp) : NativeOffloadHandler {
 
     override fun handle(request: NativeOffloadRequest): NativeOffloadResult {
         // Declared-boolean flags: without this set, the shared OffloadArgs

@@ -28,7 +28,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import kotlin.math.abs
 
@@ -108,7 +108,7 @@ class ToolOverlayController(private val context: Context) {
         context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val mainHandler = Handler(Looper.getMainLooper())
     private val backgroundRepo =
-        (context.applicationContext as IApp).backgroundSettingsRepository
+        (context.applicationContext as OrcaApp).backgroundSettingsRepository
 
     private var view: View? = null
     private var logoView: ImageView? = null

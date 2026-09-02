@@ -36,10 +36,10 @@ object UpdateChecker {
     private const val TAG = "UpdateChecker"
     private const val OWNER = "I"
     // T133: the public repo is I/I (org + repo share a name).
-    // Previously pointed at I/IApp, which is the private dev
+    // Previously pointed at I/OrcaApp, which is the private dev
     // mirror — every API call 404'd, which we mistranslated as "no release
     // published". The 0.1-preview release is published as a prerelease on
-    // I/I with a IApp-*.apk asset attached.
+    // I/I with a OrcaApp-*.apk asset attached.
     private const val REPO = "I"
     private const val DOWNLOAD_FILENAME = "i-update.apk"
     /**

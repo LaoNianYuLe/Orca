@@ -39,7 +39,7 @@ object ConfigBridge {
     }
 
     /** First-line gate — returns true when the master switch is on. */
-    fun isEnabled(): Boolean = IConfigPermissionStore.isEnabled
+    fun isEnabled(): Boolean = OrcaConfigPermissionStore.isEnabled
 
     /**
      * [T-android-config-feature-unavailable] Envelope for a field whose feature
@@ -190,7 +190,7 @@ object ConfigBridge {
     }
 
     private fun readFieldRaw(path: String): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val field = ConfigRegistry.get().resolveField(path) ?: return JSONObject().apply {
             put("ok", false)
             put("error", "unknown_path")
@@ -280,7 +280,7 @@ object ConfigBridge {
         actorRaw: String,
         sessionId: String?,
     ): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         // Bridge runs on the offload worker thread; the gate itself
         // does its own context switch to Main for the dialog.
         return runBlocking {
@@ -816,7 +816,7 @@ object ConfigBridge {
     // -- audit --
 
     fun auditList(limit: Int, scope: String?): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val entries = ConfigAuditLog.get().recent(limit, scope)
         val usage = ConfigAuditLog.get().usage()
         return JSONObject().apply {
@@ -829,7 +829,7 @@ object ConfigBridge {
     }
 
     fun auditGet(id: String): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val e = ConfigAuditLog.get().get(id) ?: return JSONObject().apply {
             put("ok", false)
             put("error", "not_found")
@@ -872,7 +872,7 @@ object ConfigBridge {
         sessionId: String?,
         skipConfirmation: Boolean,
     ): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val entry = ConfigAuditLog.get().get(id) ?: return JSONObject().apply {
             put("ok", false)
             put("error", "not_found")

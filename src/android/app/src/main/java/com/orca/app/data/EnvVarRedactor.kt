@@ -32,7 +32,7 @@ object EnvVarRedactor {
     /**
      * Static handoff so non-DI call sites (e.g. ShellExecutor on a
      * background coroutine) can reach the repository without plumbing
-     * it through every layer. Set once from [com.orca.app.IApp.onCreate].
+     * it through every layer. Set once from [com.orca.app.OrcaApp.onCreate].
      */
     @Volatile
     var envVarRepository: EnvVarRepository? = null

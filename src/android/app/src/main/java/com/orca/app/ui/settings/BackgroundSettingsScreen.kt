@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import com.orca.app.power.PowerOptimizationManager
 
@@ -84,9 +84,9 @@ fun BackgroundSettingsScreen(onBack: () -> Unit) {
 
     // T180-bg-notif: pull the BackgroundSettingsRepository off the
     // Application instance — keeps AppNavigation parameters unchanged
-    // (no plumbing churn through the nav graph). IApp.onCreate is
+    // (no plumbing churn through the nav graph). OrcaApp.onCreate is
     // guaranteed to have run before any composable composes.
-    val app = context.applicationContext as IApp
+    val app = context.applicationContext as OrcaApp
     val backgroundRepo = app.backgroundSettingsRepository
     val taskNotificationsEnabled by backgroundRepo.taskNotificationsEnabled.collectAsState()
     val backgroundOverlayEnabled by backgroundRepo.backgroundOverlayEnabled.collectAsState()

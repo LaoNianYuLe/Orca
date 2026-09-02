@@ -2,7 +2,7 @@ package com.orca.app.speech.correction
 
 import android.content.Context
 import android.util.Log
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.shared.TextSegmenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +66,7 @@ object VoiceCorrection {
         // safe call only rules out a null Application, while the lateinit
         // getter itself throws when onCreate early-returned under safe-mode.
         // Null here already degrades gracefully (correction is skipped).
-        val repository = (app as? IApp)
+        val repository = (app as? OrcaApp)
             ?.takeIf { it.subsystemsReady() }
             ?.providerRepository
         if (repository != null) {
@@ -83,7 +83,7 @@ object VoiceCorrection {
         }
 
         // Straight from the Room singleton rather than adding an accessor to
-        // IApp — AppDatabase.getInstance is already the shared handle.
+        // OrcaApp — AppDatabase.getInstance is already the shared handle.
         val dao = runCatching {
             com.orca.app.data.db.AppDatabase.getInstance(app).chatDao()
         }.getOrNull()

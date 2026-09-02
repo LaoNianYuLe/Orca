@@ -1,7 +1,7 @@
 package com.orca.app.debug
 
 import android.content.Context
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.data.model.FallbackStrategy
 import com.orca.app.data.model.ImageEndpointMode
 import com.orca.app.data.model.LLMModel
@@ -32,8 +32,8 @@ import java.util.UUID
 internal object ProviderMutationMethods {
 
     private fun repo(context: Context): ProviderRepository =
-        (context.applicationContext as? IApp
-            ?: throw RPCException(-32000, "IApp not initialized")).providerRepository
+        (context.applicationContext as? OrcaApp
+            ?: throw RPCException(-32000, "OrcaApp not initialized")).providerRepository
 
     // ─── Instances ──────────────────────────────────────────────────────────
 

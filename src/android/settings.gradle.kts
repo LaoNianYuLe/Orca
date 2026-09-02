@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "I"
+rootProject.name = "Orca"
 include(":app")

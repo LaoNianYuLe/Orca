@@ -137,7 +137,7 @@ class BackgroundTaskNotifier(
 
     /**
      * T298: cancel every notification posted on the
-     * [CHANNEL_ID] channel. Called from IApp's foreground transition
+     * [CHANNEL_ID] channel. Called from OrcaApp's foreground transition
      * (Activity start count 0 → 1) so the user never finds a stale "task
      * completed" entry waiting in the tray when they open the app — they
      * just saw the result, the notification has served its purpose.

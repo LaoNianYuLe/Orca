@@ -1,7 +1,7 @@
 package com.orca.app.debug
 
 import android.content.Context
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.data.model.LLMModel
 import com.orca.app.data.model.ProviderConfig
 import com.orca.app.data.model.ProviderType
@@ -23,8 +23,8 @@ import org.json.JSONObject
 internal object ProviderDebugMethods {
 
     private fun repo(context: Context): ProviderRepository {
-        val app = context.applicationContext as? IApp
-            ?: throw RPCException(-32000, "IApp not initialized")
+        val app = context.applicationContext as? OrcaApp
+            ?: throw RPCException(-32000, "OrcaApp not initialized")
         // Force the lazy load HERE, once, for every provider.* handler. These
         // handlers read `config.value` directly, and ProviderRepository loads
         // config lazily on first mutation/access — so on a cold process (app

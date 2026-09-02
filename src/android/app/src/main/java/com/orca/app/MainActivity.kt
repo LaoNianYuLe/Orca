@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
 
     /**
      * T-android-safemode-lateinit-crash: escape hatch for a process whose
-     * [IApp.onCreate] early-returned under safe-mode.
+     * [OrcaApp.onCreate] early-returned under safe-mode.
      *
      * That early return is irreversible within the process — the
      * repositories stay unassigned no matter what the safe-mode flag says
@@ -206,21 +206,21 @@ class MainActivity : ComponentActivity() {
         }
 
         // Safe-mode short-circuit: if CrashFrequencyDetector tripped in
-        // IApp.onCreate (≥THRESHOLD recent crash files), the
+        // OrcaApp.onCreate (≥THRESHOLD recent crash files), the
         // Application skipped all heavy init — no DB, no repos, no
         // offload server. We must NOT call setContent() / ChatViewModel /
-        // any code that touches IApp's lateinit deps; doing so would
+        // any code that touches OrcaApp's lateinit deps; doing so would
         // throw UninitializedPropertyAccessException and overwrite the
         // very crash logs we're trying to ship.
         //
         // Pop the share/dismiss dialog directly and finish() on close so
         // the user's next launch starts fresh. The dialog UI uses
-        // AlertDialog (system-level) which doesn't touch IApp state.
+        // AlertDialog (system-level) which doesn't touch OrcaApp state.
         // T-android-safemode-lateinit-crash: gate on the Application's own
         // "did init actually run" flag, NOT on isSafeMode(). The two are
         // not equivalent, and the difference was a hard crash loop:
         // finishClose() sets safe-mode back to false as soon as the user
-        // dismisses the share dialog, but IApp.onCreate already
+        // dismisses the share dialog, but OrcaApp.onCreate already
         // early-returned and never re-runs for the life of the process.
         // Any MainActivity created after that dismissal (launcher icon —
         // including the MainActivityIconDark alias — notification tap, or
@@ -235,7 +235,7 @@ class MainActivity : ComponentActivity() {
         // `subsystemsInitialized` only goes true after every repository is
         // assigned, so it stays false for exactly as long as composing is
         // genuinely unsafe.
-        val iApp = application as? IApp
+        val iApp = application as? OrcaApp
         if (iApp == null || !iApp.subsystemsInitialized) {
             android.util.Log.w(
                 "MainActivity",
@@ -443,7 +443,7 @@ class MainActivity : ComponentActivity() {
         //
         // [T-android-share-launch-crash] Deliberately UNCONDITIONAL, matching
         // iOS `checkForPendingShare()` which runs on every launch
-        // (IApp.swift:279) rather than keying off a launch parameter.
+        // (OrcaApp.swift:279) rather than keying off a launch parameter.
         // Gating on the extra made the share unrecoverable in exactly the case
         // the OEM-crash fallback creates: when ShareReceiverActivity cannot
         // start MainActivity at all, the extra is never delivered, so a user
@@ -478,7 +478,7 @@ class MainActivity : ComponentActivity() {
         }
 
         // Non-null and fully initialized — proven by the guard above.
-        val app = requireNotNull(application as? IApp)
+        val app = requireNotNull(application as? OrcaApp)
 
         // Parse deep link from launch intent. A real deep-link in the
         // launch intent always wins over a saved-state restore (the
@@ -625,7 +625,7 @@ class MainActivity : ComponentActivity() {
                 // fires whenever a CLI write is awaiting user OK. The
                 // dialog is rendered on top of any active screen, so
                 // it works regardless of where the user is when the
-                // agent triggers a change. Mirrors iOS IApp.swift
+                // agent triggers a change. Mirrors iOS OrcaApp.swift
                 // root-level `.sheet(item: gate.pending)`.
                 com.orca.app.ui.settings.ConfigConfirmDialogHost()
             }

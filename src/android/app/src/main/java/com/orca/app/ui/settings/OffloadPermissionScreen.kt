@@ -53,7 +53,7 @@ fun OffloadPermissionScreen(
 
     var showResetConfirm by remember { mutableStateOf(false) }
 
-    val configEnabled by com.orca.app.config.IConfigPermissionStore.enabled.collectAsState()
+    val configEnabled by com.orca.app.config.OrcaConfigPermissionStore.enabled.collectAsState()
 
     val context = LocalContext.current
 
@@ -86,7 +86,7 @@ fun OffloadPermissionScreen(
                 title = stringResource(R.string.perm_allow_i_config),
                 checked = configEnabled,
                 onCheckedChange = {
-                    com.orca.app.config.IConfigPermissionStore.setEnabled(it)
+                    com.orca.app.config.OrcaConfigPermissionStore.setEnabled(it)
                 },
                 showDivider = false,
             )
@@ -155,7 +155,7 @@ fun OffloadPermissionScreen(
             confirmButton = {
                 ITextButton(onClick = {
                     OffloadPermissionManager.resetAll()
-                    com.orca.app.config.IConfigPermissionStore.setEnabled(true)
+                    com.orca.app.config.OrcaConfigPermissionStore.setEnabled(true)
                     AppLogger.info("PermissionsScreen", "user confirmed Reset All — all tool permissions cleared, i-config switch reset to default")
                     showResetConfirm = false
                 }) {

@@ -65,7 +65,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import com.orca.app.data.repository.WebAppShortcutRepository
 import kotlinx.coroutines.Dispatchers
@@ -369,7 +369,7 @@ fun AddToHomeSheet(
                                 is IconChoice.Gallery -> "file:${c.uri}"
                                 is IconChoice.Preset -> "preset:${c.preset.name.lowercase()}"
                             }
-                            val app = context.applicationContext as IApp
+                            val app = context.applicationContext as OrcaApp
                             val entity = when (source) {
                                 is WebAppSource.ChatAttachment -> {
                                     // htmlPath stays relative under the
