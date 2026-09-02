@@ -14,8 +14,8 @@
         android:shortcutLongLabel="@string/shortcut_new_chat_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.i.app"
-            android:targetClass="com.i.app.MainActivity"
+            android:targetPackage="com.orca.app"
+            android:targetClass="com.orca.app.MainActivity"
             android:data="i://action/new_chat" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
@@ -27,8 +27,8 @@
         android:shortcutLongLabel="@string/shortcut_voice_chat_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.i.app"
-            android:targetClass="com.i.app.MainActivity"
+            android:targetPackage="com.orca.app"
+            android:targetClass="com.orca.app.MainActivity"
             android:data="i://action/voice_chat" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
@@ -40,8 +40,8 @@
         android:shortcutLongLabel="@string/shortcut_camera_chat_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.i.app"
-            android:targetClass="com.i.app.MainActivity"
+            android:targetPackage="com.orca.app"
+            android:targetClass="com.orca.app.MainActivity"
             android:data="i://action/camera_chat" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>

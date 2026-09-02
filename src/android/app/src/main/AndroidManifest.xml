@@ -353,7 +353,7 @@
             android:excludeFromRecents="false"
             android:theme="@style/Theme.I">
             <intent-filter>
-                <action android:name="com.i.app.action.OPEN_WEBAPP" />
+                <action android:name="com.orca.app.action.OPEN_WEBAPP" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
