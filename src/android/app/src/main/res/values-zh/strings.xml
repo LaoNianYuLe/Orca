@@ -1036,7 +1036,7 @@
     <!-- T-selection-add-to-input — 长按选择菜单"添加到输入框"动作 -->
     <string name="selection_add_to_chat_input">添加到输入框</string>
     <string name="selection_read_aloud">朗读</string>
-    <!-- T-i-textkit 选择菜单按钮 -->
+    <!-- T-orca-textkit 选择菜单按钮 -->
     <string name="selection_copy">复制</string>
     <string name="selection_copy_markdown">复制 Markdown</string>
     <string name="selection_copy_rich_text">复制富文本</string>

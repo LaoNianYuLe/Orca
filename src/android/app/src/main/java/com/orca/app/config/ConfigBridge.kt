@@ -214,7 +214,7 @@ object ConfigBridge {
                 put("display_name", field.displayName)
             }
         } catch (e: ConfigError.PermissionDenied) {
-            // [T-i-config-provider-add] Forward PermissionDenied verbatim
+            // [T-orca-config-provider-add] Forward PermissionDenied verbatim
             // — used by fields that are editable but unreadable (notably
             // providers.<id>.apiKey: writes accepted, reads guarded). Without
             // this branch the previous generic catch reported "read_failed"
@@ -349,7 +349,7 @@ object ConfigBridge {
                         put("reason", "Collection '${coll.basePath}' does not allow .remove.")
                     }
                 }
-                // [T-i-config-provider-add] Redact credential values
+                // [T-orca-config-provider-add] Redact credential values
                 // (apiKey / oauthToken / manualOAuthToken) BEFORE they reach
                 // the confirmation sheet or the audit log. The collection's
                 // add() still receives the un-redacted `parsedValue` so it
@@ -495,7 +495,7 @@ object ConfigBridge {
                 }
             }
 
-            // [T-i-config-provider-add] Mask credential writes the
+            // [T-orca-config-provider-add] Mask credential writes the
             // same way collection-add does: detect by the path's last
             // segment matching ConfigValue.SECRET_KEYS (apiKey /
             // oauthToken / manualOAuthToken). Field still gets the un-
@@ -657,7 +657,7 @@ object ConfigBridge {
                             r.field.write(r.newValue)
                             displayName = r.field.displayName
                             displayPath = r.field.path
-                            // [T-i-config-provider-add] If this is a
+                            // [T-orca-config-provider-add] If this is a
                             // credential field, audit/display rows pull
                             // from the redacted copy so the secret never
                             // reaches the audit DB or the user's screen.
@@ -755,7 +755,7 @@ object ConfigBridge {
         val scope: String,
         val oldValue: ConfigValue,
         val newValue: ConfigValue,
-        // [T-i-config-provider-add] When non-null, audit / display
+        // [T-orca-config-provider-add] When non-null, audit / display
         // logging uses this instead of `newValue` — the executor still
         // applies `newValue` un-redacted so the credential reaches the
         // collection's add(). null = no redaction needed (use newValue

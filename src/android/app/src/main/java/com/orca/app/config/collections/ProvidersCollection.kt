@@ -19,7 +19,7 @@ import com.orca.app.data.repository.ProviderRepository
  * Exposes `ProviderInstance` fields under `providers.<id>.…`. Mirrors
  * iOS `ProvidersCollection`.
  *
- * [T-i-config-provider-add] Add is OPEN (per user decision: writes
+ * [T-orca-config-provider-add] Add is OPEN (per user decision: writes
  * are agent-permitted, reads of credentials remain guarded). Remove
  * stays denied — yanking a provider may break tool calls already in
  * flight, and the user's revertable choice is to disable it instead
@@ -352,7 +352,7 @@ class ProvidersCollection(
     /**
      * Write-only API key. Read always throws permission_denied (the
      * bridge surfaces this as `error: permission_denied`, not
-     * `read_failed`, thanks to the explicit catch added in T-i-
+     * `read_failed`, thanks to the explicit catch added in T-orca-
      * config-provider-add). Write accepts either a literal value or a
      * `$$ENV_NAME` reference resolved at write time against the env
      * var store; failed lookups throw invalid_value.

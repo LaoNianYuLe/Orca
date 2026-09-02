@@ -545,7 +545,7 @@ class OrcaApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-shizuku-cli", ShizukuOffloadHandler(this))
         com.orca.app.offload.ShizukuManager.init(this)
 
-        // T-android-i-debug-cli: shell-side CLI wrapper around the in-app
+        // T-android-orca-debug-cli: shell-side CLI wrapper around the in-app
         // DebugServer (127.0.0.1:5321) JSON-RPC. DEBUG-only — Release builds
         // ship neither the DebugServer nor this handler, so the
         // `/usr/local/bin/orca-debug` stub is also absent (PRootKernel.

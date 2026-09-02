@@ -203,7 +203,7 @@ class ConfigOffloadHandler : NativeOffloadHandler {
 
     private fun cmdSet(args: OffloadArgs): NativeOffloadResult {
         val path = args.positional.getOrNull(1)
-        // [T-android-i-config-set-shell-escape] (issue #36) `--file <path>`
+        // [T-android-orca-config-set-shell-escape] (issue #36) `--file <path>`
         // reads the value-json from a file instead of an argv positional. The
         // value normally rides through the guest shell as a positional arg, so
         // busybox ash mangles embedded double-quotes / backslashes / newlines /
@@ -375,7 +375,7 @@ class ConfigOffloadHandler : NativeOffloadHandler {
     }
 
     /**
-     * [T-android-i-config-set-shell-escape] Read a file's text by its
+     * [T-android-orca-config-set-shell-escape] Read a file's text by its
      * guest (Linux) path, resolving it to the host path through the rootfs /
      * bind mounts. Same helper shape as ModelUseOffloadHandler.readLinuxPath —
      * used by `set --file` so the value-json never transits the shell. Returns

@@ -187,7 +187,7 @@ class DebugRPCHandler(private val context: Context) {
                 }
                 handleSessionsExec(params)
             }
-            // [T-i-config-provider-add] DEBUG-only invocation of the
+            // [T-orca-config-provider-add] DEBUG-only invocation of the
             // ConfigOffloadHandler — parallels debug.modelUse.exec so test
             // harnesses can exercise orca-config (get / set / set-batch /
             // audit-*) without driving an in-shell prompt. The handler
@@ -1227,7 +1227,7 @@ class DebugRPCHandler(private val context: Context) {
     }
 
     /**
-     * [T-i-config-provider-add] DEBUG-only orca-config invocation
+     * [T-orca-config-provider-add] DEBUG-only orca-config invocation
      * that BYPASSES the user-confirmation gate. Targets the same code
      * path the offload CLI hits (ConfigBridge.performWriteBatch /
      * readField / auditList), so harnesses can verify add / set / get

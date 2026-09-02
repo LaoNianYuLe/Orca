@@ -955,7 +955,7 @@
     <!-- T-selection-add-to-input — 長押し選択メニュー「入力欄に追加」 -->
     <string name="selection_add_to_chat_input">入力欄に追加</string>
     <string name="selection_read_aloud">読み上げ</string>
-    <!-- T-i-textkit 選択メニューボタン -->
+    <!-- T-orca-textkit 選択メニューボタン -->
     <string name="selection_copy">コピー</string>
     <string name="selection_copy_markdown">Markdown をコピー</string>
     <string name="selection_copy_rich_text">リッチテキストをコピー</string>

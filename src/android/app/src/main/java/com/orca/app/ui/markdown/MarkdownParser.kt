@@ -297,7 +297,7 @@ object MarkdownParser {
 
     private fun splitTableRow(line: String): List<String> {
         val trimmed = line.trim().removePrefix("|").removeSuffix("|")
-        // [T-i-url-fullwidth-pipe-android] Fast path: the only reason to
+        // [T-orca-url-fullwidth-pipe-android] Fast path: the only reason to
         // protect a `|` from the cell split is a markdown link whose URL
         // contains a raw ASCII pipe, e.g. `[f](orca://ns/a|b.png)` — the model
         // (or a hand-authored row) can emit an un-encoded `|` inside the URL,

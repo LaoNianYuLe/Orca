@@ -101,7 +101,7 @@ fun OrcaMenu(
     alignEnd: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    // [T-android-i-menu-ios26-anim] BOTH branches (default left-anchored and
+    // [T-android-orca-menu-ios26-anim] BOTH branches (default left-anchored and
     // alignEnd right-anchored) now render through ONE custom Popup +
     // AnimatedVisibility so every OrcaMenu gets the same iOS 26-style
     // 200ms scale-from-anchor + fade enter animation. Material3's DropdownMenu
@@ -166,7 +166,7 @@ fun OrcaMenu(
             exit = scaleOut(animationSpec = tween(120)) + fadeOut(animationSpec = tween(120)),
         ) {
             Surface(
-                // [T-android-i-menu-width] Size to the CONTENT's intrinsic
+                // [T-android-orca-menu-width] Size to the CONTENT's intrinsic
                 // width (the widest menu item), then clamp to [minWidth, 280dp].
                 // This restores Material3 DropdownMenu's "hug the content" sizing
                 // that the unified-Popup rewrite lost: without IntrinsicSize.Max,
