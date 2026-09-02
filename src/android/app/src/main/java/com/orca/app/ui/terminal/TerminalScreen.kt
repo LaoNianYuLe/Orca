@@ -117,7 +117,10 @@ fun TerminalScreen(
     LaunchedEffect(Unit) {
         if (!terminalSession.isRunning) terminalSession.start(sessionId = sessionId)
         if (!initCommand.isNullOrBlank()) {
-            // Pre-fill at the prompt without newline so the user can review.
+            // Whether this only pre-fills depends on the caller: sendText folds
+            // CR/LF to CR, which the TTY reads as Enter. Deep links are stripped
+            // of control bytes in DeepLinkHandler.sanitizeInitCommand, so that
+            // path can only pre-fill. In-app callers keep the ability to submit.
             kotlinx.coroutines.delay(500)
             terminalSession.sendText(initCommand)
         }

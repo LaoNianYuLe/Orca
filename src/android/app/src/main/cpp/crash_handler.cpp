@@ -181,7 +181,7 @@ static void crash_signal_handler(int sig, siginfo_t* info, void* ctx) {
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_i_app_crash_NativeCrashHandler_nativeInstall(
+Java_com_orca_app_crash_NativeCrashHandler_nativeInstall(
         JNIEnv* env, jobject /*thiz*/, jstring jLogDir) {
     if (jLogDir == nullptr) return;
     const char* dir = env->GetStringUTFChars(jLogDir, nullptr);

@@ -109,7 +109,7 @@ object DeepLinkHandler {
                 else -> DeepLinkAction.Unknown
             }
             "open_terminal" -> DeepLinkAction.OpenTerminal(
-                initCommand = uri.getQueryParameter("init_command")
+                initCommand = sanitizeInitCommand(uri.getQueryParameter("init_command"))
             )
             // Quick-actions surface (app-icon long-press). Path drives which
             // pending action ChatScreen consumes on first compose. Mirrors iOS
@@ -140,6 +140,29 @@ object DeepLinkHandler {
             }
             else -> DeepLinkAction.Unknown
         }
+    }
+
+    /**
+     * `init_command` arrives from an untrusted source: any web page can fire
+     * `i://open_terminal?init_command=…` with no user confirmation.
+     *
+     * TerminalScreen only ever means to *pre-fill* the prompt so the user can
+     * read the command before running it. Two byte classes break that promise
+     * and are dropped here rather than at the call site, so every consumer of
+     * the parsed action inherits the guarantee:
+     *
+     *  - CR / LF — TerminalSession.sendText folds these to CR, which a real TTY
+     *    treats as Enter. A single `%0A` turns pre-fill into execution.
+     *  - Other C0 controls — ESC drives terminal escape sequences, and the
+     *    likes of ETX/EOT act as Ctrl-C / Ctrl-D at the prompt.
+     *
+     * Printable text is left untouched: the point is to defer execution to the
+     * user, not to guess which commands are safe.
+     */
+    internal fun sanitizeInitCommand(raw: String?): String? {
+        if (raw.isNullOrEmpty()) return raw
+        val cleaned = raw.filter { it.code >= 0x20 && it.code != 0x7F }
+        return cleaned.ifBlank { null }
     }
 
     /**
