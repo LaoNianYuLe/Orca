@@ -185,7 +185,7 @@ object AppLogger {
         val parenIdx = if (slashIdx >= 0) rawLine.indexOf('(', slashIdx) else -1
         if (slashIdx >= 0 && parenIdx > slashIdx) {
             val tag = rawLine.substring(slashIdx + 1, parenIdx).trim()
-            if (tag.startsWith("I.") || tag == "AppLogger") return
+            if (tag.startsWith("I.") || tag.startsWith("Orca.") || tag == "AppLogger") return
         }
         try {
             val now = Date()
@@ -310,7 +310,7 @@ object AppLogger {
         val timestamp = timestampFormat.format(now)
 
         // Also output to logcat
-        val logcatTag = "I.$category"
+        val logcatTag = "Orca.$category"
         when (level) {
             "ERROR" -> Log.e(logcatTag, message)
             "WARN" -> Log.w(logcatTag, message)

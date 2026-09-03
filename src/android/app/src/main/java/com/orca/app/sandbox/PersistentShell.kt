@@ -195,7 +195,7 @@ class PersistentShell(
         cmd.add("-b"); cmd.add("/dev")
         cmd.add("-b"); cmd.add("/proc")
         cmd.add("-b"); cmd.add("/sys")
-        cmd.add("-w"); cmd.add("/root")
+        cmd.add("-w"); cmd.add("/var/orca")
 
         // Apply this session's bind mounts (session-specific, not global)
         for ((linuxPath, hostPath) in sessionBindMounts) {

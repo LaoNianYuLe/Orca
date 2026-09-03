@@ -8,7 +8,7 @@ import java.util.UUID
 enum class ProviderType(val displayName: String) {
     anthropic("Anthropic"),
     gemini("Google Gemini"),
-    openAI("OpenAI"),
+    openAI("OpenAI Compatible"),
     openRouter("OpenRouter"),
     xAI("xAI (Grok)"),
     // [T-kimi-oauth] Kimi Code (Coding Plan) — RFC 8628 device-code OAuth,

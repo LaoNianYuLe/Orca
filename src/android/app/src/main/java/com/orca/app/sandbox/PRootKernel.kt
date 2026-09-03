@@ -311,7 +311,7 @@ object PRootKernel {
             Log.w(TAG, "materializeMountTargets: rootfs not yet available: ${t.message}")
             return
         }
-        val mountsRoot = File(rootfs, "var/i/mounts").also { it.mkdirs() }
+        val mountsRoot = File(rootfs, "var/orca/mounts").also { it.mkdirs() }
 
         // Create placeholder dirs for desired names.
         for (linuxPath in desiredLinuxPaths) {
@@ -591,7 +591,7 @@ object PRootKernel {
      *
      * Produces:
      * ```
-     * <proot> -0 --link2symlink -r <rootfs> -b /dev -b /proc -b /sys -w /root
+     * <proot> -0 --link2symlink -r <rootfs> -b /dev -b /proc -b /sys -w /var/orca
      *         [-b <host>:<linux> ...for each bind mount]
      *         /bin/sh -c "<command>"
      * ```
@@ -630,7 +630,7 @@ object PRootKernel {
 
         // Working directory
         cmd.add("-w")
-        cmd.add("/root")
+        cmd.add("/var/orca")
 
         // User bind mounts
         for ((linuxPath, hostPath) in bindMounts) {
@@ -870,7 +870,7 @@ object PRootKernel {
         }
         val binDir = File(rootfs, "usr/local/bin").also { it.mkdirs() }
         val guardedCmds = listOf("touch", "tee", "cp", "mv", "mkdir", "rm", "rmdir", "ln", "dd")
-        val configFile = File(rootfs, "var/i/.mount-readonly-prefixes")
+        val configFile = File(rootfs, "var/orca/.mount-readonly-prefixes")
 
         if (readOnlyLinuxPrefixes.isEmpty()) {
             // No read-only mounts — remove the config + wrappers so plain busybox

@@ -68,6 +68,7 @@ class RootfsManager private constructor(private val context: Context) {
     suspend fun installIfNeeded() = withContext(Dispatchers.IO) {
         if (isInstalled) {
             Log.d(TAG, "Rootfs already installed at $rootfsDir")
+            ensureOrcaWorkspace()
             _installState.value = RootfsInstallState.Installed
             return@withContext
         }
@@ -128,14 +129,7 @@ class RootfsManager private constructor(private val context: Context) {
             // T219-6: also pre-create `mounts/` so PRoot's `-b host:/var/orca/mounts/<name>`
             // has the parent directory to bind into; without this, PRoot silently
             // skips bind mounts whose target path doesn't exist.
-            val iSubdirs = listOf("attachments", "offloads", "workspace", "skills", "memory", "shared", "mounts")
-            for (subdir in iSubdirs) {
-                File(rootfsDir, "var/i/$subdir").mkdirs()
-            }
-
-            // Pre-create /opt/bin — appears in PATH so users can drop third-party
-            // binaries here without first `mkdir -p`. Matches iOS PATH layout.
-            File(rootfsDir, "opt/bin").mkdirs()
+            ensureOrcaWorkspace()
 
             // Write resolv.conf from system DNS (fallback to 8.8.8.8)
             refreshDns()
@@ -153,6 +147,53 @@ class RootfsManager private constructor(private val context: Context) {
             Log.e(TAG, "Rootfs installation failed", t)
             _installState.value = RootfsInstallState.Failed(t.message ?: t.javaClass.simpleName)
             throw t
+        }
+    }
+
+    /**
+     * Ensure `/var/orca/{attachments,offloads,workspace,...}` exists even when
+     * rootfs was extracted by an older APK that mkdir'd `/var/i` instead.
+     * Also folds leftover empty/skeleton `var/i` into `var/orca` (no full
+     * BrandMigration restore — only directory move of names we own).
+     */
+    private fun ensureOrcaWorkspace() {
+        val subdirs = listOf("attachments", "offloads", "workspace", "skills", "memory", "shared", "mounts")
+        for (subdir in subdirs) {
+            File(rootfsDir, "var/orca/$subdir").mkdirs()
+        }
+        File(rootfsDir, "opt/bin").mkdirs()
+        migrateLegacyVarI()
+    }
+
+    private fun migrateLegacyVarI() {
+        val legacy = File(rootfsDir, "var/i")
+        if (!legacy.isDirectory) return
+        val destRoot = File(rootfsDir, "var/orca")
+        destRoot.mkdirs()
+        mergeDirectoryPreferDest(legacy, destRoot)
+        val leftover = legacy.listFiles()
+        if (leftover.isNullOrEmpty()) {
+            legacy.delete()
+            Log.i(TAG, "Removed empty legacy var/i")
+        } else {
+            Log.w(TAG, "Left ${leftover.size} item(s) under var/i (dest already had those names)")
+        }
+    }
+
+    private fun mergeDirectoryPreferDest(src: File, dest: File) {
+        dest.mkdirs()
+        val children = src.listFiles() ?: return
+        for (child in children) {
+            val target = File(dest, child.name)
+            if (!target.exists()) {
+                if (!child.renameTo(target)) {
+                    child.copyRecursively(target, overwrite = false)
+                    child.deleteRecursively()
+                }
+            } else if (child.isDirectory && target.isDirectory) {
+                mergeDirectoryPreferDest(child, target)
+                if (child.listFiles().isNullOrEmpty()) child.delete()
+            }
         }
     }
 

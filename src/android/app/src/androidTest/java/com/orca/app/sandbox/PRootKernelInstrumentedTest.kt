@@ -125,10 +125,10 @@ class PRootKernelInstrumentedTest {
         assertTrue("Should bind /proc", cmd.contains("/proc"))
         assertTrue("Should bind /sys", cmd.contains("/sys"))
 
-        // Should have -w /root
+        // Should have -w /var/orca
         val wIndex = cmd.indexOf("-w")
         assertTrue("Should contain -w flag", wIndex >= 0)
-        assertEquals("/root", cmd[wIndex + 1])
+        assertEquals("/var/orca", cmd[wIndex + 1])
 
         // Should end with /bin/sh -c "echo hello"
         val lastThree = cmd.takeLast(3)

@@ -201,18 +201,32 @@ fun TerminalScreen(
                         terminalSession.setWindowSize(cols, rows)
                     },
                     onTap = { inputController.requestFocus() },
+                    onPaste = { text ->
+                        emulator.scrollOffset = 0
+                        if (emulator.bracketedPaste) {
+                            terminalSession.sendRawBytes("\u001b[200~".toByteArray())
+                            terminalSession.sendText(text)
+                            terminalSession.sendRawBytes("\u001b[201~".toByteArray())
+                        } else {
+                            terminalSession.sendText(text)
+                        }
+                    },
                 )
                 TerminalInputView(
                     onInput = { bytes ->
                         // Any user input snaps back to live tail so typing is visible.
                         emulator.scrollOffset = 0
-                        if (ctrlActive && bytes.size == 1) {
+                        if (ctrlActive && bytes.isNotEmpty()) {
                             val ch = bytes[0].toInt().toChar().uppercaseChar()
-                            if (ch in 'A'..'Z') {
+                            if (bytes.size == 1 && ch in 'A'..'Z') {
                                 terminalSession.sendRawBytes(byteArrayOf((ch - 'A' + 1).toByte()))
-                                ctrlActive = false
-                                return@TerminalInputView
+                            } else {
+                                // IME multi-byte / non-letter: don't trap the
+                                // next key behind a sticky Ctrl.
+                                terminalSession.sendRawBytes(bytes)
                             }
+                            ctrlActive = false
+                            return@TerminalInputView
                         }
                         terminalSession.sendRawBytes(bytes)
                     },
@@ -271,6 +285,7 @@ fun TerminalScreen(
                 onSendRaw = { bytes ->
                     emulator.scrollOffset = 0
                     terminalSession.sendRawBytes(bytes)
+                    ctrlActive = false
                 },
                 onArrow = { dir ->
                     emulator.scrollOffset = 0
@@ -278,6 +293,7 @@ fun TerminalScreen(
                         byteArrayOf(0x1B, 'O'.code.toByte())
                     else byteArrayOf(0x1B, '['.code.toByte())
                     terminalSession.sendRawBytes(prefix + byteArrayOf(dir.code.toByte()))
+                    ctrlActive = false
                 },
             )
         }
@@ -400,7 +416,7 @@ private fun KeyboardAccessoryBar(
         // carriage return to run a command line / trigger an in-CLI prompt.
         // This writes CR (0x0D) on the same raw-PTY path as Esc/Tab/C-c.
         // Placed right after Tab, mirroring iOS fa3d2f8c.
-        QuickCommandButton("⏎", iconText = "⏎") { onSendRaw(byteArrayOf(0x0D)) }
+        QuickCommandButton("⏎") { onSendRaw(byteArrayOf(0x0D)) }
         QuickCommandButton("Ctrl", iconText = "^", isActive = ctrlActive, onClick = onCtrlToggle)
         QuickCommandButton("\u2191", icon = Icons.Default.KeyboardArrowUp) { onArrow('A') }
         QuickCommandButton("\u2193", icon = Icons.Default.KeyboardArrowDown) { onArrow('B') }

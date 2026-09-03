@@ -34,13 +34,11 @@ import java.util.concurrent.TimeUnit
 object UpdateChecker {
 
     private const val TAG = "UpdateChecker"
-    private const val OWNER = "I"
-    // T133: the public repo is I/I (org + repo share a name).
-    // Previously pointed at I/OrcaApp, which is the private dev
-    // mirror — every API call 404'd, which we mistranslated as "no release
-    // published". The 0.1-preview release is published as a prerelease on
-    // I/I with a OrcaApp-*.apk asset attached.
-    private const val REPO = "I"
+    private const val OWNER = "OpenMinis"
+    // Public releases live on OpenMinis/OpenMinis (same as RELEASES_URL).
+    // OWNER/REPO used to be leftover "I"/"I" from the brand rename, so
+    // Check for Updates hit api.github.com/repos/I/I and 404'd.
+    private const val REPO = "OpenMinis"
     private const val DOWNLOAD_FILENAME = "orca-update.apk"
     /**
      * Sub-directory of `filesDir` where we stage downloaded update APKs. We

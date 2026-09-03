@@ -74,6 +74,7 @@ fun OrcaSkillsBrowserScreen(
 ) {
     val context = LocalContext.current
     var currentUrl by remember { mutableStateOf("https://github.com/OpenMinis/MinisSkills") }
+    var pageLoading by remember { mutableStateOf(true) }
     var hudState by remember { mutableStateOf(HudState.HIDDEN) }
     var hudMessage by remember { mutableStateOf("") }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -148,7 +149,21 @@ fun OrcaSkillsBrowserScreen(
 
                         webViewClient = object : WebViewClient() {
                             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                pageLoading = true
                                 url?.let { currentUrl = it }
+                            }
+
+                            override fun onPageFinished(view: WebView?, url: String?) {
+                                pageLoading = false
+                                url?.let { currentUrl = it }
+                            }
+
+                            override fun onReceivedError(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                                error: android.webkit.WebResourceError?,
+                            ) {
+                                if (request?.isForMainFrame == true) pageLoading = false
                             }
 
                             // GitHub SPA uses pushState — capture URL changes here too
@@ -184,6 +199,12 @@ fun OrcaSkillsBrowserScreen(
                 },
                 modifier = Modifier.fillMaxSize(),
             )
+
+            if (pageLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
 
             // HUD overlay at bottom
             AnimatedVisibility(

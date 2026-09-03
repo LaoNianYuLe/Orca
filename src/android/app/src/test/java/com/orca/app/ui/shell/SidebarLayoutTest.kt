@@ -14,7 +14,16 @@ class SidebarLayoutTest {
     fun settingsChildRoutesHideGlobalMenuButton() {
         assertEquals(true, Routes.isSettingsRoute(Routes.SETTINGS))
         assertEquals(true, Routes.isSettingsRoute(Routes.MODEL_GROUPS))
+        assertEquals(true, Routes.isSettingsRoute("storage"))
+        assertEquals(true, Routes.isSettingsRoute("session_storage/abc"))
+        assertEquals(true, Routes.isSettingsRoute("terminal"))
+        assertEquals(true, Routes.isSettingsRoute("terminal?initCommand=ls"))
+        assertEquals(true, Routes.isSettingsRoute("projects"))
+        assertEquals(true, Routes.isSettingsRoute("copywriting"))
+        assertEquals(true, Routes.isSettingsRoute("skill/skill-creator"))
         assertEquals(false, Routes.isSettingsRoute(Routes.CHAT))
+        assertEquals(false, Routes.isSettingsRoute(Routes.chat("abc")))
+        assertEquals(false, Routes.isSettingsRoute(Routes.SESSION_LIST))
     }
 
     @Test

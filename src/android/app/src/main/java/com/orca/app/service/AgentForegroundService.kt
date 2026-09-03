@@ -63,10 +63,18 @@ class AgentForegroundService : Service() {
                 putExtra(EXTRA_SESSION_COUNT, sessionCount)
                 putExtra(EXTRA_TOOL_STATUS, toolStatus)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                // Android 12+ throws ForegroundServiceStartNotAllowedException
+                // when the app is backgrounded without an eligible start.
+                // Overlay-without-SYSTEM_ALERT_WINDOW is a separate permission
+                // gap; this catch keeps the agent loop from crashing the process.
+                Log.w(TAG, "Failed to start AgentForegroundService: ${e.message}")
             }
         }
 

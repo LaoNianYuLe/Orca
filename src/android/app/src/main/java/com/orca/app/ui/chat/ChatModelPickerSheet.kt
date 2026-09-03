@@ -829,11 +829,13 @@ internal fun ModelPickerSheet(
                                                     modifier = Modifier.size(17.dp),
                                                 )
                                                 Spacer(Modifier.width(10.dp))
-                                                ProviderBrandBadge(
-                                                    providerId = instance?.providerType?.name?.lowercase().orEmpty(),
-                                                    displayName = instance?.label.orEmpty(),
-                                                    modifier = Modifier.size(30.dp),
-                                                )
+                                                instance?.let {
+                                                    ProviderBrandBadge(
+                                                        instance = it,
+                                                        model = entry.model,
+                                                        modifier = Modifier.size(30.dp),
+                                                    )
+                                                }
                                                 Spacer(Modifier.width(8.dp))
                                                 Column(modifier = Modifier.weight(1f)) {
                                                     Text(entry.model.displayName, style = MaterialTheme.typography.bodyMedium)
@@ -936,8 +938,7 @@ internal fun ModelPickerSheet(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     ProviderBrandBadge(
-                                        providerId = instance.providerType.name.lowercase(),
-                                        displayName = instance.label,
+                                        instance = instance,
                                         modifier = Modifier.size(30.dp),
                                     )
                                     Spacer(Modifier.width(10.dp))
@@ -1018,8 +1019,8 @@ internal fun ModelPickerSheet(
                                             )
                                             Spacer(Modifier.width(10.dp))
                                             ProviderBrandBadge(
-                                                providerId = instance.providerType.name.lowercase(),
-                                                displayName = instance.label,
+                                                instance = instance,
+                                                model = displayEntry.model,
                                                 modifier = Modifier.size(30.dp),
                                             )
                                             Spacer(Modifier.width(10.dp))
@@ -1144,8 +1145,8 @@ internal fun ModelPickerSheet(
                                             )
                                             Spacer(Modifier.width(10.dp))
                                             ProviderBrandBadge(
-                                                providerId = instance.providerType.name.lowercase(),
-                                                displayName = instance.label,
+                                                instance = instance,
+                                                model = entry.model,
                                                 modifier = Modifier.size(30.dp),
                                             )
                                             Spacer(Modifier.width(10.dp))

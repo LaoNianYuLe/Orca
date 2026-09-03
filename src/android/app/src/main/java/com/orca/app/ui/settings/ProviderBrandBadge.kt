@@ -16,8 +16,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.orca.app.R
+import com.orca.app.data.model.LLMModel
+import com.orca.app.data.model.ProviderInstance
+import com.orca.app.data.model.ProviderType
 
 /** Vendor badge backed by the Lobe Icons static SVG assets. */
+@Composable
+internal fun ProviderBrandBadge(
+    instance: ProviderInstance,
+    model: LLMModel? = null,
+    modifier: Modifier = Modifier,
+) {
+    ProviderBrandBadge(
+        providerId = resolveProviderBrandId(instance, model),
+        displayName = instance.label.ifBlank { model?.displayName.orEmpty() },
+        modifier = modifier,
+    )
+}
+
 @Composable
 internal fun ProviderBrandBadge(
     providerId: String,
@@ -51,6 +67,72 @@ internal fun ProviderBrandBadge(
             fontWeight = FontWeight.Bold,
             maxLines = 1,
         )
+    }
+}
+
+/**
+ * Model company first, then the instance, then the wire protocol.
+ * Logos already live in drawable-nodpi/provider_*.png — a DeepSeek or
+ * Claude model behind an OpenAI-compat / OpenRouter instance must use
+ * that company's mark, not OpenAI's.
+ */
+internal fun resolveProviderBrandId(
+    instance: ProviderInstance,
+    model: LLMModel? = null,
+): String {
+    inferBrandFromHaystack(
+        listOfNotNull(model?.id, model?.displayName, model?.provider)
+            .joinToString(" ").lowercase(),
+    )?.let { return it }
+
+    if (instance.azureMode) return "azure"
+
+    inferBrandFromHaystack(
+        listOfNotNull(instance.label, instance.customBaseURL, instance.effectiveBaseURL)
+            .joinToString(" ").lowercase(),
+    )?.let { return it }
+
+    return when (instance.providerType) {
+        ProviderType.anthropic -> "anthropic"
+        ProviderType.gemini -> "google"
+        ProviderType.openRouter -> "openrouter"
+        ProviderType.xAI -> "xai"
+        ProviderType.kimiCode -> "moonshot"
+        ProviderType.poolside -> "poolside"
+        ProviderType.inception -> "inception"
+        ProviderType.openAI ->
+            if (isOfficialOpenAI(instance)) "openai" else instance.label.lowercase()
+    }
+}
+
+private fun isOfficialOpenAI(instance: ProviderInstance): Boolean {
+    if (instance.azureMode) return false
+    val url = (instance.customBaseURL ?: instance.effectiveBaseURL).orEmpty().lowercase()
+    if (url.isBlank()) return true
+    return "api.openai.com" in url
+}
+
+private fun inferBrandFromHaystack(hay: String): String? {
+    if (hay.isBlank()) return null
+    return when {
+        "deepseek" in hay -> "deepseek"
+        "claude" in hay || "anthropic" in hay -> "anthropic"
+        "gemini" in hay || "gemma" in hay -> "google"
+        "llama" in hay || "meta-llama" in hay -> "meta"
+        "qwen" in hay || "qwq" in hay || "dashscope" in hay || "aliyuncs" in hay -> "qwen"
+        "moonshot" in hay || "kimi.com" in hay || "kimi-" in hay || "/kimi" in hay -> "moonshot"
+        "glm-" in hay || "bigmodel" in hay || "zhipu" in hay -> "zhipu"
+        "minimax" in hay -> "minimax"
+        "doubao" in hay || "volcengine" in hay || "volces.com" in hay -> "volcengine"
+        "grok" in hay || "x.ai" in hay -> "xai"
+        "nvidia" in hay -> "nvidia"
+        "wenxin" in hay || "ernie" in hay -> "wenxin"
+        "mimo" in hay && "xiaomi" in hay -> "xiaomi-mimo"
+        "gpt-" in hay || "chatgpt" in hay || "o1-" in hay || "o3-" in hay || "o4-" in hay -> "openai"
+        "openrouter" in hay -> "openrouter"
+        "ollama" in hay -> "ollama"
+        "openai.azure" in hay || "azure.com" in hay -> "azure"
+        else -> null
     }
 }
 

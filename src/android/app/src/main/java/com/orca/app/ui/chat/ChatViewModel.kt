@@ -285,20 +285,12 @@ class ChatViewModel(
         private const val MAX_AGENT_TURNS = 200
         private const val MIN_MAX_TOKENS = 1024
         /**
-         * Hard ceiling on max_tokens we ever send to a provider, regardless
-         * of what the model itself claims. Some models advertise 128K+
-         * output windows that in practice produce wandering, low-signal
-         * responses and burn through context budget; cap so a single turn
-         * can't run away. Mirrors iOS AIChatViewModel.globalMaxTokensCeiling.
-         * [T-android-global-max-tokens-128k] Raised 64K → 128K (iOS 8a401ab6):
-         * 64K clipped newer large-output models AND the number-budget thinking
-         * tiers whose budget is carved out of max_tokens (Anthropic legacy
-         * high/xhigh/max, Qwen thinking_budget — DashScope clamps it strictly
-         * below max_completion_tokens). Raising only lifts the upper bound —
-         * the value is still clamped by the model's own maxOutputTokens and
-         * the remaining context window in dynamicMaxTokens().
+         * Hard ceiling on max_tokens we ever send to a provider.
+         * Completion cap for a single turn. Catalog maxOutputTokens can be
+         * 128K; sending that on a one-word request burns budget and some
+         * gateways reject it. Clamp here; context window is separate.
          */
-        private const val GLOBAL_MAX_TOKENS_CEILING = 128_000
+        private const val GLOBAL_MAX_TOKENS_CEILING = 16_384
         /**
          * Sentinel prefix on synthetic tool_result output marking
          * user-cancelled calls. Aligned with iOS
@@ -699,6 +691,10 @@ class ChatViewModel(
 
     private val _sessionTitle = MutableStateFlow("New Chat")
     val sessionTitle: StateFlow<String> = _sessionTitle.asStateFlow()
+
+    /** Folder/project name when this chat was opened from a project. */
+    private val _projectName = MutableStateFlow<String?>(null)
+    val projectName: StateFlow<String?> = _projectName.asStateFlow()
 
     /** T-chat-title-pill: category drives the icon shown in the sticky title
      *  pill (mirrors SessionRow's categoryStyle lookup). Null on draft sessions
@@ -3428,6 +3424,14 @@ class ChatViewModel(
         }
     }.getOrDefault(false)
 
+    private suspend fun loadProjectName(folderId: String?) {
+        if (folderId.isNullOrBlank()) {
+            _projectName.value = null
+            return
+        }
+        _projectName.value = chatRepository.getFolder(folderId)?.name?.takeIf { it.isNotBlank() }
+    }
+
     private fun loadSession() {
         // T-android-crash-detected-halt: when CrashFrequencyDetector
         // tripped (#459, ≥3 crashes in last hour), skip the heavy
@@ -3466,6 +3470,7 @@ class ChatViewModel(
                 // Draft session: just set up provider using default group or first entry
                 _sessionTitle.value = "New Chat"
                 _sessionCategory.value = null
+                loadProjectName(initialFolderId)
                 val effectiveGroupId = initialGroupId ?: providerRepository.defaultPrimaryGroupId
                 var resolved = false
                 if (effectiveGroupId != null) {
@@ -3491,6 +3496,7 @@ class ChatViewModel(
             val session = chatRepository.getSession(sessionId) ?: return@launch
             _sessionTitle.value = session.title ?: "New Chat"
             _sessionCategory.value = session.category
+            loadProjectName(session.folderId ?: initialFolderId)
             _memoryEnabled.value = session.memoryEnabled != 0
             // T239: hydrate persisted thinking-mode override. null = unset
             // (use OFF as the legacy default); non-null = explicit user
@@ -4862,12 +4868,7 @@ class ChatViewModel(
             }
         }
 
-        val baseSystemPrompt = buildSystemPrompt()
-        val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-            val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-            if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-            else "$prefix\n\n${baseSystemPrompt ?: ""}"
-        } else baseSystemPrompt
+        val systemPrompt = composeBoundSystemPrompt(provider)
 
         // _isStreaming was already set synchronously by the caller.
         val launchedProvider = provider
@@ -5558,12 +5559,7 @@ class ChatViewModel(
 
             // Build system prompt
             // Anthropic OAuth requires the Claude Code prefix in the system prompt
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                else "$prefix\n\n${baseSystemPrompt ?: ""}"
-            } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             // Start agent loop with fallback. _isStreaming was set synchronously at top.
             streamLaunched = true
@@ -5900,12 +5896,7 @@ class ChatViewModel(
                 }
             }
 
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                else "$prefix\n\n${baseSystemPrompt ?: ""}"
-            } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             // _isStreaming was already set synchronously at the top.
             streamLaunched = true
@@ -6507,6 +6498,7 @@ class ChatViewModel(
 
         // Fallback state — mirrors iOS streamWithGroupFallback
         var currentProvider = provider
+        var activeSystemPrompt = systemPrompt
         val remainingFallbacks = fallbackProviders.toMutableList()
         val fallbackReasons = mutableListOf<String>()
 
@@ -6773,7 +6765,7 @@ class ChatViewModel(
                     // no compact has happened, so the common path stays zero-copy.
                     currentProvider.streamMessage(
                         applyRequestImageBudget(effectiveAgentHistory()),
-                        systemPrompt, dynamicMaxTokens(currentProvider, lastContextTokens),
+                        activeSystemPrompt, dynamicMaxTokens(currentProvider, lastContextTokens),
                         tools = agentTools,
                         thinkingLevel = if (currentModelSupportsReasoning) _thinkingLevel.value else ThinkingLevel.OFF,
                     ).collect { chunk ->
@@ -7279,8 +7271,14 @@ class ChatViewModel(
                             }
                         }
                         // Flash ONLY on a genuine model switch — never on a
-                        // transparent same-model endpoint retry.
-                        if (isRealModelChange) _fallbackTrigger.value++
+                        // transparent same-model endpoint retry. Rebuild the
+                        // system prompt on a real switch so Runtime context
+                        // `chat_backend_model_id` matches the next request's
+                        // `model` field; same-id endpoint retries keep the suffix.
+                        if (isRealModelChange) {
+                            _fallbackTrigger.value++
+                            activeSystemPrompt = composeBoundSystemPrompt(currentProvider)
+                        }
                         // Persist the fallback model so re-entering the session starts from here
                         val groupId = _selectedGroupId.value
                         if (groupId != null && newEntry != null) {
@@ -8908,15 +8906,36 @@ class ChatViewModel(
         return entity.id
     }
 
-    private fun buildSystemPrompt(): String? {
+    /**
+     * System prompt bound to [sending] — the provider that will actually
+     * `streamMessage`. Model id in Runtime context is [LLMProvider.model],
+     * the same object OpenAI/Anthropic/Gemini put in the JSON `model` field.
+     */
+    private fun composeBoundSystemPrompt(
+        sending: LLMProvider? = currentProvider,
+    ): String? {
+        val sender = sending ?: currentProvider
+        val base = buildSystemPrompt(sender?.model ?: currentModel)
+        val oauth = sender as? com.orca.app.provider.anthropic.AnthropicProvider
+        if (oauth?.isOAuth == true) {
+            val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
+            if (base?.startsWith(prefix) == true) return base
+            return "$prefix\n\n${base ?: ""}"
+        }
+        return base
+    }
+
+    private fun buildSystemPrompt(
+        wireModel: LLMModel? = currentProvider?.model ?: currentModel,
+    ): String? {
         // Cache-friendly layout: keep `base` byte-stable by stripping out anything
         // that varies per request, then append a "Runtime context" suffix at the
         // very end with all the dynamic bits (date, timezone, locale, configured
-        // orca-model-use count). OpenAI / DeepSeek prompt caching is prefix-
-        // based, so the longer the static head, the better the hit rate.
-        // Pre-T122 the prompt embedded `Current time: yyyy-MM-dd HH:mm` mid-base,
-        // which guaranteed cache misses across minute boundaries — even a quick
-        // follow-up could land on a different minute and pay full ingestion.
+        // orca-model-use count, this-turn API model id). OpenAI / DeepSeek prompt
+        // caching is prefix-based, so the longer the static head, the better the
+        // hit rate. Pre-T122 the prompt embedded `Current time: yyyy-MM-dd HH:mm`
+        // mid-base, which guaranteed cache misses across minute boundaries — even
+        // a quick follow-up could land on a different minute and pay full ingestion.
         val today = java.time.LocalDate.now()
         val dateStr = today.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
         val tzId = java.util.TimeZone.getDefault().id
@@ -8937,6 +8956,7 @@ class ChatViewModel(
         // sentence with its original single trailing space — the full
         // assembled prompt then matches the pre-SOUL prompt byte-for-byte.
         val identitySection = com.orca.app.agent.SystemPromptBuilder.identitySection(context)
+        val identityVsBackendRule = com.orca.app.agent.ChatRuntimeContext.IDENTITY_VS_BACKEND_RULE
         // [T-memory-toggle-gates-injection-and-tools-android] Mirror the iOS
         // gate: when memory is disabled for this session, replace the
         // "memory_write / memory_get" tool bullets and the "Memory system:"
@@ -8977,7 +8997,7 @@ Memory system (currently DISABLED):
 - If the user asks why earlier memories aren't visible, or asks you to save something, tell them memory is currently disabled and point them at the /memory slash command or [Settings → Memory](orca://settings/memory) to re-enable it.
 - SOUL.md (personality / identity) is unaffected by this toggle; the persona section above still applies."""
         }
-        val base = identitySection + """You should proactively use shell commands to accomplish the user's tasks — installing packages (apk add), writing and running scripts, managing files, networking, and any other operations a Linux terminal can perform.
+        val base = identitySection + identityVsBackendRule + """You should proactively use shell commands to accomplish the user's tasks — installing packages (apk add), writing and running scripts, managing files, networking, and any other operations a Linux terminal can perform.
 
 Available tools:
 - shell_execute: Run any shell command. Each invocation is an isolated process with stdout/stderr captured. Prefer this for most tasks — it is a real Linux environment with persistent filesystem. Common tools (python3, pip, curl, wget, git, ssh, etc.) can be installed via apk add; Python packages via pip install. Use `which <cmd>` to check if a tool is already installed before running apk add — many packages persist across sessions. When you need to wait before checking results (e.g. polling, waiting for a process), use the `delay` parameter instead of `sleep` in the command — delay blocks the agent flow without occupying the shell, so other concurrent tasks can use it during the wait. This avoids resource contention. Execution discipline for long-running or dispatched work: make tool calls immediately instead of describing intentions, and keep working until the task is complete. Without a scheduler or timed-callback tool, `delay` is your ONLY wait mechanism within a turn — to follow up on something still running, chain delay-then-check calls at a task-appropriate interval until you have the result or hit a sensible retry cap. NEVER end a turn with a promise of future action: 'I'll keep monitoring', 'will sync the result later', and ending right after a single still-running status check with 'let's keep waiting' are all the same violation — once your turn ends, NOTHING runs until the user's next message. If polling to completion is genuinely not worth blocking the turn, close honestly instead: state that the task keeps running in the background, that you will only learn its outcome when the user next messages (or they ask you to check), and — if something must fire on a schedule beyond this conversation — point them to the options under 'Scheduled tasks' later in this prompt (native alarm reminder or a system-level schedule; those notify the USER, they do not wake you).
@@ -9114,12 +9134,23 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
                 append(dailyMemoryFragment)
             }
             // Runtime context goes last so the prefix above stays byte-stable
-            // across requests within the same day. Keep ordering deteritic
-            // (date → tz → lang → model count) — any reorder defeats the cache.
-            append("\n\nRuntime context:\n")
-            append("- Current date: ").append(dateStr).append(" (").append(tzId).append(")\n")
-            append("- Device language: ").append(lang).append("\n")
-            append("- orca-model-use models available: ").append(modelUseCount)
+            // across requests within the same day. Keep ordering deterministic
+            // (date → tz → lang → model count → backend model id) — any reorder
+            // defeats the cache. The id is the same string the provider puts in
+            // the request body's `model` field (`currentProvider.model`, then
+            // the ViewModel snapshot). ProviderType / instance label stay out:
+            // those name the wire protocol or a nickname, not the weights.
+            val backend = com.orca.app.agent.ChatRuntimeContext.backendModelFrom(wireModel)
+            append("\n\n")
+            append(
+                com.orca.app.agent.ChatRuntimeContext.runtimeContextBlock(
+                    dateStr = dateStr,
+                    tzId = tzId,
+                    lang = lang,
+                    modelUseCount = modelUseCount,
+                    backend = backend,
+                ),
+            )
         }
     }
 
@@ -10157,12 +10188,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
                 }
             }
 
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                else "$prefix\n\n${baseSystemPrompt ?: ""}"
-            } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             // T145: claim the streaming flag synchronously before launching
             // the streamJob so a concurrent send/retry tap is rejected by the
@@ -10425,13 +10451,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         }
 
         viewModelScope.launch {
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt =
-                if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                    val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                    if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                    else "$prefix\n\n${baseSystemPrompt ?: ""}"
-                } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             AppLogger.info(TAG_STREAM, "resume _isStreaming=true (sid=$activeSessionId)")
             _isStreaming.value = true

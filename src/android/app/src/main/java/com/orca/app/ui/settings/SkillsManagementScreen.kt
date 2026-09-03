@@ -285,6 +285,7 @@ fun SkillsManagementScreen(
                     SettingsRow(
                         title = skill.name,
                         subtitle = skill.description.takeIf { it.isNotEmpty() }?.let { stripMarkdown(it) },
+                        minHeight = 80.dp,
                         showChevron = true,
                         showDivider = index < filteredSkills.size - 1,
                         onClick = { onSkillClick(skill.id) },
@@ -1077,7 +1078,7 @@ private fun SettingsActionIcon(
  * etc.) where a single-line plain-text preview is wanted. Handles fenced
  * code blocks, inline code, links, headings, blockquotes, bold, italic,
  * and collapses any remaining whitespace/newlines into single spaces.
- * Output is trimmed and capped at 120 characters.
+ * Output is trimmed and capped at 90 characters with an ellipsis.
  */
 private fun stripMarkdown(text: String): String {
     return text
@@ -1092,7 +1093,7 @@ private fun stripMarkdown(text: String): String {
         .replace(Regex("_([^_]+)_"), "$1")                  // _italic_
         .replace(Regex("\\s+"), " ")                       // collapse whitespace + newlines
         .trim()
-        .take(120)
+        .let { s -> if (s.length > 90) s.take(89).trimEnd() + "…" else s }
 }
 
 /** Format millis as relative time string (matching iOS). */

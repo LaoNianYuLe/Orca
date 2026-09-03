@@ -454,6 +454,7 @@ fun ChatScreen(
     val error by viewModel.error.collectAsState()
     val modelName by viewModel.modelName.collectAsState()
     val sessionTitle by viewModel.sessionTitle.collectAsState()
+    val projectName by viewModel.projectName.collectAsState()
     val sessionCategory by viewModel.sessionCategory.collectAsState()
     val attachments by viewModel.attachments.collectAsState()
     val availableGroups by viewModel.availableGroups.collectAsState()
@@ -2365,6 +2366,11 @@ fun ChatScreen(
                             val topBarSoul by com.orca.app.agent.SoulStore
                                 .cachedMetadata.collectAsState()
                             val displayTitle = when {
+                                !projectName.isNullOrBlank() &&
+                                    showChatTitlePill &&
+                                    sessionTitle.isNotBlank() &&
+                                    sessionTitle != "New Chat" -> "$projectName · $sessionTitle"
+                                !projectName.isNullOrBlank() -> projectName!!
                                 showChatTitlePill
                                     && sessionTitle.isNotBlank()
                                     && sessionTitle != "New Chat" -> sessionTitle

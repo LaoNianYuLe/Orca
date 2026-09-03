@@ -410,7 +410,7 @@ class TerminalSession(private val context: Context) {
         cmd.add("-b"); cmd.add("/dev")
         cmd.add("-b"); cmd.add("/proc")
         cmd.add("-b"); cmd.add("/sys")
-        cmd.add("-w"); cmd.add("/root")
+        cmd.add("-w"); cmd.add("/var/orca")
 
         for ((linuxPath, hostPath) in PRootKernel.bindMounts) {
             cmd.add("-b"); cmd.add("$hostPath:$linuxPath")

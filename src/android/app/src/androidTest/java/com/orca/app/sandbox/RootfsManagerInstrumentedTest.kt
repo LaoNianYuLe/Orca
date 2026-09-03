@@ -96,9 +96,9 @@ class RootfsManagerInstrumentedTest {
         // Verify /var/orca subdirs created
         val expectedDirs = listOf("attachments", "offloads", "workspace", "skills", "memory")
         for (subdir in expectedDirs) {
-            val dir = File(manager.rootfsDir, "var/i/$subdir")
-            assertTrue("var/i/$subdir should exist", dir.exists())
-            assertTrue("var/i/$subdir should be directory", dir.isDirectory)
+            val dir = File(manager.rootfsDir, "var/orca/$subdir")
+            assertTrue("var/orca/$subdir should exist", dir.exists())
+            assertTrue("var/orca/$subdir should be directory", dir.isDirectory)
         }
 
         // Verify resolv.conf
