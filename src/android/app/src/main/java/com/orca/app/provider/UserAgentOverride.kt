@@ -14,7 +14,7 @@ import okhttp3.Request
  * non-blank override wins over the provider default.
  *
  * **Fallback policy (T-android-default-ua):** when `customUserAgent` is
- * null/blank, we now apply [IUserAgent.DEFAULT] instead of leaving
+ * null/blank, we now apply [OrcaUserAgent.DEFAULT] instead of leaving
  * the builder UA-less (which lets OkHttp insert its own `okhttp/4.12.0`).
  * The default carries the I version so request logs upstream can be
  * traced back to the app build that issued them — matching the
@@ -28,7 +28,7 @@ import okhttp3.Request
  */
 fun Request.Builder.applyUserAgentOverride(
     customUserAgent: String?,
-    defaultUserAgent: String? = IUserAgent.DEFAULT,
+    defaultUserAgent: String? = OrcaUserAgent.DEFAULT,
 ): Request.Builder {
     val ua = customUserAgent?.trim()
     when {
@@ -60,7 +60,7 @@ fun Request.Builder.applyUserAgentOverride(
  * Built lazily — only the first request constructs the string, so the
  * `Build.*` reads (cheap but JNI-bound) don't cost startup time.
  */
-object IUserAgent {
+object OrcaUserAgent {
     val DEFAULT: String by lazy {
         val release = android.os.Build.VERSION.RELEASE ?: "unknown"
         val model = (android.os.Build.MODEL ?: "unknown").trim().ifEmpty { "unknown" }

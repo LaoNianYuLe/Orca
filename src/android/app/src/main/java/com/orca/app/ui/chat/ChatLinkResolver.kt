@@ -13,8 +13,8 @@ import java.io.File
  * Decides what should happen when a link inside chat markdown is tapped.
  *
  * Routing order:
- *  1. Recognized i:// deep-link action  → DeepLink (delegated to MainActivity via Intent.ACTION_VIEW)
- *  2. i://<sandbox path>, file://, or absolute /var/i|/root path → SandboxFile
+ *  1. Recognized orca:// deep-link action  → DeepLink (delegated to MainActivity via Intent.ACTION_VIEW)
+ *  2. orca://<sandbox path>, file://, or absolute /var/orca|/root path → SandboxFile
  *  3. Non-http(s) external schemes (intent://, mailto:, tel:, geo:, …)   → ExternalApp
  *  4. Anything else (http(s), about, file)                                → Web
  */
@@ -34,9 +34,9 @@ object ChatLinkResolver {
         val uri = runCatching { trimmed.toUri() }.getOrNull()
         val scheme = uri?.scheme?.lowercase()
 
-        // 1. i:// deep links — only branch out when the URL maps to a known action,
+        // 1. orca:// deep links — only branch out when the URL maps to a known action,
         //    otherwise fall through to sandbox-path handling.
-        if (scheme == "i") {
+        if (scheme == "orca") {
             val action = DeepLinkHandler.parse(uri)
             if (action !is DeepLinkAction.Unknown) {
                 return ChatLinkAction.DeepLink(action)
@@ -70,10 +70,10 @@ object ChatLinkResolver {
     /**
      * Map a chat link to a host File when it points into the sandbox, else null.
      * Accepts:
-     *   i://attachments/foo.png        → /var/i/attachments/foo.png
-     *   i:///var/i/workspace/x.csv → /var/i/workspace/x.csv (absolute)
+     *   orca://attachments/foo.png        → /var/orca/attachments/foo.png
+     *   orca:///var/orca/workspace/x.csv → /var/orca/workspace/x.csv (absolute)
      *   file:///path/to/file               → /path/to/file
-     *   /var/i/workspace/x.csv         → resolved via bind mount
+     *   /var/orca/workspace/x.csv         → resolved via bind mount
      *   /root/whatever                     → resolved relative to rootfs
      */
     private fun resolveSandboxFile(
@@ -91,11 +91,11 @@ object ChatLinkResolver {
         return when (scheme) {
             "i" -> {
                 // Keep '#' — attachment filenames legitimately contain it.
-                // `i://` URLs don't use fragments, so stripping at '#'
+                // `orca://` URLs don't use fragments, so stripping at '#'
                 // would truncate filenames like `foo #China.mp4`.
-                val stripped = raw.removePrefix("i://").substringBefore('?')
+                val stripped = raw.removePrefix("orca://").substringBefore('?')
                 val decoded = runCatching { java.net.URLDecoder.decode(stripped, "UTF-8") }.getOrDefault(stripped)
-                val linuxPath = if (decoded.startsWith("/")) decoded else "/var/i/$decoded"
+                val linuxPath = if (decoded.startsWith("/")) decoded else "/var/orca/$decoded"
                 lookup(linuxPath)
             }
             "file" -> {

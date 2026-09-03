@@ -32,7 +32,7 @@ data class NativeOffloadRequest(
     val cwd: String,
     /**
      * T340: chat session id forwarded by the agent shell via the
-     * `I_CHAT_SESSION_ID` env var. Lets [OffloadPermissionManager]
+     * `ORCA_CHAT_SESSION_ID` env var. Lets [OffloadPermissionManager]
      * scope ASK_ONCE grants/denials per-chat-session instead of using
      * a single process-wide bucket. Null when the offload originates
      * outside a chat (e.g. interactive terminal) — handlers fall back
@@ -174,6 +174,32 @@ object NativeOffloadServer {
         }
     }
 
+    /**
+     * The Linux abstract namespace has no filesystem permissions, so
+     * `@native-offload` is reachable by every app on the device — the magic and
+     * version words in the header are a format check, not an access check.
+     * Without this gate any installed app could drive the registered handlers,
+     * which reach alarms, notifications and the shell.
+     *
+     * SO_PEERCRED is set by the kernel at connect time and cannot be forged by
+     * the peer. The only legitimate client is the PRoot extension, which runs
+     * inside our own sandbox and therefore under our own UID.
+     */
+    private fun isSameUidPeer(client: LocalSocket): Boolean {
+        val creds = try {
+            client.peerCredentials
+        } catch (e: Exception) {
+            Log.w(TAG, "rejecting client: cannot read peer credentials: ${e.message}")
+            return false
+        }
+        val myUid = android.os.Process.myUid()
+        if (creds.uid != myUid) {
+            Log.w(TAG, "rejecting client from uid=${creds.uid} pid=${creds.pid} (expected $myUid)")
+            return false
+        }
+        return true
+    }
+
     private fun bindWithRetry(): LocalServerSocket? {
         // Backoff schedule: 0, 50, 100, 200, 400, 800 ms — total ~1.55s.
         val delays = longArrayOf(0L, 50L, 100L, 200L, 400L, 800L)
@@ -217,6 +243,8 @@ object NativeOffloadServer {
     }
 
     private fun handleClient(client: LocalSocket) {
+        if (!isSameUidPeer(client)) return
+
         val input = DataInputStream(client.inputStream)
         val output = DataOutputStream(client.outputStream)
 
@@ -262,7 +290,7 @@ object NativeOffloadServer {
                     argv = argv,
                     env = env,
                     cwd = cwd,
-                    sessionId = env["I_CHAT_SESSION_ID"]?.takeIf { it.isNotEmpty() },
+                    sessionId = env["ORCA_CHAT_SESSION_ID"]?.takeIf { it.isNotEmpty() },
                 ))
             } catch (e: Exception) {
                 Log.w(TAG, "handler '$name' threw: ${e.message}", e)

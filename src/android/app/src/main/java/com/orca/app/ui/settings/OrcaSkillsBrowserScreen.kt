@@ -1,7 +1,7 @@
 package com.orca.app.ui.settings
 
 import com.orca.app.R
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -68,12 +68,13 @@ private enum class HudState {
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ISkillsBrowserScreen(
+fun OrcaSkillsBrowserScreen(
     skillRepository: SkillRepository,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     var currentUrl by remember { mutableStateOf("https://github.com/OpenMinis/MinisSkills") }
+    var pageLoading by remember { mutableStateOf(true) }
     var hudState by remember { mutableStateOf(HudState.HIDDEN) }
     var hudMessage by remember { mutableStateOf("") }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -107,7 +108,7 @@ fun ISkillsBrowserScreen(
                     }
                 },
                 actions = {
-                    ITextButton(
+                    OrcaTextButton(
                         onClick = {
                             scope.launch {
                                 importSkillFromCurrentUrl(
@@ -148,7 +149,21 @@ fun ISkillsBrowserScreen(
 
                         webViewClient = object : WebViewClient() {
                             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                pageLoading = true
                                 url?.let { currentUrl = it }
+                            }
+
+                            override fun onPageFinished(view: WebView?, url: String?) {
+                                pageLoading = false
+                                url?.let { currentUrl = it }
+                            }
+
+                            override fun onReceivedError(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                                error: android.webkit.WebResourceError?,
+                            ) {
+                                if (request?.isForMainFrame == true) pageLoading = false
                             }
 
                             // GitHub SPA uses pushState — capture URL changes here too
@@ -184,6 +199,12 @@ fun ISkillsBrowserScreen(
                 },
                 modifier = Modifier.fillMaxSize(),
             )
+
+            if (pageLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
 
             // HUD overlay at bottom
             AnimatedVisibility(

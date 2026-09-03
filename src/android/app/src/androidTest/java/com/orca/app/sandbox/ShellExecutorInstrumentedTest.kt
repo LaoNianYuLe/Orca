@@ -144,7 +144,7 @@ class ShellExecutorInstrumentedTest {
     fun executeCanAccessIDirectories() = runBlocking {
         skipIfNoBoot()
 
-        val result = ShellExecutor.execute(context, "ls /var/i/")
+        val result = ShellExecutor.execute(context, "ls /var/orca/")
         assertEquals(0, result.exitCode)
         assertTrue("Should list workspace", result.output.contains("workspace"))
         assertTrue("Should list attachments", result.output.contains("attachments"))

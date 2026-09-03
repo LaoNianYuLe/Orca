@@ -6,7 +6,7 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.provider.voice.VoiceInputRequest
 import com.orca.app.provider.voice.VoiceProvider
 import com.orca.app.provider.voice.VoiceProviderException
@@ -123,7 +123,7 @@ class ProviderSpeechRecognitionEngine(private val appContext: Context) : SpeechR
     // shortcut/assistant intent that never went through MainActivity's guard.
     // Every caller already treats null as "no provider configured".
     private fun repository() =
-        (appContext.applicationContext as? IApp)
+        (appContext.applicationContext as? OrcaApp)
             ?.takeIf { it.subsystemsReady() }
             ?.providerRepository
 

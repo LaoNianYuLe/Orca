@@ -139,9 +139,9 @@ import com.orca.app.BuildConfig
 import com.orca.app.R
 import com.orca.app.data.FileMentionIndex
 import com.orca.app.logging.AppLogger
-import com.orca.app.ui.components.IAlertDialog
-import com.orca.app.ui.components.IMenu
-import com.orca.app.ui.components.IMenuDivider
+import com.orca.app.ui.components.OrcaAlertDialog
+import com.orca.app.ui.components.OrcaMenu
+import com.orca.app.ui.components.OrcaMenuDivider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -272,7 +272,7 @@ import com.orca.app.data.repository.MemoryRepository
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.browser.BrowserSheet
 import com.orca.app.ui.theme.ChatColors
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 // ─── User Message (right-aligned, iOS: tertiarySystemFill bubble, 18dp radius) ─
 
@@ -319,7 +319,7 @@ internal fun UserMessageBubble(
         Box(
             modifier = Modifier
                 .widthIn(max = bubbleMaxWidth)
-                // pointerInput on the OUTER box (= IMenu's anchor). Long-press
+                // pointerInput on the OUTER box (= OrcaMenu's anchor). Long-press
                 // anywhere on the bubble (text or attachments) opens the menu;
                 // press coords are stored in this box's coordinate space, which
                 // is exactly what DropdownMenu's `offset` parameter expects.
@@ -465,14 +465,14 @@ internal fun UserMessageBubble(
             // alignEnd-branch max 280dp → 196dp) so the popup feels less
             // chunky on user bubbles, which only host 2-3 short items
             // (Copy / Retry / Edit). Override is local to the user-message
-            // call site — other IMenu callers keep the default 240dp
+            // call site — other OrcaMenu callers keep the default 240dp
             // minimum.
             // [T-android-tool-menu-minwidth] Match the tool-pill long-press
             // menu: width = min(220dp, screen width). Wants 220dp but must never
             // exceed the device width on a narrow screen; cap max to the same
             // value so the widthIn(min,max) range is always valid.
             val userMenuWidthDp = minOf(220, LocalConfiguration.current.screenWidthDp).dp
-            IMenu(
+            OrcaMenu(
                 expanded = showMenu,
                 onDismissRequest = { showMenu = false },
                 offset = androidx.compose.ui.unit.DpOffset(0.dp, 6.dp),

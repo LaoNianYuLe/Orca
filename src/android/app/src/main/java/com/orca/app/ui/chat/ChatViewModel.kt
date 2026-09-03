@@ -49,8 +49,8 @@ import com.orca.app.agent.shell.BashismDetector
 import com.orca.app.agent.shell.BashismReminder
 import com.orca.app.agent.shell.OnDemandBash
 import com.orca.app.sandbox.ExecutionCoordinator
-import com.orca.app.terminal.IOpenUrlBroker
-import com.orca.app.terminal.IUrlMarker
+import com.orca.app.terminal.OrcaOpenUrlBroker
+import com.orca.app.terminal.OrcaUrlMarker
 import com.orca.app.tools.AgentTools
 import com.orca.app.tools.FileEditTool
 import com.orca.app.tools.FileReadTool
@@ -285,20 +285,12 @@ class ChatViewModel(
         private const val MAX_AGENT_TURNS = 200
         private const val MIN_MAX_TOKENS = 1024
         /**
-         * Hard ceiling on max_tokens we ever send to a provider, regardless
-         * of what the model itself claims. Some models advertise 128K+
-         * output windows that in practice produce wandering, low-signal
-         * responses and burn through context budget; cap so a single turn
-         * can't run away. Mirrors iOS AIChatViewModel.globalMaxTokensCeiling.
-         * [T-android-global-max-tokens-128k] Raised 64K → 128K (iOS 8a401ab6):
-         * 64K clipped newer large-output models AND the number-budget thinking
-         * tiers whose budget is carved out of max_tokens (Anthropic legacy
-         * high/xhigh/max, Qwen thinking_budget — DashScope clamps it strictly
-         * below max_completion_tokens). Raising only lifts the upper bound —
-         * the value is still clamped by the model's own maxOutputTokens and
-         * the remaining context window in dynamicMaxTokens().
+         * Hard ceiling on max_tokens we ever send to a provider.
+         * Completion cap for a single turn. Catalog maxOutputTokens can be
+         * 128K; sending that on a one-word request burns budget and some
+         * gateways reject it. Clamp here; context window is separate.
          */
-        private const val GLOBAL_MAX_TOKENS_CEILING = 128_000
+        private const val GLOBAL_MAX_TOKENS_CEILING = 16_384
         /**
          * Sentinel prefix on synthetic tool_result output marking
          * user-cancelled calls. Aligned with iOS
@@ -699,6 +691,10 @@ class ChatViewModel(
 
     private val _sessionTitle = MutableStateFlow("New Chat")
     val sessionTitle: StateFlow<String> = _sessionTitle.asStateFlow()
+
+    /** Folder/project name when this chat was opened from a project. */
+    private val _projectName = MutableStateFlow<String?>(null)
+    val projectName: StateFlow<String?> = _projectName.asStateFlow()
 
     /** T-chat-title-pill: category drives the icon shown in the sticky title
      *  pill (mirrors SessionRow's categoryStyle lookup). Null on draft sessions
@@ -1158,19 +1154,19 @@ class ChatViewModel(
 
     // ── @ file-mention picker (mirrors iOS AIChatViewModel mention*) ─────
     /**
-     * Per-app singleton — scans /var/i/{workspace,attachments,shared,
+     * Per-app singleton — scans /var/orca/{workspace,attachments,shared,
      * skills,memory}/<sessionId>/ on demand, ranks matches by basename
      * fuzzy score + scope priority. The composer hooks update*MentionMenu*
      * on every keystroke; the popup composes against [mentionEntries].
      */
     val fileMentionIndex: FileMentionIndex by lazy {
         // T219: provide the SAF-mounted external folders so `@<mountName>`
-        // resolves to /var/i/mounts/<name>/... in the chat composer.
+        // resolves to /var/orca/mounts/<name>/... in the chat composer.
         // PRootKernel holds the MountedFoldersStore reference (set at app
-        // launch by IApp); reading via a closure means the index sees
+        // launch by OrcaApp); reading via a closure means the index sees
         // an up-to-date snapshot on every rescan without a manual refresh.
         FileMentionIndex(
-            filesDir = java.io.File(context.applicationContext.filesDir, "i-global"),
+            filesDir = java.io.File(context.applicationContext.filesDir, "orca-global"),
             mountsProvider = {
                 com.orca.app.sandbox.PRootKernel
                     .mountEntriesForIndex(context.applicationContext)
@@ -2143,7 +2139,7 @@ class ChatViewModel(
         // For dropped images without a linuxPath, lazily spill to disk so
         // the placeholder still gives the model an addressable reference.
         val attachmentsRoot = activeSessionId?.let { sid ->
-            java.io.File(context.filesDir, "i-sessions/$sid/attachments")
+            java.io.File(context.filesDir, "orca-sessions/$sid/attachments")
         }
         val resolvedPaths = HashMap<ImageBudget.ImagePartId, String?>()
         for (ref in images) {
@@ -3261,13 +3257,13 @@ class ChatViewModel(
      * Session ID that disk/shell-bound resources must use. Until the user sends
      * the first message, `realSessionId` is empty and we fall back to the draft
      * key. After `ensureSession()` runs, this returns the persisted id so
-     * `/var/i/{attachments,workspace,...}` mounts, browser artifacts, and
+     * `/var/orca/{attachments,workspace,...}` mounts, browser artifacts, and
      * the PersistentShell all land in a single directory that survives re-entry.
      */
     internal val activeSessionId: String
         get() = realSessionId.ifEmpty { sessionId }
 
-    /** Public accessor used by ChatScreen to resolve session-scoped i:// links. */
+    /** Public accessor used by ChatScreen to resolve session-scoped orca:// links. */
     val currentSessionId: String
         get() = activeSessionId
 
@@ -3319,8 +3315,8 @@ class ChatViewModel(
             // Bring every disk/shell resource that was opened with the draft
             // id over to the real id *before* agent tools start running against
             // the persisted session — otherwise the first tool call (e.g.
-            // yt-dlp writing into /var/i/attachments) would land in
-            // i-sessions/__new__*/… and be orphaned when the user
+            // yt-dlp writing into /var/orca/attachments) would land in
+            // orca-sessions/__new__*/… and be orphaned when the user
             // re-enters the session and everything is resolved via the real
             // id. See debug report 2026-04-21 (TikTok Chinese filename).
             migrateDraftResources(fromDraft = sessionId, toReal = session.id)
@@ -3365,7 +3361,7 @@ class ChatViewModel(
      * browser artifacts (`persistBrowserArtifact`), and the `BrowserTabPool`'s
      * cookie/state store. Before this migration ran, a tool invocation that
      * happened before the user's first message would write into the draft's
-     * `i-sessions/__new__{uuid}` directory and become invisible the
+     * `orca-sessions/__new__{uuid}` directory and become invisible the
      * moment the VM was recreated under the real id — exactly the symptom
      * observed with the Chinese-named TikTok download that appeared to
      * "disappear" after `yt-dlp` reported success.
@@ -3376,7 +3372,7 @@ class ChatViewModel(
         // we can't reuse it after the migration.
         runCatching { ExecutionCoordinator.sessionDidTerminate(fromDraft) }
 
-        val base = java.io.File(context.filesDir, "i-sessions")
+        val base = java.io.File(context.filesDir, "orca-sessions")
         val draftBase = java.io.File(base, fromDraft)
         if (!draftBase.isDirectory) return
         val realBase = java.io.File(base, toReal).apply { mkdirs() }
@@ -3428,6 +3424,14 @@ class ChatViewModel(
         }
     }.getOrDefault(false)
 
+    private suspend fun loadProjectName(folderId: String?) {
+        if (folderId.isNullOrBlank()) {
+            _projectName.value = null
+            return
+        }
+        _projectName.value = chatRepository.getFolder(folderId)?.name?.takeIf { it.isNotBlank() }
+    }
+
     private fun loadSession() {
         // T-android-crash-detected-halt: when CrashFrequencyDetector
         // tripped (#459, ≥3 crashes in last hour), skip the heavy
@@ -3466,6 +3470,7 @@ class ChatViewModel(
                 // Draft session: just set up provider using default group or first entry
                 _sessionTitle.value = "New Chat"
                 _sessionCategory.value = null
+                loadProjectName(initialFolderId)
                 val effectiveGroupId = initialGroupId ?: providerRepository.defaultPrimaryGroupId
                 var resolved = false
                 if (effectiveGroupId != null) {
@@ -3491,6 +3496,7 @@ class ChatViewModel(
             val session = chatRepository.getSession(sessionId) ?: return@launch
             _sessionTitle.value = session.title ?: "New Chat"
             _sessionCategory.value = session.category
+            loadProjectName(session.folderId ?: initialFolderId)
             _memoryEnabled.value = session.memoryEnabled != 0
             // T239: hydrate persisted thinking-mode override. null = unset
             // (use OFF as the legacy default); non-null = explicit user
@@ -4862,12 +4868,7 @@ class ChatViewModel(
             }
         }
 
-        val baseSystemPrompt = buildSystemPrompt()
-        val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-            val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-            if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-            else "$prefix\n\n${baseSystemPrompt ?: ""}"
-        } else baseSystemPrompt
+        val systemPrompt = composeBoundSystemPrompt(provider)
 
         // _isStreaming was already set synchronously by the caller.
         val launchedProvider = provider
@@ -5506,7 +5507,7 @@ class ChatViewModel(
 
             // T132: build the user contentParts in iOS order — caption first
             // (only if non-empty), then per image emit
-            //   text("[attached image: /var/i/attachments/uploads/<f>]")
+            //   text("[attached image: /var/orca/attachments/uploads/<f>]")
             //   ImageData(<bytes>, <mime>)
             // so the caption sits adjacent to the image in the wire payload,
             // and the agent's read_image tool can resolve the same path back
@@ -5558,12 +5559,7 @@ class ChatViewModel(
 
             // Build system prompt
             // Anthropic OAuth requires the Claude Code prefix in the system prompt
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                else "$prefix\n\n${baseSystemPrompt ?: ""}"
-            } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             // Start agent loop with fallback. _isStreaming was set synchronously at top.
             streamLaunched = true
@@ -5648,7 +5644,7 @@ class ChatViewModel(
      *
      *  Also clears [ChatMessage.isAwaitingModelResponse] — without this, an
      *  exception thrown after a tool turn (which sets isAwaitingModelResponse=
-     *  true at runAgentLoop ~4015) leaves the "I is thinking" indicator
+     *  true at runAgentLoop ~4015) leaves the "Orca is thinking" indicator
      *  on screen even though streaming is over. The flag is per-message and
      *  is not implicitly cleared by isStreaming=false. */
     private fun setInlineError(errorText: String) {
@@ -5900,12 +5896,7 @@ class ChatViewModel(
                 }
             }
 
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                else "$prefix\n\n${baseSystemPrompt ?: ""}"
-            } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             // _isStreaming was already set synchronously at the top.
             streamLaunched = true
@@ -6112,7 +6103,7 @@ class ChatViewModel(
     // The agent loop calls [offloadContextIfNeeded] once per turn just before
     // the next API call. When token usage crosses the policy threshold, large
     // tool outputs in older messages are written to disk under
-    // `filesDir/i-sessions/<sid>/offloads/tools/` and replaced in
+    // `filesDir/orca-sessions/<sid>/offloads/tools/` and replaced in
     // [agentHistory] by `[CONTEXT OFFLOADED] … <linux path>` stubs. The model
     // can later `file_read` the path to retrieve the original content.
     //
@@ -6507,6 +6498,7 @@ class ChatViewModel(
 
         // Fallback state — mirrors iOS streamWithGroupFallback
         var currentProvider = provider
+        var activeSystemPrompt = systemPrompt
         val remainingFallbacks = fallbackProviders.toMutableList()
         val fallbackReasons = mutableListOf<String>()
 
@@ -6514,7 +6506,7 @@ class ChatViewModel(
         val allToolInputs = mutableMapOf<String, String>()
 
         // Add placeholder assistant message (once). Mark as awaiting so the
-        // "I is thinking" indicator shows during the initial request gap
+        // "Orca is thinking" indicator shows during the initial request gap
         // before the first stream chunk arrives. Mirrors iOS isAwaitingModelResponse.
         // T300: snapshot the user's current thinking level at message
         // creation so the renderer can hide Deep Thinking blocks for
@@ -6615,7 +6607,7 @@ class ChatViewModel(
                     // placeholder, while `loopExitedNormally = true` below
                     // deliberately skips finalizeAtTurnLimit at the loop tail.
                     //
-                    // Without this the bubble stays on "I is thinking"
+                    // Without this the bubble stays on "Orca is thinking"
                     // forever — the streamJob's finally only clears the GLOBAL
                     // _isStreaming, not the per-message flags. Reachable with no
                     // failure at all: ContextPolicy gives every model with a
@@ -6773,7 +6765,7 @@ class ChatViewModel(
                     // no compact has happened, so the common path stays zero-copy.
                     currentProvider.streamMessage(
                         applyRequestImageBudget(effectiveAgentHistory()),
-                        systemPrompt, dynamicMaxTokens(currentProvider, lastContextTokens),
+                        activeSystemPrompt, dynamicMaxTokens(currentProvider, lastContextTokens),
                         tools = agentTools,
                         thinkingLevel = if (currentModelSupportsReasoning) _thinkingLevel.value else ThinkingLevel.OFF,
                     ).collect { chunk ->
@@ -7097,7 +7089,7 @@ class ChatViewModel(
                         // media (gpt-image-2 image). Inline chat display is out
                         // of scope for this change — the image is delivered via
                         // sendMessage→LLMResponse.mediaAttachments for the
-                        // i-model-use CLI path. No-op here so the chat agent
+                        // orca-model-use CLI path. No-op here so the chat agent
                         // loop compiles with the new chunk variant.
                     }
                 }
@@ -7279,8 +7271,14 @@ class ChatViewModel(
                             }
                         }
                         // Flash ONLY on a genuine model switch — never on a
-                        // transparent same-model endpoint retry.
-                        if (isRealModelChange) _fallbackTrigger.value++
+                        // transparent same-model endpoint retry. Rebuild the
+                        // system prompt on a real switch so Runtime context
+                        // `chat_backend_model_id` matches the next request's
+                        // `model` field; same-id endpoint retries keep the suffix.
+                        if (isRealModelChange) {
+                            _fallbackTrigger.value++
+                            activeSystemPrompt = composeBoundSystemPrompt(currentProvider)
+                        }
                         // Persist the fallback model so re-entering the session starts from here
                         val groupId = _selectedGroupId.value
                         if (groupId != null && newEntry != null) {
@@ -7814,7 +7812,7 @@ class ChatViewModel(
             }
 
             // Update UI with tool statuses. Mark as awaiting the next model
-            // response so "I is thinking" shows during the network gap
+            // response so "Orca is thinking" shows during the network gap
             // between tool results being sent and the next turn's first chunk.
             // Mirrors iOS isAwaitingModelResponse.
             withContext(Dispatchers.Main) {
@@ -8005,7 +8003,7 @@ class ChatViewModel(
         return when (name) {
             FileReadTool.NAME -> {
                 val result = FileReadTool.execute(argsJson, activeSessionId, context)
-                // Record skill usage when SKILL.md under /var/i/skills/<id>/ is read.
+                // Record skill usage when SKILL.md under /var/orca/skills/<id>/ is read.
                 if (result.success) {
                     runCatching {
                         val readPath = JSONObject(argsJson).optString("path", "")
@@ -8028,7 +8026,7 @@ class ChatViewModel(
             // resolveSessionHostPath like file_read/write/edit do — without
             // these, the tool consults the global last-writer-wins
             // bindMounts map and would surface another session's
-            // /var/i/{workspace,attachments,offloads,browser} files.
+            // /var/orca/{workspace,attachments,offloads,browser} files.
             ReadImageTool.NAME -> executeReadImageTool(argsJson)
             "shell_execute" -> executeShellCommand(argsJson, toolId, toolBlocks, assistantId, currentText)
             "browser_use" -> executeBrowserUseTool(argsJson)
@@ -8104,7 +8102,7 @@ class ChatViewModel(
             // [T-vision-group-attribution / GH#182] iOS rewrites the tool block's
             // live content here so the card names the model as it works. Android
             // has no equivalent channel — no tool streams partial output to its
-            // card, and the progress label ("I is reading Image",
+            // card, and the progress label ("Orca is reading Image",
             // ChatToolFormatting.kt:102) is a static per-tool string. Building
             // that plumbing is a separate change, so for now the per-attempt
             // signal goes to the log, where a fallback is still traceable. The
@@ -8175,8 +8173,8 @@ class ChatViewModel(
         val b64 = android.util.Base64.encodeToString(
             normalized.toByteArray(Charsets.UTF_8), android.util.Base64.NO_WRAP)
         return "( command -v bash >/dev/null 2>&1 || exit $BASH_MISSING_SENTINEL; " +
-            "printf %s '$b64' | base64 -d > /tmp/.i-exec-\$\$.sh && " +
-            "bash /tmp/.i-exec-\$\$.sh; rc=\$?; rm -f /tmp/.i-exec-\$\$.sh; exit \$rc )"
+            "printf %s '$b64' | base64 -d > /tmp/.orca-exec-\$\$.sh && " +
+            "bash /tmp/.orca-exec-\$\$.sh; rc=\$?; rm -f /tmp/.orca-exec-\$\$.sh; exit \$rc )"
     }
 
     private suspend fun executeShellCommand(
@@ -8274,14 +8272,14 @@ class ChatViewModel(
                 command = command,
                 timeout = timeoutSec * 1000L,
                 lineCallback = lc@{ rawLine ->
-                    // Strip any OSC IOpenURL markers emitted by
-                    // /usr/local/bin/i-open and forward the captured
+                    // Strip any OSC OrcaOpenURL markers emitted by
+                    // /usr/local/bin/orca-open and forward the captured
                     // URLs to the broker so the chat screen can present the
                     // in-app preview. Lines that were *entirely* a marker
                     // (nothing visible afterwards) are dropped so the tool
                     // output doesn't grow blank rows.
-                    val (cleanedLine, capturedUrls) = IUrlMarker.extract(rawLine)
-                    for (raw in capturedUrls) IOpenUrlBroker.offer(raw)
+                    val (cleanedLine, capturedUrls) = OrcaUrlMarker.extract(rawLine)
+                    for (raw in capturedUrls) OrcaOpenUrlBroker.offer(raw)
                     if (cleanedLine.isEmpty() && rawLine.isNotEmpty()) return@lc
 
                     val idx = toolBlocks.indexOfFirst { it.id == toolId }
@@ -8319,8 +8317,8 @@ class ChatViewModel(
             // Also scrub markers from the aggregated one-shot output and
             // broker any URLs that only appeared there (defensive — handles
             // executors that don't fire lineCallback for every line).
-            val (cleanedOutput, oneShotUrls) = IUrlMarker.extract(result.output)
-            for (raw in oneShotUrls) IOpenUrlBroker.offer(raw)
+            val (cleanedOutput, oneShotUrls) = OrcaUrlMarker.extract(result.output)
+            for (raw in oneShotUrls) OrcaOpenUrlBroker.offer(raw)
             val output = if (cleanedOutput.isBlank()) "(no output)" else cleanedOutput
             val exitInfo = if (result.exitCode != 0) " (exit code ${result.exitCode})" else ""
             // Exit code 124 is the BusyBox/GNU timeout-utility convention for
@@ -8376,8 +8374,8 @@ class ChatViewModel(
             var persistentImagePath: String? = result.imageFilePath
             var inferenceBytes: ByteArray? = null
 
-            // Persist browser screenshots to /var/i/browser/<session>/ so the
-            // agent can reference them via i:// in subsequent tool calls
+            // Persist browser screenshots to /var/orca/browser/<session>/ so the
+            // agent can reference them via orca:// in subsequent tool calls
             // (mirrors iOS AIChatViewModel case "browser_use").
             val base64 = result.base64Image
             var linuxImagePath: String? = null
@@ -8393,7 +8391,7 @@ class ChatViewModel(
                     val persistPath = persistBrowserArtifact(filename, raw)
                     if (persistPath != null) {
                         persistentImagePath = persistPath
-                        linuxImagePath = "/var/i/browser/$filename"
+                        linuxImagePath = "/var/orca/browser/$filename"
                         linuxPathToIURL(linuxImagePath)?.let {
                             output = "$output\ni_url: $it"
                         }
@@ -8406,7 +8404,7 @@ class ChatViewModel(
             val fetchName = result.fetchedFileName
             if (fetchData != null && fetchName != null) {
                 persistBrowserArtifact(fetchName, fetchData)
-                linuxPathToIURL("/var/i/browser/$fetchName")?.let {
+                linuxPathToIURL("/var/orca/browser/$fetchName")?.let {
                     output = "$output\ni_url: $it"
                 }
             }
@@ -8427,15 +8425,15 @@ class ChatViewModel(
     }
 
     /**
-     * Write bytes to <filesDir>/i-sessions/<sessionId>/browser/<filename>.
-     * That directory is bind-mounted to `/var/i/browser/` so the agent can
-     * read it back via file_read / file_write / i:// URLs.
+     * Write bytes to <filesDir>/orca-sessions/<sessionId>/browser/<filename>.
+     * That directory is bind-mounted to `/var/orca/browser/` so the agent can
+     * read it back via file_read / file_write / orca:// URLs.
      * Returns the host absolute path on success, null otherwise.
      */
     private fun persistBrowserArtifact(filename: String, data: ByteArray): String? {
         val sid = activeSessionId.takeIf { it.isNotEmpty() } ?: return null
         return try {
-            val dir = java.io.File(context.filesDir, "i-sessions/$sid/browser").apply { mkdirs() }
+            val dir = java.io.File(context.filesDir, "orca-sessions/$sid/browser").apply { mkdirs() }
             val file = java.io.File(dir, filename)
             file.writeBytes(data)
             file.absolutePath
@@ -8446,11 +8444,11 @@ class ChatViewModel(
     }
 
     /**
-     * Convert a Linux path under /var/i/ to a percent-encoded i:// URL.
+     * Convert a Linux path under /var/orca/ to a percent-encoded orca:// URL.
      * Mirrors iOS AIChatViewModel.linuxPathToIURL.
      */
     private fun linuxPathToIURL(path: String): String? {
-        val prefix = "/var/i/"
+        val prefix = "/var/orca/"
         if (!path.startsWith(prefix)) return null
         val rest = path.removePrefix(prefix)
         val slash = rest.indexOf('/')
@@ -8458,7 +8456,7 @@ class ChatViewModel(
         val namespace = rest.substring(0, slash)
         val filename = rest.substring(slash + 1)
         val encoded = java.net.URLEncoder.encode(filename, "UTF-8").replace("+", "%20")
-        return "i://$namespace/$encoded"
+        return "orca://$namespace/$encoded"
     }
 
     /**
@@ -8908,21 +8906,42 @@ class ChatViewModel(
         return entity.id
     }
 
-    private fun buildSystemPrompt(): String? {
+    /**
+     * System prompt bound to [sending] — the provider that will actually
+     * `streamMessage`. Model id in Runtime context is [LLMProvider.model],
+     * the same object OpenAI/Anthropic/Gemini put in the JSON `model` field.
+     */
+    private fun composeBoundSystemPrompt(
+        sending: LLMProvider? = currentProvider,
+    ): String? {
+        val sender = sending ?: currentProvider
+        val base = buildSystemPrompt(sender?.model ?: currentModel)
+        val oauth = sender as? com.orca.app.provider.anthropic.AnthropicProvider
+        if (oauth?.isOAuth == true) {
+            val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
+            if (base?.startsWith(prefix) == true) return base
+            return "$prefix\n\n${base ?: ""}"
+        }
+        return base
+    }
+
+    private fun buildSystemPrompt(
+        wireModel: LLMModel? = currentProvider?.model ?: currentModel,
+    ): String? {
         // Cache-friendly layout: keep `base` byte-stable by stripping out anything
         // that varies per request, then append a "Runtime context" suffix at the
         // very end with all the dynamic bits (date, timezone, locale, configured
-        // i-model-use count). OpenAI / DeepSeek prompt caching is prefix-
-        // based, so the longer the static head, the better the hit rate.
-        // Pre-T122 the prompt embedded `Current time: yyyy-MM-dd HH:mm` mid-base,
-        // which guaranteed cache misses across minute boundaries — even a quick
-        // follow-up could land on a different minute and pay full ingestion.
+        // orca-model-use count, this-turn API model id). OpenAI / DeepSeek prompt
+        // caching is prefix-based, so the longer the static head, the better the
+        // hit rate. Pre-T122 the prompt embedded `Current time: yyyy-MM-dd HH:mm`
+        // mid-base, which guaranteed cache misses across minute boundaries — even
+        // a quick follow-up could land on a different minute and pay full ingestion.
         val today = java.time.LocalDate.now()
         val dateStr = today.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
         val tzId = java.util.TimeZone.getDefault().id
         val lang = context.resources.configuration.locales[0].toLanguageTag()
 
-        // Count of agent-loop-visible models for the `i-model-use` CLI
+        // Count of agent-loop-visible models for the `orca-model-use` CLI
         // (exposed as a shell command via the native_offload handler).
         val modelUseCount = try { providerRepository.resolvedAgentLoopEntries().size } catch (_: Exception) { 0 }
 
@@ -8937,6 +8956,7 @@ class ChatViewModel(
         // sentence with its original single trailing space — the full
         // assembled prompt then matches the pre-SOUL prompt byte-for-byte.
         val identitySection = com.orca.app.agent.SystemPromptBuilder.identitySection(context)
+        val identityVsBackendRule = com.orca.app.agent.ChatRuntimeContext.IDENTITY_VS_BACKEND_RULE
         // [T-memory-toggle-gates-injection-and-tools-android] Mirror the iOS
         // gate: when memory is disabled for this session, replace the
         // "memory_write / memory_get" tool bullets and the "Memory system:"
@@ -8962,7 +8982,7 @@ class ChatViewModel(
 
 Memory system (currently ENABLED):
 - memory_write writes to today's daily log (YYYY-MM-DD.md) — use it for session notes, key facts, project context, things learned, and action items.
-- GLOBAL.md (/var/i/memory/GLOBAL.md) stores persistent preferences, settings, and general-purpose conventions. To read it, use file_read (NOT memory_get). To update it, use file_read first then file_edit. If GLOBAL.md does not exist yet, use file_write to create it directly.
+- GLOBAL.md (/var/orca/memory/GLOBAL.md) stores persistent preferences, settings, and general-purpose conventions. To read it, use file_read (NOT memory_get). To update it, use file_read first then file_edit. If GLOBAL.md does not exist yet, use file_write to create it directly.
 - IMPORTANT: Only write to GLOBAL.md when the user explicitly asks (e.g. 'remember this globally', 'save to global memory'). Before editing, deduplicate and clean up — avoid ambiguity, repetition, or daily-log-style entries. GLOBAL.md should contain only concise, reusable knowledge (preferences, settings, conventions), NOT session logs or transient context.
 - Use memory_get to recall past knowledge before starting tasks — check if there are relevant memories that can help.
 - Proactively save memories (via memory_write to daily log) when you discover user preferences or important patterns — don't wait to be asked.
@@ -8974,10 +8994,10 @@ Memory system (currently ENABLED):
 
 Memory system (currently DISABLED):
 - The user has turned OFF memory injection and memory tools for this session. GLOBAL.md and recent daily logs are NOT included in this prompt, and the memory_write / memory_get tools are NOT available — do not attempt to call them.
-- If the user asks why earlier memories aren't visible, or asks you to save something, tell them memory is currently disabled and point them at the /memory slash command or [Settings → Memory](i://settings/memory) to re-enable it.
+- If the user asks why earlier memories aren't visible, or asks you to save something, tell them memory is currently disabled and point them at the /memory slash command or [Settings → Memory](orca://settings/memory) to re-enable it.
 - SOUL.md (personality / identity) is unaffected by this toggle; the persona section above still applies."""
         }
-        val base = identitySection + """You should proactively use shell commands to accomplish the user's tasks — installing packages (apk add), writing and running scripts, managing files, networking, and any other operations a Linux terminal can perform.
+        val base = identitySection + identityVsBackendRule + """You should proactively use shell commands to accomplish the user's tasks — installing packages (apk add), writing and running scripts, managing files, networking, and any other operations a Linux terminal can perform.
 
 Available tools:
 - shell_execute: Run any shell command. Each invocation is an isolated process with stdout/stderr captured. Prefer this for most tasks — it is a real Linux environment with persistent filesystem. Common tools (python3, pip, curl, wget, git, ssh, etc.) can be installed via apk add; Python packages via pip install. Use `which <cmd>` to check if a tool is already installed before running apk add — many packages persist across sessions. When you need to wait before checking results (e.g. polling, waiting for a process), use the `delay` parameter instead of `sleep` in the command — delay blocks the agent flow without occupying the shell, so other concurrent tasks can use it during the wait. This avoids resource contention. Execution discipline for long-running or dispatched work: make tool calls immediately instead of describing intentions, and keep working until the task is complete. Without a scheduler or timed-callback tool, `delay` is your ONLY wait mechanism within a turn — to follow up on something still running, chain delay-then-check calls at a task-appropriate interval until you have the result or hit a sensible retry cap. NEVER end a turn with a promise of future action: 'I'll keep monitoring', 'will sync the result later', and ending right after a single still-running status check with 'let's keep waiting' are all the same violation — once your turn ends, NOTHING runs until the user's next message. If polling to completion is genuinely not worth blocking the turn, close honestly instead: state that the task keeps running in the background, that you will only learn its outcome when the user next messages (or they ask you to check), and — if something must fire on a schedule beyond this conversation — point them to the options under 'Scheduled tasks' later in this prompt (native alarm reminder or a system-level schedule; those notify the USER, they do not wake you).
@@ -8987,33 +9007,33 @@ Available tools:
 - browser_use: Web browsing (navigate, screenshot, click, type, get_text, scroll, scroll_and_collect, get_readable, get_backbone, fetch, etc.). Starts with a desktop Chrome user agent. Use screenshot to see the page.
   当 browser_use 触达 Google 登录 / OAuth 页（accounts.google.com、signin.google.com、myaccount.google.com、oauth2.googleapis.com 等）或网页返回 "disallowed_useragent" / 403 包含 "browser is not secure" 字样时，**不要重试或尝试登录** — Google 永久禁止 in-app WebView 完成登录，重试只会浪费 turn。改为告诉用户："此页面需要在系统 Chrome 完成登录" 并给出可点击的 Markdown link [在 Chrome 中打开](https://accounts.google.com/...)。点该 link 时 app 会跳出 Custom Tab；用户在 Chrome 完成操作后，请他**把所需结果（邮件正文 / 文档摘要 / 表格数据）粘贴回 chat**，你再继续帮他处理。这是 Android 平台限制，不是 bug。${toolListMemoryBullets}
 
-Shared directory /var/i/ (bidirectional read/write between shell and app):
-  /var/i/attachments/ — Media files (images, audio, video). Display inline with ![desc](i://attachments/filename).
-  /var/i/workspace/   — Working files (scripts, data, configs). Link with [name](i://workspace/filename).
-  /var/i/offloads/    — Auto-saved large outputs. Read with file_read.
-  /var/i/browser/     — Browser screenshots and extracts.
-  /var/i/shared/      — Cross-session shared storage for artifacts and documents. Organize by project or topic (e.g. shared/myproject/, shared/datasets/). Do NOT store temporary files here.
-  /var/i/memory/GLOBAL.md    — Persistent global memory (read-only, user-maintained via Settings).
-  /var/i/memory/YYYY-MM-DD.md — Daily memory log.
-  /var/i/mounts/<name>/      — User-mounted external folders from Settings → Mount External Folders. Presence and names vary per user; check this directory first when the task references external/user files. Some mounts may be read-only — file_write / file_edit will reject writes with a clear error message.
+Shared directory /var/orca/ (bidirectional read/write between shell and app):
+  /var/orca/attachments/ — Media files (images, audio, video). Display inline with ![desc](orca://attachments/filename).
+  /var/orca/workspace/   — Working files (scripts, data, configs). Link with [name](orca://workspace/filename).
+  /var/orca/offloads/    — Auto-saved large outputs. Read with file_read.
+  /var/orca/browser/     — Browser screenshots and extracts.
+  /var/orca/shared/      — Cross-session shared storage for artifacts and documents. Organize by project or topic (e.g. shared/myproject/, shared/datasets/). Do NOT store temporary files here.
+  /var/orca/memory/GLOBAL.md    — Persistent global memory (read-only, user-maintained via Settings).
+  /var/orca/memory/YYYY-MM-DD.md — Daily memory log.
+  /var/orca/mounts/<name>/      — User-mounted external folders from Settings → Mount External Folders. Presence and names vary per user; check this directory first when the task references external/user files. Some mounts may be read-only — file_write / file_edit will reject writes with a clear error message.
 
-The i:// URL scheme:
-  i://attachments/file.png  →  /var/i/attachments/file.png
-  i://workspace/data.csv    →  /var/i/workspace/data.csv
-  i://shared/project/f.txt  →  /var/i/shared/project/f.txt
+The orca:// URL scheme:
+  orca://attachments/file.png  →  /var/orca/attachments/file.png
+  orca://workspace/data.csv    →  /var/orca/workspace/data.csv
+  orca://shared/project/f.txt  →  /var/orca/shared/project/f.txt
 
-IMPORTANT: i:// URLs are app-internal — they are NOT web URLs. Do NOT pass i:// action URLs (open_terminal, views, settings) to browser_use — those are app deep links, use Markdown links in chat instead. However, i:// resource URLs CAN be opened in browser_use with navigate. All directories under /var/i/ are accessible: workspace, attachments, offloads, shared, etc. The built-in browser fully supports i:// — HTML pages and all sub-resources (JS, CSS, images, fonts, etc.) referenced via i:// absolute URLs or relative paths resolve correctly within the current session. When building multi-file web projects, use file_write to create files in the same directory (e.g. /var/i/workspace/myapp/), then reference sub-resources with relative paths in HTML (e.g. <link href="style.css">, <script src="app.js">, <img src="logo.png">). The browser resolves relative paths against the i:// base URL automatically. Cross-directory references also work with absolute i:// URLs (e.g. <img src="i://attachments/photo.png"> from a workspace HTML page). Navigate to the entry HTML to preview, e.g. i://workspace/myapp/index.html.
-To display a i:// URL in chat, write it as a Markdown link or image (e.g. [name](i://...)) — the app handles it when the user taps it.
-IMPORTANT: i:// URLs MUST be percent-encoded. Non-ASCII characters (Chinese, emoji, spaces, etc.) in filenames will break Markdown rendering if not encoded. Use the i_url from tool results directly — it is already encoded. If you construct a i:// URL manually, percent-encode the filename (e.g. %E4%B8%AD%E6%96%87 for non-ASCII characters).
-When you write files to /var/i/, the tool result includes a i_url you can embed directly in Markdown.
-Inline media — use the ![desc](i://...) image syntax for ALL of images, audio, AND video. The same ![]() syntax renders an inline audio player or video player, not just images:
-  - Images: ![chart](i://attachments/chart.png)   → inline image (.png/.jpg/.gif/.webp)
-  - Audio:  ![song](i://attachments/song.mp3)     → inline audio player (.mp3/.m4a/.wav)
-  - Video:  ![clip](i://attachments/clip.mp4)     → inline video player (.mp4/.mov/.m4v)
+IMPORTANT: orca:// URLs are app-internal — they are NOT web URLs. Do NOT pass orca:// action URLs (open_terminal, views, settings) to browser_use — those are app deep links, use Markdown links in chat instead. However, orca:// resource URLs CAN be opened in browser_use with navigate. All directories under /var/orca/ are accessible: workspace, attachments, offloads, shared, etc. The built-in browser fully supports orca:// — HTML pages and all sub-resources (JS, CSS, images, fonts, etc.) referenced via orca:// absolute URLs or relative paths resolve correctly within the current session. When building multi-file web projects, use file_write to create files in the same directory (e.g. /var/orca/workspace/myapp/), then reference sub-resources with relative paths in HTML (e.g. <link href="style.css">, <script src="app.js">, <img src="logo.png">). The browser resolves relative paths against the orca:// base URL automatically. Cross-directory references also work with absolute orca:// URLs (e.g. <img src="orca://attachments/photo.png"> from a workspace HTML page). Navigate to the entry HTML to preview, e.g. orca://workspace/myapp/index.html.
+To display a orca:// URL in chat, write it as a Markdown link or image (e.g. [name](orca://...)) — the app handles it when the user taps it.
+IMPORTANT: orca:// URLs MUST be percent-encoded. Non-ASCII characters (Chinese, emoji, spaces, etc.) in filenames will break Markdown rendering if not encoded. Use the i_url from tool results directly — it is already encoded. If you construct a orca:// URL manually, percent-encode the filename (e.g. %E4%B8%AD%E6%96%87 for non-ASCII characters).
+When you write files to /var/orca/, the tool result includes a i_url you can embed directly in Markdown.
+Inline media — use the ![desc](orca://...) image syntax for ALL of images, audio, AND video. The same ![]() syntax renders an inline audio player or video player, not just images:
+  - Images: ![chart](orca://attachments/chart.png)   → inline image (.png/.jpg/.gif/.webp)
+  - Audio:  ![song](orca://attachments/song.mp3)     → inline audio player (.mp3/.m4a/.wav)
+  - Video:  ![clip](orca://attachments/clip.mp4)     → inline video player (.mp4/.mov/.m4v)
 Do NOT use the [text](url) link form for audio/video when you want them to play inline — that only produces a tappable link. Use ![]() to embed an actual player.
-For non-media files, use Markdown links: [filename](i://workspace/filename).
-Tappable link previews: text/code (.py/.json/.md/etc), images, audio, video, HTML, and PDF files open native previews when the user taps a [name](i://...) link.
-Use Markdown links for all non-media i:// files — the user can tap to preview them directly in chat.
+For non-media files, use Markdown links: [filename](orca://workspace/filename).
+Tappable link previews: text/code (.py/.json/.md/etc), images, audio, video, HTML, and PDF files open native previews when the user taps a [name](orca://...) link.
+Use Markdown links for all non-media orca:// files — the user can tap to preview them directly in chat.
 
 File creation guidelines:
 - Use file_write to CREATE new files. Use file_edit to MODIFY existing files. The shell is BusyBox ash: heredoc syntax (cat << EOF, python3 << 'EOF') may mis-parse braces, quotes, or special characters and execute abnormally — avoid it whenever possible, and prefer file_write over echo/printf for writing file contents. When you hit escaping or parsing errors with long inline content, write the content to a file first (file_write), then pass or execute the file (e.g. `python3 /tmp/script.py`).
@@ -9024,7 +9044,7 @@ File creation guidelines:
 - Also (BusyBox ash, NOT bash): `**` recursive glob (globstar) is NOT supported. Use `find <dir> -name '*.ext'` for recursive file search, and pipe to `xargs` for tools like `wc`. Brace expansion ({a,b,c}) and bash arrays (arr=(...), ${'$'}{arr[@]}) are also unsupported — use space-separated strings with a for loop or multiple arguments instead.
 - Python packages: many PyPI packages (numpy, pandas, scipy, pillow, etc.) lack musllinux_aarch64 wheels and will fail to build from source. Use Alpine's native packages instead: `apk search py3-<name>` then `apk add py3-numpy py3-pandas py3-matplotlib py3-pillow py3-scipy py3-requests`. Only fall back to `pip install` for pure-Python packages not available via apk. For matplotlib, always set `matplotlib.use('Agg')` before importing pyplot — there is no display server in the sandbox.
 - Background services: each shell_execute runs in an isolated process. When starting a background server (e.g. `python3 -m http.server &`), you MUST redirect stdout/stderr to avoid SIGPIPE when the shell exits: `python3 -m http.server 8765 > /dev/null 2>&1 &`. Without redirection the server dies silently after the command finishes.
-- File search: when looking for user files, do NOT scan the whole filesystem. Search under /var/i/ first (workspace/attachments/shared for the current session, mounts/* for user-provided external folders). Only widen the scope if the file is clearly not under /var/i/.
+- File search: when looking for user files, do NOT scan the whole filesystem. Search under /var/orca/ first (workspace/attachments/shared for the current session, mounts/* for user-provided external folders). Only widen the scope if the file is clearly not under /var/orca/.
 
 Tool call style:
 - Default: do not narrate routine, low-risk tool calls — just call the tool directly.
@@ -9038,8 +9058,8 @@ Tone and style:
 - Be concise. Prefer action over explanation — when the user asks for something that can be done via shell, do it directly.
 
 Android-only tools (android-* CLIs):
-CLI tools at /usr/local/bin with the `android-` prefix give you access to Android framework capabilities and on-device control. Invoke them from shell_execute like any other binary — they are already on PATH. Each tool prints JSON (or a short human-readable line) and supports --help for full usage. Tools gated by Shizuku or AccessibilityService return permission_denied when not granted — handle that gracefully and point the user at [Settings → Permissions](i://settings/permissions).
-- android-alarm — schedule alarms/timers in the system Clock app (`schedule <HH:MM> --label <L> [--repeat ONCE|DAILY|WEEKDAYS]`, `timer <seconds> --label <L>`, `open`). Alarms/timers are saved into the user's Android Clock — list/cancel are not supported (no system query API); tell the user to manage them from the Clock app's Alarms/Timers tabs (or `android-alarm open` / i://views/alarm).
+CLI tools at /usr/local/bin with the `android-` prefix give you access to Android framework capabilities and on-device control. Invoke them from shell_execute like any other binary — they are already on PATH. Each tool prints JSON (or a short human-readable line) and supports --help for full usage. Tools gated by Shizuku or AccessibilityService return permission_denied when not granted — handle that gracefully and point the user at [Settings → Permissions](orca://settings/permissions).
+- android-alarm — schedule alarms/timers in the system Clock app (`schedule <HH:MM> --label <L> [--repeat ONCE|DAILY|WEEKDAYS]`, `timer <seconds> --label <L>`, `open`). Alarms/timers are saved into the user's Android Clock — list/cancel are not supported (no system query API); tell the user to manage them from the Clock app's Alarms/Timers tabs (or `android-alarm open` / orca://views/alarm).
 - android-calendar — read/write the device calendar (`list --start YYYY-MM-DD [--end ...] [--max N]`; `create --title <T> --start <ISO> [--end <ISO>] [--description <D>] [--location <L>] [--all-day]`).
 - android-clipboard — `get | set <text> [--label L] | clear`.
 - android-contacts — `list [--max N] | search <query> [--max N] | get <id> | delete <id>`. Requires READ_CONTACTS (delete also needs WRITE_CONTACTS).
@@ -9054,17 +9074,17 @@ CLI tools at /usr/local/bin with the `android-` prefix give you access to Androi
 - android-weather <latitude> <longitude> — Open-Meteo forecast (current + hourly + daily). No API key needed.
 - android-shizuku-cli — invoke privileged Android system APIs (package management, settings, system commands) via Shizuku when granted. Curated subcommands return structured JSON; for anything not covered, fall back to `android-shizuku-cli exec <any shell command>` which runs the command via `sh -c` with Shizuku privilege (same surface as `adb shell`). Run with no args (or --help) for the subcommand list.
 - android-a11y-cli — drive system UI (read screen, tap, type, swipe, scroll) via the Android AccessibilityService when enabled. Run with no args (or --help) for the subcommand list.
-- i-open <url-or-path>: Opens a resource inside I without leaving the chat. Accepts http/https URLs (→ built-in WebKit preview) and chat-resource file paths under /var/i/** (→ built-in file preview, routed by extension: images to the image viewer, .md to markdown preview, .html to HTML preview, .pdf/office docs to QuickLook, audio/video to the media player, else share sheet). Examples: i-open https://example.com, i-open /var/i/workspace/report.md, i-open /var/i/attachments/chart.png. Prefer this over android-open for anything that can be previewed in-app so the user doesn't lose conversation context. Use android-open for non-web schemes (tel:, mailto:, geo:, intent:, etc.) or when the user explicitly wants the system handler.
-- i-sessions-cli: Manage chat sessions. `list` recent or by date range, `search --keywords` cross-session, `messages --id` to read, `send` to create/continue a session, `retry` to re-run, `status` to check, `open` to navigate the app UI. Run --help for full options.
-- i-model-use: Invoke other LLM models pre-configured by the user. Use `i-model-use list` to see them (includes each model's modality capabilities like image_output, audio_output, etc.), `i-model-use search <query>` to filter by name/provider. `i-model-use run --model <id_or_name>` sends an OpenAI-compatible messages request; pass input via --input <json_file> or stdin, output goes to stdout or --output <path>. The OpenAI shape is the PRIMARY input for every model and modality; standard params are auto-converted to the underlying provider, so do not hand-write provider-native bodies as the primary input. For provider-specific extras the standard schema doesn't model (web-search plugins, image-to-image fields, TTS/video or other custom endpoints), escape hatches exist for OpenAI-compatible providers (they error or are ignored on Anthropic/Gemini models): `extra_body` (object merged verbatim into the request body), a custom `endpoint` path, and a top-level `passthrough` envelope for fully verbatim requests with RAW (unparsed) responses. Results may carry `warnings` (fields that were ignored/downgraded and why) and `applied_extras` (which extras actually took effect) — read them to self-correct. Run --help for the full contract before using these. Models may support multimodal output (image generation, TTS/audio, video) — check the modalities field in list output. For image_output models, pass generation params in the input JSON: top-level `n`/`size`/`quality`/`prompt` (OpenAI /images/generations style) or `generation_config.{aspect_ratio,image_size,number_of_images,person_generation}` (Gemini). Run with --help for full usage.
-- i-config: Read or change I settings programmatically. Run `i-config --help` for subcommands and `i-config topic-help <topic>` for details on a specific area. For array-valued fields (e.g. `models`, `groups`, `envvars`, `defaults.agentLoopEntries`) the `get` subcommand accepts `--filter <keywords>` (whitespace-AND, case-insensitive substring match against each element's JSON) and `--page <N> --page-size <N>` (default 20, max 100) — use these instead of dumping the full list when you only need a subset, and check the response's `pagination` / `agent_hint` fields for the next-page command. Every write triggers an in-app confirmation sheet and is logged to a revertable audit (1000-entry rolling log). After a successful change the response includes a `user_message` field — relay it (or paraphrase) so the user knows how to review or revert via Settings → Logs → Config Changes. If the call returns `permission_denied`, the user has disabled i-config in [Settings → Permissions](i://settings/permissions); relay that message and don't retry. You CAN add new providers and write their `apiKey` (literal string OR a `${'$'}${'$'}ENV_VAR` reference to copy from an env var at write time), but `get` never echoes API keys / OAuth tokens / env var values back — those reads return `permission_denied` by design. OAuth tokens and env var values are not settable via this tool; for an env var, point the user at [Set ENV_NAME](i://settings/environments?create_key=ENV_NAME&create_value=) so they enter the value themselves.
-- i-scheduled: Create and manage scheduled tasks — prompts that run automatically at a chosen time. `i-scheduled create --time HH:MM --prompt "..." [--label L] [--repeat once|daily|weekdays|custom --days mon,tue,...] [--target new|follow-up|rerun --session <id> --message <id>] [--model <modelId>] [--start YYYY-MM-DD] [--end YYYY-MM-DD]` schedules it; `list` shows existing tasks (with nextTriggerMs and run history), `delete --id <taskId>`, `enable`/`disable --id <taskId>`, and `run --id <taskId>` fires one immediately. Target modes: `new` runs the prompt in a fresh chat; `follow-up` appends the prompt to an existing chat (--session); `rerun` re-runs an existing chat (--session) from a chosen user message (--message). Use this when the user asks to "remind me / do X every morning / run this later / schedule a task". Run --help for full usage.
-Interactive terminal: i://open_terminal opens a terminal for tasks that require interactive stdin (passwords, ssh, TUI apps like htop/vi). Write it as a Markdown link in your response — the app opens it when tapped. The optional init_command parameter pre-fills (NOT executes) a command; it MUST be fully percent-encoded (spaces → %20, & → %26, | → %7C, etc.). Only use this for genuinely interactive sessions — for everything else, use shell_execute. Examples: [Open Terminal](i://open_terminal), [Login to SSH](i://open_terminal?init_command=ssh%20user%40host).
+- orca-open <url-or-path>: Opens a resource inside I without leaving the chat. Accepts http/https URLs (→ built-in WebKit preview) and chat-resource file paths under /var/orca/** (→ built-in file preview, routed by extension: images to the image viewer, .md to markdown preview, .html to HTML preview, .pdf/office docs to QuickLook, audio/video to the media player, else share sheet). Examples: orca-open https://example.com, orca-open /var/orca/workspace/report.md, orca-open /var/orca/attachments/chart.png. Prefer this over android-open for anything that can be previewed in-app so the user doesn't lose conversation context. Use android-open for non-web schemes (tel:, mailto:, geo:, intent:, etc.) or when the user explicitly wants the system handler.
+- orca-sessions-cli: Manage chat sessions. `list` recent or by date range, `search --keywords` cross-session, `messages --id` to read, `send` to create/continue a session, `retry` to re-run, `status` to check, `open` to navigate the app UI. Run --help for full options.
+- orca-model-use: Invoke other LLM models pre-configured by the user. Use `orca-model-use list` to see them (includes each model's modality capabilities like image_output, audio_output, etc.), `orca-model-use search <query>` to filter by name/provider. `orca-model-use run --model <id_or_name>` sends an OpenAI-compatible messages request; pass input via --input <json_file> or stdin, output goes to stdout or --output <path>. The OpenAI shape is the PRIMARY input for every model and modality; standard params are auto-converted to the underlying provider, so do not hand-write provider-native bodies as the primary input. For provider-specific extras the standard schema doesn't model (web-search plugins, image-to-image fields, TTS/video or other custom endpoints), escape hatches exist for OpenAI-compatible providers (they error or are ignored on Anthropic/Gemini models): `extra_body` (object merged verbatim into the request body), a custom `endpoint` path, and a top-level `passthrough` envelope for fully verbatim requests with RAW (unparsed) responses. Results may carry `warnings` (fields that were ignored/downgraded and why) and `applied_extras` (which extras actually took effect) — read them to self-correct. Run --help for the full contract before using these. Models may support multimodal output (image generation, TTS/audio, video) — check the modalities field in list output. For image_output models, pass generation params in the input JSON: top-level `n`/`size`/`quality`/`prompt` (OpenAI /images/generations style) or `generation_config.{aspect_ratio,image_size,number_of_images,person_generation}` (Gemini). Run with --help for full usage.
+- orca-config: Read or change I settings programmatically. Run `orca-config --help` for subcommands and `orca-config topic-help <topic>` for details on a specific area. For array-valued fields (e.g. `models`, `groups`, `envvars`, `defaults.agentLoopEntries`) the `get` subcommand accepts `--filter <keywords>` (whitespace-AND, case-insensitive substring match against each element's JSON) and `--page <N> --page-size <N>` (default 20, max 100) — use these instead of dumping the full list when you only need a subset, and check the response's `pagination` / `agent_hint` fields for the next-page command. Every write triggers an in-app confirmation sheet and is logged to a revertable audit (1000-entry rolling log). After a successful change the response includes a `user_message` field — relay it (or paraphrase) so the user knows how to review or revert via Settings → Logs → Config Changes. If the call returns `permission_denied`, the user has disabled orca-config in [Settings → Permissions](orca://settings/permissions); relay that message and don't retry. You CAN add new providers and write their `apiKey` (literal string OR a `${'$'}${'$'}ENV_VAR` reference to copy from an env var at write time), but `get` never echoes API keys / OAuth tokens / env var values back — those reads return `permission_denied` by design. OAuth tokens and env var values are not settable via this tool; for an env var, point the user at [Set ENV_NAME](orca://settings/environments?create_key=ENV_NAME&create_value=) so they enter the value themselves.
+- orca-scheduled: Create and manage scheduled tasks — prompts that run automatically at a chosen time. `orca-scheduled create --time HH:MM --prompt "..." [--label L] [--repeat once|daily|weekdays|custom --days mon,tue,...] [--target new|follow-up|rerun --session <id> --message <id>] [--model <modelId>] [--start YYYY-MM-DD] [--end YYYY-MM-DD]` schedules it; `list` shows existing tasks (with nextTriggerMs and run history), `delete --id <taskId>`, `enable`/`disable --id <taskId>`, and `run --id <taskId>` fires one immediately. Target modes: `new` runs the prompt in a fresh chat; `follow-up` appends the prompt to an existing chat (--session); `rerun` re-runs an existing chat (--session) from a chosen user message (--message). Use this when the user asks to "remind me / do X every morning / run this later / schedule a task". Run --help for full usage.
+Interactive terminal: orca://open_terminal opens a terminal for tasks that require interactive stdin (passwords, ssh, TUI apps like htop/vi). Write it as a Markdown link in your response — the app opens it when tapped. The optional init_command parameter pre-fills (NOT executes) a command; it MUST be fully percent-encoded (spaces → %20, & → %26, | → %7C, etc.). Only use this for genuinely interactive sessions — for everything else, use shell_execute. Examples: [Open Terminal](orca://open_terminal), [Login to SSH](orca://open_terminal?init_command=ssh%20user%40host).
 
 Environment variables:
 - Shell environment variables may contain sensitive API keys, tokens, or passwords. NEVER echo, print, cat, or otherwise output their values to stdout/stderr. Always reference them by variable name (e.g. ${'$'}API_KEY) inside scripts or commands — never inline the literal value.
-- When a skill or task requires an environment variable that is not set, tell the user which variable is missing and provide a tappable deep link to create it: [Set ENV_NAME](i://settings/environments?create_key=ENV_NAME&create_value=) — the user can tap it to open the Environment Variables page with the key pre-filled.
-- Settings deep links: when you tell the user "go to Settings → X" or want to point them at a specific setting, prefer a Markdown link `[Label](i://settings/<path>)` over plain prose. Available paths: providers (list), providers/<instanceId> (one provider), model-groups (incl. Agent Loop), model-groups/<groupId>, usage (token usage), skills, memory, storage, shared-folders (Shared Folders: /var/i/{shared,skills,memory}), mount-external (Mount External Folders), logs, appearance, background, about, permissions, environments[?create_key=K&create_value=V[&create_note=N]], rootfs (also reachable as mirrors). Unknown paths fall back to Settings home, but prefer the exact path so users land where they want. These settings/action links are app deep links — render them as Markdown links in chat (same action-vs-resource rule as the i:// section above: only /var/i resource URLs may go to browser_use).
+- When a skill or task requires an environment variable that is not set, tell the user which variable is missing and provide a tappable deep link to create it: [Set ENV_NAME](orca://settings/environments?create_key=ENV_NAME&create_value=) — the user can tap it to open the Environment Variables page with the key pre-filled.
+- Settings deep links: when you tell the user "go to Settings → X" or want to point them at a specific setting, prefer a Markdown link `[Label](orca://settings/<path>)` over plain prose. Available paths: providers (list), providers/<instanceId> (one provider), model-groups (incl. Agent Loop), model-groups/<groupId>, usage (token usage), skills, memory, storage, shared-folders (Shared Folders: /var/orca/{shared,skills,memory}), mount-external (Mount External Folders), logs, appearance, background, about, permissions, environments[?create_key=K&create_value=V[&create_note=N]], rootfs (also reachable as mirrors). Unknown paths fall back to Settings home, but prefer the exact path so users land where they want. These settings/action links are app deep links — render them as Markdown links in chat (same action-vs-resource rule as the orca:// section above: only /var/orca resource URLs may go to browser_use).
 - To check if a variable is set, use `[ -n "${'$'}VAR" ] && echo 'set' || echo 'not set'`. NEVER use echo ${'$'}VAR, printenv VAR, or any command that would output the actual value into the conversation context.${memorySystemSection}
 
 Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended, so in-app scheduled scripts may not run as expected. For recurring tasks that must fire while the app is backgrounded, use the native alarm tool (AlarmManager) or tell the user to set up a system-level schedule (Google Calendar event, Tasker automation, etc.). (Waiting or polling WITHIN the current turn is different — that is what shell_execute `delay` chains are for, per the shell_execute notes above.)"""
@@ -9114,12 +9134,23 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
                 append(dailyMemoryFragment)
             }
             // Runtime context goes last so the prefix above stays byte-stable
-            // across requests within the same day. Keep ordering deteritic
-            // (date → tz → lang → model count) — any reorder defeats the cache.
-            append("\n\nRuntime context:\n")
-            append("- Current date: ").append(dateStr).append(" (").append(tzId).append(")\n")
-            append("- Device language: ").append(lang).append("\n")
-            append("- i-model-use models available: ").append(modelUseCount)
+            // across requests within the same day. Keep ordering deterministic
+            // (date → tz → lang → model count → backend model id) — any reorder
+            // defeats the cache. The id is the same string the provider puts in
+            // the request body's `model` field (`currentProvider.model`, then
+            // the ViewModel snapshot). ProviderType / instance label stay out:
+            // those name the wire protocol or a nickname, not the weights.
+            val backend = com.orca.app.agent.ChatRuntimeContext.backendModelFrom(wireModel)
+            append("\n\n")
+            append(
+                com.orca.app.agent.ChatRuntimeContext.runtimeContextBlock(
+                    dateStr = dateStr,
+                    tzId = tzId,
+                    lang = lang,
+                    modelUseCount = modelUseCount,
+                    backend = backend,
+                ),
+            )
         }
     }
 
@@ -9244,7 +9275,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         // T132: iOS-parity additions so the model sees the attachment as
         // a real file in the agent's sandbox (read_image / shell_execute can
         // open these paths).
-        //   imageUploadPaths: one /var/i/attachments/uploads/<safe> per
+        //   imageUploadPaths: one /var/orca/attachments/uploads/<safe> per
         //     inlined image, in the same order as `imageParts`.
         //   attachedFilesXml:  null when no attachments, otherwise the
         //     <user-attached-files> XML block iOS appends to the user turn.
@@ -9286,13 +9317,13 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         val nonImageMediaRefPartsJson = mutableListOf<String>()
         val imageUploadPaths = mutableListOf<String>()
         // T132: also write the resized bytes into the session's iSH-bound
-        // attachments dir (filesDir/i-sessions/<sid>/attachments/uploads/),
-        // which is mounted at /var/i/attachments/ inside iSH. This makes
+        // attachments dir (filesDir/orca-sessions/<sid>/attachments/uploads/),
+        // which is mounted at /var/orca/attachments/ inside iSH. This makes
         // the same image accessible to the agent via shell tools (read_image
         // / cat / file) and matches the iOS uploads-directory convention.
         val uploadsHostDir = java.io.File(
             context.filesDir,
-            "i-sessions/$sessionId/attachments/uploads",
+            "orca-sessions/$sessionId/attachments/uploads",
         ).apply { mkdirs() }
         // Metadata captured per attachment for the <user-attached-files> XML.
         data class UploadMeta(val linuxPath: String, val size: Long, val modifiedIso: String)
@@ -9354,7 +9385,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
                     Log.w(TAG, "uploads write failed for ${attachment.fileName}: ${e.message}")
                     false
                 }
-                val linuxPath = if (uploadOk) "/var/i/attachments/uploads/$safeName" else null
+                val linuxPath = if (uploadOk) "/var/orca/attachments/uploads/$safeName" else null
                 if (linuxPath != null) {
                     imageUploadPaths.add(linuxPath)
                     metas.add(UploadMeta(linuxPath = linuxPath, size = rawBytes.size.toLong(), modifiedIso = nowStr))
@@ -9416,7 +9447,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
                 nonImageUris.add(Uri.fromFile(java.io.File(mediaStore.mediaBaseDir, ref.relativePath)))
             }
 
-            val linuxPath = "/var/i/attachments/uploads/$safeName"
+            val linuxPath = "/var/orca/attachments/uploads/$safeName"
             metas.add(UploadMeta(linuxPath = linuxPath, size = dest.length(), modifiedIso = nowStr))
         }
 
@@ -9463,10 +9494,10 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         val xml = if (metas.isEmpty()) null else buildString {
             append("<user-attached-files>\n")
             for (m in metas) {
-                val urlPath = m.linuxPath.removePrefix("/var/i/")
+                val urlPath = m.linuxPath.removePrefix("/var/orca/")
                 append("  <file path=\"")
                 append(m.linuxPath)
-                append("\" url=\"i://")
+                append("\" url=\"orca://")
                 append(urlPath)
                 append("\" size=\"")
                 append(m.size)
@@ -9542,7 +9573,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         // inventory (non-image file paths/sizes the model uses to `cat` the
         // file). iOS persists this same XML as a trailing text part so it
         // round-trips through retry / rerun / session-reload unchanged — the
-        // model keeps seeing the /var/i/attachments/uploads/... paths.
+        // model keeps seeing the /var/orca/attachments/uploads/... paths.
         // Android previously only added it to the in-memory agentHistory and
         // never persisted it, so a retry silently dropped the file inventory.
         // Persist it here as a text part (iOS parity); toLLMMessage restores
@@ -10157,12 +10188,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
                 }
             }
 
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt = if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                else "$prefix\n\n${baseSystemPrompt ?: ""}"
-            } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             // T145: claim the streaming flag synchronously before launching
             // the streamJob so a concurrent send/retry tap is rejected by the
@@ -10251,7 +10277,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         if (lastIdx < 0) return
         var last = msgs[lastIdx]
 
-        // T73: clear "I is thinking…" the moment the user taps Stop.
+        // T73: clear "Orca is thinking…" the moment the user taps Stop.
         // isAwaitingModelResponse is set true at runAgentLoop entry (≈ line
         // 2785) so the typing indicator shows during the initial request
         // gap before the first stream chunk. The cancel paths below didn't
@@ -10425,13 +10451,7 @@ Scheduled tasks: crontab / at / nohup loops will stop when the app is suspended,
         }
 
         viewModelScope.launch {
-            val baseSystemPrompt = buildSystemPrompt()
-            val systemPrompt =
-                if ((provider as? com.orca.app.provider.anthropic.AnthropicProvider)?.isOAuth == true) {
-                    val prefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
-                    if (baseSystemPrompt?.startsWith(prefix) == true) baseSystemPrompt
-                    else "$prefix\n\n${baseSystemPrompt ?: ""}"
-                } else baseSystemPrompt
+            val systemPrompt = composeBoundSystemPrompt(provider)
 
             AppLogger.info(TAG_STREAM, "resume _isStreaming=true (sid=$activeSessionId)")
             _isStreaming.value = true

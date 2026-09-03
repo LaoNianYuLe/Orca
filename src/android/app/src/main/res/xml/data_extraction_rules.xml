@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  API 31+ backup/transfer rules (android:dataExtractionRules).
+  Mirrors backup_rules.xml, which still covers API 30 and below.
+
+  Both destinations get the same exclusions. device-transfer keeps the secrets
+  out even on a direct device-to-device move: the AndroidKeystore master key
+  does not travel either way, so restored ciphertext can only fail to decrypt —
+  carrying it over adds exposure without adding recoverability.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="provider_secrets.xml" />
+        <exclude domain="sharedpref" path="oauth_prefs.xml" />
+        <exclude domain="sharedpref" path="mcp_oauth_secrets.xml" />
+        <exclude domain="sharedpref" path="env_var_values.xml" />
+        <exclude domain="sharedpref" path="orca_device_identity.xml" />
+        <exclude domain="sharedpref" path="__androidx_security_crypto_encrypted_prefs__.xml" />
+
+        <exclude domain="sharedpref" path="provider_secrets_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="oauth_prefs_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="mcp_oauth_secrets_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="env_var_values_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="orca_device_identity_plain_fallback.xml" />
+
+        <exclude domain="file" path="alpine-rootfs" />
+        <exclude domain="file" path="debug_server_token" />
+    </cloud-backup>
+
+    <device-transfer>
+        <exclude domain="sharedpref" path="provider_secrets.xml" />
+        <exclude domain="sharedpref" path="oauth_prefs.xml" />
+        <exclude domain="sharedpref" path="mcp_oauth_secrets.xml" />
+        <exclude domain="sharedpref" path="env_var_values.xml" />
+        <exclude domain="sharedpref" path="orca_device_identity.xml" />
+        <exclude domain="sharedpref" path="__androidx_security_crypto_encrypted_prefs__.xml" />
+
+        <exclude domain="sharedpref" path="provider_secrets_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="oauth_prefs_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="mcp_oauth_secrets_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="env_var_values_plain_fallback.xml" />
+        <exclude domain="sharedpref" path="orca_device_identity_plain_fallback.xml" />
+
+        <exclude domain="file" path="alpine-rootfs" />
+        <exclude domain="file" path="debug_server_token" />
+    </device-transfer>
+</data-extraction-rules>

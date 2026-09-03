@@ -75,8 +75,8 @@ import com.orca.app.data.model.ModelGroup
 import com.orca.app.data.model.RoutingStrategy
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.R
-import com.orca.app.ui.components.IOutlinedButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaOutlinedButton
+import com.orca.app.ui.components.OrcaTextButton
 import com.orca.app.ui.components.SectionCard
 import com.orca.app.ui.components.SectionDesign
 import com.orca.app.ui.components.SectionDivider
@@ -369,7 +369,7 @@ fun ModelGroupsScreen(
                 }
             },
             confirmButton = {
-                ITextButton(
+                OrcaTextButton(
                     onClick = {
                         if (newGroupName.isNotBlank()) {
                             val newGroup = ModelGroup(name = newGroupName.trim())
@@ -388,7 +388,7 @@ fun ModelGroupsScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     showNewGroupDialog = false
                     newGroupName = ""
                 }) {
@@ -609,7 +609,7 @@ private fun LazyListScope.agentLoopModelsSectionItems(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            IOutlinedButton(
+            OrcaOutlinedButton(
                 onClick = onAddModelsTap,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(50),
@@ -623,7 +623,7 @@ private fun LazyListScope.agentLoopModelsSectionItems(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(stringResource(R.string.agent_loop_section_add_models))
             }
-            IOutlinedButton(
+            OrcaOutlinedButton(
                 onClick = onAddGroupsTap,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(50),

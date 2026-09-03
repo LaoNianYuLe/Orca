@@ -16,7 +16,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.orca.app.R
 import com.orca.app.logging.AppLogger
-import com.orca.app.offload.INotificationListenerService
+import com.orca.app.offload.OrcaNotificationListenerService
 import com.orca.app.offload.OffloadPermissionManager
 import com.orca.app.offload.ScheduledNotificationReceiver
 import com.orca.app.offload.ScheduledNotificationStore
@@ -211,10 +211,10 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
         // an immediate follow-up `list` may miss this notification. Block
         // until our listener observes it (best-effort: 2s, only when the
         // listener is connected — otherwise `list` would have failed anyway).
-        if (INotificationListenerService.isEnabled(context) &&
-            INotificationListenerService.isConnected()
+        if (OrcaNotificationListenerService.isEnabled(context) &&
+            OrcaNotificationListenerService.isConnected()
         ) {
-            val seen = INotificationListenerService.awaitPosted(context.packageName, notifId)
+            val seen = OrcaNotificationListenerService.awaitPosted(context.packageName, notifId)
             if (!seen) {
                 AppLogger.warning(TAG, "listener did not observe posted id=$notifId within timeout — list may not see it immediately")
             }
@@ -408,8 +408,8 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
             val canSchedule = try { am?.canScheduleExactAlarms() == true } catch (_: Throwable) { false }
             data.put("schedule_exact_allowed", canSchedule)
         }
-        data.put("listener_access", INotificationListenerService.isEnabled(context))
-        AppLogger.info(TAG, "settings: can_post=$canPost listener=${INotificationListenerService.isEnabled(context)}")
+        data.put("listener_access", OrcaNotificationListenerService.isEnabled(context))
+        AppLogger.info(TAG, "settings: can_post=$canPost listener=${OrcaNotificationListenerService.isEnabled(context)}")
         return NativeOffloadResult(0, OffloadOutput.formatBody(data.toString(2), args) + "\n")
     }
 
@@ -444,7 +444,7 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
     // ── list ────────────────────────────────────────────────────────────────
 
     private fun handleList(args: OffloadArgs): NativeOffloadResult {
-        if (!INotificationListenerService.isEnabled(context)) {
+        if (!OrcaNotificationListenerService.isEnabled(context)) {
             // Notification Access can only be granted from the system settings
             // page — requestPermissions is not an option. Use the in-app
             // "settings gate" which shows a dialog, opens the settings page,
@@ -455,11 +455,11 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
                         id = "notification_access",
                         title = "Notification access needed",
                             message = "Orca needs Notification access to read the status-bar notifications. Open Settings and enable \"Orca\" under Notification access.",
-                        settingsAction = INotificationListenerService.SETTINGS_ACTION,
+                        settingsAction = OrcaNotificationListenerService.SETTINGS_ACTION,
                         requiresPackageUri = false,
                         positiveLabel = "Open Settings",
                     ),
-                    check = { INotificationListenerService.isEnabled(context) },
+                    check = { OrcaNotificationListenerService.isEnabled(context) },
                 )
             }
             when (result) {
@@ -495,7 +495,7 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
         // own notifications. The cross-app list comes from our bound
         // `NotificationListenerService`.
         val active: Array<StatusBarNotification> =
-            INotificationListenerService.getActiveNotifications()
+            OrcaNotificationListenerService.getActiveNotifications()
                 ?: return NativeOffloadResult(
                     77,
                     OffloadOutput.formatBody(
@@ -549,7 +549,7 @@ class NotificationOffloadHandler(private val context: Context) : NativeOffloadHa
 
     companion object {
         private const val TAG = "NotificationOffload"
-        private const val CHANNEL_ID = "i_agent_notifications"
+        private const val CHANNEL_ID = "orca_agent_notifications"
         private const val CHANNEL_NAME = "Agent Notifications"
         private var channelCreated = false
 

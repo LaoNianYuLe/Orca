@@ -25,7 +25,7 @@ object NativeCrashHandler {
         synchronized(this) {
             if (installed) return
             try {
-                System.loadLibrary("i_crash_handler")
+                System.loadLibrary("orca_crash_handler")
             } catch (t: Throwable) {
                 Log.w(TAG, "loadLibrary failed: ${t.message}")
                 return

@@ -48,8 +48,8 @@ import com.orca.app.provider.ImageBudget
 import com.orca.app.provider.LLMProvider
 import com.orca.app.provider.ProviderFactory
 import com.orca.app.sandbox.ExecutionCoordinator
-import com.orca.app.terminal.IOpenUrlBroker
-import com.orca.app.terminal.IUrlMarker
+import com.orca.app.terminal.OrcaOpenUrlBroker
+import com.orca.app.terminal.OrcaUrlMarker
 import com.orca.app.tools.AgentTools
 import com.orca.app.tools.FileEditTool
 import com.orca.app.tools.FileReadTool
@@ -245,7 +245,7 @@ data class SlashCommand(
      * configured MCP server (vs. a built-in command or a skill). Distinct from
      * [isSkill] so the picker can tag MCP rows with [mcp] + a wrench icon and
      * skills with ⚡. Tapping fills the composer with the server name; the
-     * actual discovery/call happens model-side via i-mcp-cli.
+     * actual discovery/call happens model-side via orca-mcp-cli.
      */
     val isMcp: Boolean = false,
 )

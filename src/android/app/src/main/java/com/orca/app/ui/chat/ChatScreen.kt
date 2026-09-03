@@ -140,9 +140,9 @@ import com.orca.app.BuildConfig
 import com.orca.app.R
 import com.orca.app.data.FileMentionIndex
 import com.orca.app.logging.AppLogger
-import com.orca.app.ui.components.IAlertDialog
-import com.orca.app.ui.components.IMenu
-import com.orca.app.ui.components.IMenuDivider
+import com.orca.app.ui.components.OrcaAlertDialog
+import com.orca.app.ui.components.OrcaMenu
+import com.orca.app.ui.components.OrcaMenuDivider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -277,7 +277,7 @@ import com.orca.app.data.repository.MemoryRepository
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.browser.BrowserSheet
 import com.orca.app.ui.theme.ChatColors
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 // iOS ChatColors equivalent
 internal val ToolCheckColor = Color(0xFF34C759) // iOS .green
@@ -454,6 +454,7 @@ fun ChatScreen(
     val error by viewModel.error.collectAsState()
     val modelName by viewModel.modelName.collectAsState()
     val sessionTitle by viewModel.sessionTitle.collectAsState()
+    val projectName by viewModel.projectName.collectAsState()
     val sessionCategory by viewModel.sessionCategory.collectAsState()
     val attachments by viewModel.attachments.collectAsState()
     val availableGroups by viewModel.availableGroups.collectAsState()
@@ -560,7 +561,7 @@ fun ChatScreen(
     }
 
     // T311: publish "this is the active chat" while ChatScreen is composed,
-    // so `i-config session.*` reads/writes target it. Mirrors iOS
+    // so `orca-config session.*` reads/writes target it. Mirrors iOS
     // `AIChatViewModel.activeSessionId` which is updated on appear / disappear.
     // [T-HANG-DIAG] capture the application context so we can read the
     // current hang count from non-composable scopes below. LocalContext is
@@ -869,7 +870,7 @@ fun ChatScreen(
     }
 
     // App-icon quick action: when the user launched via
-    // `i://action/camera_chat`, auto-open the camera on first compose.
+    // `orca://action/camera_chat`, auto-open the camera on first compose.
     // Consumed exactly once so re-entering the chat later does NOT re-trigger.
     // Voice variant lives next to the MicButton because it needs sttAvailable
     // — camera is always available so it can fire from the top-level scope.
@@ -2083,7 +2084,7 @@ fun ChatScreen(
     var chatInputLevel by remember { mutableStateOf(appearancePrefs.getInt(com.orca.app.ui.settings.KEY_FONT_CHAT_INPUT, 0)) }
     var toolPreviewEnabled by remember { mutableStateOf(appearancePrefs.getBoolean(com.orca.app.ui.settings.KEY_TOOL_PREVIEW, true)) }
     // T-chat-title-pill: live-toggled by Settings → Appearance and by
-    // `i-config set appearance.show_chat_title …`. Default ON.
+    // `orca-config set appearance.show_chat_title …`. Default ON.
     var showChatTitlePill by remember { mutableStateOf(appearancePrefs.getBoolean(com.orca.app.ui.settings.KEY_SHOW_CHAT_TITLE, true)) }
     // T-chat-title-pill-edit: state for the in-chat edit-title sheet (the
     // exact same SessionEditSheet hosted by the session list home screen,
@@ -2131,7 +2132,7 @@ fun ChatScreen(
             htmlPreviewFullscreen = false
         }
     }
-    // Pinned-shortcut deep link: i://session/<id>/<resource-path>
+    // Pinned-shortcut deep link: orca://session/<id>/<resource-path>
     // consumes here on first composition iff this screen is showing the
     // matching session; opens fullscreen HTML preview backed by a fresh
     // holder. Pending state is left untouched when a different chat is on
@@ -2141,7 +2142,7 @@ fun ChatScreen(
             .pendingHtmlPreview.value ?: return@LaunchedEffect
         if (pending.sessionId != sessionId) return@LaunchedEffect
         com.orca.app.deeplink.DeepLinkCoordinator.consumePendingHtmlPreview()
-        val absPath = "/var/i" + pending.resourcePath
+        val absPath = "/var/orca" + pending.resourcePath
         val file = java.io.File(absPath)
         if (!file.exists()) {
             com.orca.app.logging.AppLogger.warning(
@@ -2163,7 +2164,7 @@ fun ChatScreen(
     var previewImageGallery by remember {
         mutableStateOf<Pair<List<com.orca.app.ui.components.ImageGalleryItem>, Int>?>(null)
     }
-    // Video links from chat go through IFullscreenVideoPlayer rather than
+    // Video links from chat go through OrcaFullscreenVideoPlayer rather than
     // FilePreviewScreen → InlineVideoPlayer. The inline player wraps a bare
     // VideoView with an anchored MediaController and never starts playback,
     // so a tap on an mp4 link rendered as a black surface until the user
@@ -2176,7 +2177,7 @@ fun ChatScreen(
     var webAppSheetTarget by remember { mutableStateOf<InputAttachment?>(null) }
     val urlClickHandler = remember<(String) -> Unit>(viewModel) {
         { url ->
-            // Pass the current session id so `i://attachments/...` resolves
+            // Pass the current session id so `orca://attachments/...` resolves
             // against this chat's session directory rather than whichever
             // session booted its PRoot shell most recently (which is what
             // the global bindMounts map would answer).
@@ -2221,14 +2222,14 @@ fun ChatScreen(
     }
 
     // Auto-present the in-app preview when a shell tool's stdout emits an
-    // OSC IOpenURL marker (via /usr/local/bin/i-open). The broker is
+    // OSC OrcaOpenURL marker (via /usr/local/bin/orca-open). The broker is
     // populated by ChatViewModel's shell lineCallback; forwarding the URL
     // into `urlClickHandler` routes it exactly like a chat-link tap —
-    // http(s)/about → UrlPreviewSheet, i:// deep links → DeepLinkHandler,
-    // i://<host>/<path> → in-app file preview by extension.
-    val pendingIOpenUrl by com.orca.app.terminal.IOpenUrlBroker.pendingUrl
+    // http(s)/about → UrlPreviewSheet, orca:// deep links → DeepLinkHandler,
+    // orca://<host>/<path> → in-app file preview by extension.
+    val pendingIOpenUrl by com.orca.app.terminal.OrcaOpenUrlBroker.pendingUrl
         .collectAsState()
-    val iOpenTerminalVisible by com.orca.app.terminal.IOpenUrlBroker.terminalVisible
+    val iOpenTerminalVisible by com.orca.app.terminal.OrcaOpenUrlBroker.terminalVisible
         .collectAsState()
     LaunchedEffect(pendingIOpenUrl, iOpenTerminalVisible) {
         val url = pendingIOpenUrl ?: return@LaunchedEffect
@@ -2237,7 +2238,7 @@ fun ChatScreen(
         // so we don't try to open a sheet on a covered ChatScreen.
         if (iOpenTerminalVisible) return@LaunchedEffect
         urlClickHandler(url.toString())
-        com.orca.app.terminal.IOpenUrlBroker.consume()
+        com.orca.app.terminal.OrcaOpenUrlBroker.consume()
     }
 
     // [T-android-markdown-image-gallery-cross-message] Collect every
@@ -2248,8 +2249,8 @@ fun ChatScreen(
     // matches the standard inline image form; tool-block content stays
     // untouched (toolBlocks live in a separate AssistantBlock list, not
     // in `content`). Video/audio extensions are filtered out so the gallery
-    // only contains still images. Resolution of `i://` → host File is
-    // deferred to the gallery's Coil model — Coil's IImageFetcher walks
+    // only contains still images. Resolution of `orca://` → host File is
+    // deferred to the gallery's Coil model — Coil's OrcaImageFetcher walks
     // the same session-aware resolver we use for inline rendering.
     val markdownImageTapHandler = remember<(String, String) -> Unit>(messages, sessionId) {
         handler@{ tappedMessageId, tappedUrl ->
@@ -2287,10 +2288,10 @@ fun ChatScreen(
                 ?: refs.indexOfFirst { it.source == tappedUrl }.takeIf { it >= 0 }
                 ?: 0
             val items = refs.map { ref ->
-                // Resolve i://... / file:// / /abs → host File so Coil
+                // Resolve orca://... / file:// / /abs → host File so Coil
                 // doesn't have to re-walk PRootKernel for every page swipe.
                 // Falls back to the raw URL string when resolution misses —
-                // AsyncImage will route it through IImageFetcher anyway.
+                // AsyncImage will route it through OrcaImageFetcher anyway.
                 val resolved = resolveMdMediaFile(context, ref.source, sessionId)
                 com.orca.app.ui.components.ImageGalleryItem(
                     model = resolved ?: ref.source,
@@ -2308,7 +2309,7 @@ fun ChatScreen(
         LocalMarkdownUrlClickHandler provides urlClickHandler,
         LocalMarkdownImageTapHandler provides markdownImageTapHandler,
         // Route markdown media resolution through this chat's session so
-        // i://attachments/* lookups don't rely on the global bindMounts
+        // orca://attachments/* lookups don't rely on the global bindMounts
         // map (which is last-writer-wins across sessions).
         LocalMarkdownSessionId provides sessionId,
     ) {
@@ -2365,6 +2366,11 @@ fun ChatScreen(
                             val topBarSoul by com.orca.app.agent.SoulStore
                                 .cachedMetadata.collectAsState()
                             val displayTitle = when {
+                                !projectName.isNullOrBlank() &&
+                                    showChatTitlePill &&
+                                    sessionTitle.isNotBlank() &&
+                                    sessionTitle != "New Chat" -> "$projectName · $sessionTitle"
+                                !projectName.isNullOrBlank() -> projectName!!
                                 showChatTitlePill
                                     && sessionTitle.isNotBlank()
                                     && sessionTitle != "New Chat" -> sessionTitle
@@ -2555,7 +2561,7 @@ fun ChatScreen(
                         IconButton(onClick = { showChatMenu = true }) {
                             Icon(Icons.Default.MoreVert, contentDescription = "More")
                         }
-                        IMenu(
+                        OrcaMenu(
                             expanded = showChatMenu,
                             onDismissRequest = { showChatMenu = false },
                         ) {
@@ -2583,7 +2589,7 @@ fun ChatScreen(
                                     Icon(Icons.Outlined.Forum, contentDescription = null)
                                 },
                             )
-                            IMenuDivider()
+                            OrcaMenuDivider()
                             // Clear Chat (iOS parity, red)
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.chat_menu_clear_chat), color = MaterialTheme.colorScheme.error) },
@@ -2595,8 +2601,8 @@ fun ChatScreen(
                                     Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                                 },
                             )
-                            IMenuDivider()
-                            // Open Terminal (iOS parity) — session-bound, starts in /var/i
+                            OrcaMenuDivider()
+                            // Open Terminal (iOS parity) — session-bound, starts in /var/orca
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.chat_menu_open_terminal)) },
                                 onClick = {
@@ -2618,7 +2624,7 @@ fun ChatScreen(
                                     Icon(Icons.Default.Language, contentDescription = null)
                                 },
                             )
-                            // Browse Chat Files (iOS parity) — opens file browser at /var/i
+                            // Browse Chat Files (iOS parity) — opens file browser at /var/orca
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.chat_menu_browse_chat_files)) },
                                 onClick = {
@@ -2629,7 +2635,7 @@ fun ChatScreen(
                                     Icon(Icons.Default.Description, contentDescription = null)
                                 },
                             )
-                            IMenuDivider()
+                            OrcaMenuDivider()
                             // Session Skills (iOS parity)
                             if (skillRepository != null) {
                                 DropdownMenuItem(
@@ -2669,7 +2675,7 @@ fun ChatScreen(
                                     },
                                 )
                             }
-                            IMenuDivider()
+                            OrcaMenuDivider()
                             // Token Usage (iOS parity)
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.settings_token_usage)) },
@@ -2775,7 +2781,7 @@ fun ChatScreen(
                             // uncaught-exception handler catches it and writes
                             // a crash-<stamp>.log under filesDir/logs/.
                             if (BuildConfig.DEBUG) {
-                                IMenuDivider()
+                                OrcaMenuDivider()
                                 DropdownMenuItem(
                                     text = {
                                         Text(
@@ -2899,7 +2905,7 @@ fun ChatScreen(
                 // in-flight tool is invisible to this predicate → reserve
                 // collapsed to 20dp while a 65dp+6dp floating bar covered
                 // the bottom of the LazyColumn. The new arrivals (status
-                // pill, "I is thinking" indicator, inline retry banner) landed
+                // pill, "Orca is thinking" indicator, inline retry banner) landed
                 // behind the bar with no way to scroll them into view.
                 //
                 // Fix: also subscribe to streamingById so the predicate
@@ -3348,7 +3354,7 @@ fun ChatScreen(
                     onDispose { selectionReader.shutdown() }
                 }
                 val markdownToolbar = remember(context, messageBounds, viewModel, inputFocusRequester, keyboardController, selectionController, selectionReader) {
-                    IMarkdownTextToolbar(
+                    OrcaMarkdownTextToolbar(
                         context = context,
                         registry = messageBounds,
                         onAddToInput = { snippet ->
@@ -3534,7 +3540,7 @@ fun ChatScreen(
                                 viewModel.resume()
                                 // T282: same dual-scroll trick as the regular
                                 // send paths (T281). Resume kicks off a fresh
-                                // stream, so the "I is thinking" indicator
+                                // stream, so the "Orca is thinking" indicator
                                 // mounts a frame or two later — pin once now,
                                 // then again after 100ms so the indicator
                                 // doesn't land below the fold.
@@ -3937,9 +3943,9 @@ fun ChatScreen(
                     listRootCoordinates = { listRootCoords },
                     reverseLayout = true,
                 )
-                IMarkdownTextToolbarHost(markdownToolbar)
+                OrcaMarkdownTextToolbarHost(markdownToolbar)
                 // ITextKit floating toolbar — driven by selectionController.
-                ISelectionToolbarHost(
+                OrcaSelectionToolbarHost(
                     controller = selectionController,
                     // Clamp the menu's vertical position inside the
                     // LazyColumn's viewport in window coords, so it can't
@@ -3985,7 +3991,7 @@ fun ChatScreen(
                     ),
                 )
                 // iOS-style selection handle dots, one at each endpoint.
-                ISelectionHandlesHost(
+                OrcaSelectionHandlesHost(
                     controller = selectionController,
                     listState = listState,
                     reverseLayout = true,
@@ -4976,7 +4982,7 @@ fun ChatScreen(
                                 // feature not yet validated/complete. Re-enable
                                 // by removing `false &&` from the guard below.
                                 if (false && isHtmlAttachment) {
-                                    com.orca.app.ui.components.IMenu(
+                                    com.orca.app.ui.components.OrcaMenu(
                                         expanded = webAppMenuExpanded,
                                         onDismissRequest = { webAppMenuExpanded = false },
                                     ) {
@@ -5372,7 +5378,7 @@ fun ChatScreen(
                                     modifier = Modifier.size(20.dp),
                                 )
                             }
-                            IMenu(
+                            OrcaMenu(
                                 expanded = showAttachMenu,
                                 onDismissRequest = { showAttachMenu = false },
                             ) {
@@ -5538,7 +5544,7 @@ fun ChatScreen(
                         }
 
                         // App-icon quick action: when the user launched via
-                        // `i://action/voice_chat`, auto-fire the mic on
+                        // `orca://action/voice_chat`, auto-fire the mic on
                         // first compose. Consumed exactly once so re-entering
                         // the chat later does NOT re-trigger.
                         //
@@ -6001,7 +6007,7 @@ fun ChatScreen(
             //                                  now on (iOS T-chat-auto-compact-opt-in)
             val showCompactBeforeSend by viewModel.showCompactBeforeSendPrompt.collectAsState()
             if (showCompactBeforeSend) {
-                IAlertDialog(
+                OrcaAlertDialog(
                     // Back-gesture / scrim dismissal must NOT silently drop the
                     // user's text — cancelCompactBeforeSend puts it back in the
                     // composer.
@@ -6023,7 +6029,7 @@ fun ChatScreen(
             // compact markers; the session row, workspace files, attachments,
             // and offload payloads are intentionally preserved (iOS parity).
             if (showClearChatDialog) {
-                IAlertDialog(
+                OrcaAlertDialog(
                     onDismissRequest = { showClearChatDialog = false },
                     title = stringResource(R.string.chat_menu_clear_chat),
                     text = stringResource(R.string.chat_clear_dialog_body),
@@ -6040,7 +6046,7 @@ fun ChatScreen(
             // confirm → stop the running task, then navigate to a fresh draft;
             // dismiss → stay in the current chat.
             if (showNewChatStopDialog) {
-                IAlertDialog(
+                OrcaAlertDialog(
                     onDismissRequest = { showNewChatStopDialog = false },
                     title = stringResource(R.string.chat_menu_new_chat),
                     text = stringResource(R.string.chat_new_chat_stop_dialog_body),
@@ -6057,7 +6063,7 @@ fun ChatScreen(
             // before the first enable. Accepting records the durable ack and
             // turns the toggle on; subsequent enables skip the dialog.
             if (showEnhancedCacheDialog) {
-                IAlertDialog(
+                OrcaAlertDialog(
                     onDismissRequest = { showEnhancedCacheDialog = false },
                     title = stringResource(R.string.chat_menu_enhanced_cache),
                     text = stringResource(R.string.enhanced_cache_dialog_body),
@@ -6238,7 +6244,7 @@ fun ChatScreen(
         )
 
         pendingNonTextSelection?.let { pending ->
-            IAlertDialog(
+            OrcaAlertDialog(
                 onDismissRequest = { pendingNonTextSelection = null },
                 title = stringResource(R.string.model_picker_non_text_warning_title),
                 text = stringResource(
@@ -6330,10 +6336,10 @@ fun ChatScreen(
 
     // Fullscreen video player — tapped video link (mp4/mov/m4v/…) from chat
     // markdown. Reuses the same dialog player as the markdown-rendered
-    // ![](i://...) syntax so behaviour is consistent regardless of how
+    // ![](orca://...) syntax so behaviour is consistent regardless of how
     // the LLM emitted the reference.
     previewVideoFile?.let { file ->
-        com.orca.app.ui.media.IFullscreenVideoPlayer(
+        com.orca.app.ui.media.OrcaFullscreenVideoPlayer(
             file = file,
             onDismiss = { previewVideoFile = null },
         )

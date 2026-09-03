@@ -141,9 +141,9 @@ import com.orca.app.BuildConfig
 import com.orca.app.R
 import com.orca.app.data.FileMentionIndex
 import com.orca.app.logging.AppLogger
-import com.orca.app.ui.components.IAlertDialog
-import com.orca.app.ui.components.IMenu
-import com.orca.app.ui.components.IMenuDivider
+import com.orca.app.ui.components.OrcaAlertDialog
+import com.orca.app.ui.components.OrcaMenu
+import com.orca.app.ui.components.OrcaMenuDivider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -274,7 +274,7 @@ import com.orca.app.data.repository.MemoryRepository
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.browser.BrowserSheet
 import com.orca.app.ui.theme.ChatColors
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Fuzzy match: substring first, then all query chars appear in order.
@@ -438,7 +438,7 @@ internal fun ModelPickerSheet(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                    ITextButton(onClick = onDismiss) {
+                    OrcaTextButton(onClick = onDismiss) {
                         Text(stringResource(R.string.model_picker_done))
                     }
                 }
@@ -566,7 +566,7 @@ internal fun ModelPickerSheet(
                                 if (onEditGroups != null) {
                                     // Text button (not a pencil icon) matching the
                                     // sheet's other text actions like "Done".
-                                    ITextButton(
+                                    OrcaTextButton(
                                         onClick = onEditGroups,
                                         modifier = Modifier.padding(end = 8.dp),
                                     ) {
@@ -829,11 +829,13 @@ internal fun ModelPickerSheet(
                                                     modifier = Modifier.size(17.dp),
                                                 )
                                                 Spacer(Modifier.width(10.dp))
-                                                ProviderBrandBadge(
-                                                    providerId = instance?.providerType?.name?.lowercase().orEmpty(),
-                                                    displayName = instance?.label.orEmpty(),
-                                                    modifier = Modifier.size(30.dp),
-                                                )
+                                                instance?.let {
+                                                    ProviderBrandBadge(
+                                                        instance = it,
+                                                        model = entry.model,
+                                                        modifier = Modifier.size(30.dp),
+                                                    )
+                                                }
                                                 Spacer(Modifier.width(8.dp))
                                                 Column(modifier = Modifier.weight(1f)) {
                                                     Text(entry.model.displayName, style = MaterialTheme.typography.bodyMedium)
@@ -878,7 +880,7 @@ internal fun ModelPickerSheet(
                                     }
                                 }
 
-                                // Inset hairline between groups, matches IMenuDivider rhythm.
+                                // Inset hairline between groups, matches OrcaMenuDivider rhythm.
                                 if (index < filteredGroups.size - 1) {
                                     HorizontalDivider(
                                         modifier = Modifier.padding(start = 48.dp, end = 16.dp),
@@ -936,8 +938,7 @@ internal fun ModelPickerSheet(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     ProviderBrandBadge(
-                                        providerId = instance.providerType.name.lowercase(),
-                                        displayName = instance.label,
+                                        instance = instance,
                                         modifier = Modifier.size(30.dp),
                                     )
                                     Spacer(Modifier.width(10.dp))
@@ -1018,8 +1019,8 @@ internal fun ModelPickerSheet(
                                             )
                                             Spacer(Modifier.width(10.dp))
                                             ProviderBrandBadge(
-                                                providerId = instance.providerType.name.lowercase(),
-                                                displayName = instance.label,
+                                                instance = instance,
+                                                model = displayEntry.model,
                                                 modifier = Modifier.size(30.dp),
                                             )
                                             Spacer(Modifier.width(10.dp))
@@ -1144,8 +1145,8 @@ internal fun ModelPickerSheet(
                                             )
                                             Spacer(Modifier.width(10.dp))
                                             ProviderBrandBadge(
-                                                providerId = instance.providerType.name.lowercase(),
-                                                displayName = instance.label,
+                                                instance = instance,
+                                                model = entry.model,
                                                 modifier = Modifier.size(30.dp),
                                             )
                                             Spacer(Modifier.width(10.dp))

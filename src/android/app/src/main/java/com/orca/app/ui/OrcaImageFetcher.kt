@@ -14,25 +14,25 @@ import okio.source
 import java.io.File
 
 /**
- * Coil Fetcher that resolves `i://` URIs to local files.
+ * Coil Fetcher that resolves `orca://` URIs to local files.
  *
  * Usage: Register with ImageLoader.Builder().components {
- *     add(IImageFetcher.Factory())
+ *     add(OrcaImageFetcher.Factory())
  * }
  *
- * i://attachments/foo.jpg → /var/i/attachments/foo.jpg → host path
+ * orca://attachments/foo.jpg → /var/orca/attachments/foo.jpg → host path
  */
-class IImageFetcher(
+class OrcaImageFetcher(
     private val uri: String,
     private val options: Options,
 ) : Fetcher {
 
     override suspend fun fetch(): FetchResult {
-        // Strip i:// prefix, drop any ?query, and percent-decode so
+        // Strip orca:// prefix, drop any ?query, and percent-decode so
         // Chinese/emoji/space filenames resolve to the actual on-disk file.
-        val stripped = uri.removePrefix("i://").substringBefore('?')
+        val stripped = uri.removePrefix("orca://").substringBefore('?')
         val decoded = java.net.URLDecoder.decode(stripped, "UTF-8")
-        val linuxPath = "/var/i/$decoded"
+        val linuxPath = "/var/orca/$decoded"
         val hostFile = PRootKernel.resolveHostPath(linuxPath)
             ?: throw IllegalArgumentException("Cannot resolve path: $linuxPath")
 
@@ -67,32 +67,32 @@ class IImageFetcher(
      */
     class Factory : Fetcher.Factory<String> {
         override fun create(data: String, options: Options, imageLoader: ImageLoader): Fetcher? {
-            if (!data.startsWith("i://")) return null
-            return IImageFetcher(data, options)
+            if (!data.startsWith("orca://")) return null
+            return OrcaImageFetcher(data, options)
         }
     }
 
     /**
      * Uri factory — the path the Markdown renderer hits. Coil's default
-     * StringMapper converts an `AsyncImage(model = "i://…")` String into
+     * StringMapper converts an `AsyncImage(model = "orca://…")` String into
      * an android.net.Uri before fetcher resolution, so the String factory
      * above is never consulted for markdown images. Match on scheme here.
      */
     class UriFactory : Fetcher.Factory<Uri> {
         override fun create(data: Uri, options: Options, imageLoader: ImageLoader): Fetcher? {
-            if (data.scheme != "i") return null
-            return IImageFetcher(data.toString(), options)
+            if (data.scheme != "orca") return null
+            return OrcaImageFetcher(data.toString(), options)
         }
     }
 
     /**
      * T-image-cache-mtime-35133: Bust Coil's memory + disk cache when a
-     * `i://` file is overwritten in-place (e.g. Grok regenerating an
+     * `orca://` file is overwritten in-place (e.g. Grok regenerating an
      * image to the same `attachments/cat.jpg`). Without this, Coil keys
      * off the URI alone and keeps serving the previous bitmap; only the
      * ToolDetailSheet — which reads the File directly — saw the new bytes.
      *
-     * The key composes `<i-uri>?mt=<lastModified>`. The fetcher above
+     * The key composes `<orca-uri>?mt=<lastModified>`. The fetcher above
      * already strips `?query` before resolving, so adding the suffix here
      * does not interfere with on-disk lookup. Returning `null` falls back
      * to Coil's default keying, which is correct for non-i data.
@@ -102,14 +102,14 @@ class IImageFetcher(
      */
     class MtimeKeyer : Keyer<Uri> {
         override fun key(data: Uri, options: Options): String? {
-            if (data.scheme != "i") return null
+            if (data.scheme != "orca") return null
             return composeMtimeKey(data.toString())
         }
     }
 
     class StringMtimeKeyer : Keyer<String> {
         override fun key(data: String, options: Options): String? {
-            if (!data.startsWith("i://")) return null
+            if (!data.startsWith("orca://")) return null
             return composeMtimeKey(data)
         }
     }
@@ -119,13 +119,13 @@ class IImageFetcher(
             // Resolve once to fetch mtime. Cheap (single stat on host fs);
             // Coil only calls Keyer when computing/looking up cache keys,
             // not on every recomposition.
-            val stripped = uri.removePrefix("i://").substringBefore('?')
+            val stripped = uri.removePrefix("orca://").substringBefore('?')
             val decoded = try {
                 java.net.URLDecoder.decode(stripped, "UTF-8")
             } catch (_: Throwable) {
                 stripped
             }
-            val linuxPath = "/var/i/$decoded"
+            val linuxPath = "/var/orca/$decoded"
             val mtime = try {
                 PRootKernel.resolveHostPath(linuxPath)?.lastModified() ?: 0L
             } catch (_: Throwable) {

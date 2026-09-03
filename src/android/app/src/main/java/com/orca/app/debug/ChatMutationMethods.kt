@@ -2,7 +2,7 @@ package com.orca.app.debug
 
 import android.content.Context
 import androidx.core.content.FileProvider
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.data.model.ThinkingLevel
 import com.orca.app.ui.chat.InputAttachment
 import org.json.JSONObject
@@ -19,9 +19,9 @@ import java.io.File
  */
 internal object ChatMutationMethods {
 
-    private fun app(context: Context): IApp =
-        context.applicationContext as? IApp
-            ?: throw RPCException(-32000, "IApp not initialized")
+    private fun app(context: Context): OrcaApp =
+        context.applicationContext as? OrcaApp
+            ?: throw RPCException(-32000, "OrcaApp not initialized")
 
     /**
      * [T-android-ui-prompt-rpc] Send a prompt through the ON-SCREEN chat's own

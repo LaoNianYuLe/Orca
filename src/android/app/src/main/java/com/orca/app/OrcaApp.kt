@@ -54,10 +54,10 @@ import com.orca.app.sandbox.offload.SpeakOffloadHandler
 import com.orca.app.sandbox.offload.SpeechOffloadHandler
 import com.orca.app.sandbox.offload.WeatherOffloadHandler
 import com.orca.app.service.SessionActivityTracker
-import com.orca.app.ui.IImageFetcher
+import com.orca.app.ui.OrcaImageFetcher
 import kotlinx.coroutines.launch
 
-class IApp : Application(), ImageLoaderFactory {
+class OrcaApp : Application(), ImageLoaderFactory {
     /**
      * T-android-safemode-lateinit-crash: true once the heavy subsystem
      * block in [onCreate] has fully run (DB + every repository assigned).
@@ -187,12 +187,12 @@ class IApp : Application(), ImageLoaderFactory {
     val networkMonitor: NetworkMonitor = NetworkMonitor()
 
     /**
-     * Application-scoped BrowserTabPool for shell-invoked `i-browser-use`.
+     * Application-scoped BrowserTabPool for shell-invoked `orca-browser-use`.
      * Separate from the per-ChatViewModel pool so browser state driven from
      * within an ish shell doesn't collide with the agent's own tabs.
      */
     val sharedBrowserTabPool: BrowserTabPool by lazy {
-        BrowserTabPool(this).also { it.setSession("i-browser-use") }
+        BrowserTabPool(this).also { it.setSession("orca-browser-use") }
     }
 
     override fun attachBaseContext(base: Context) {
@@ -238,7 +238,7 @@ class IApp : Application(), ImageLoaderFactory {
         // done in attachBaseContext, which is what makes the :acra
         // process do its job).
         if (ACRA.isACRASenderServiceProcess()) {
-            Log.i("IApp", "skipping app init in :acra reporter process")
+            Log.i("OrcaApp", "skipping app init in :acra reporter process")
             return
         }
 
@@ -272,7 +272,7 @@ class IApp : Application(), ImageLoaderFactory {
                 java.io.File(filesDir, "logs"),
             )
         } catch (t: Throwable) {
-            Log.w("IApp", "NativeCrashHandler install failed: ${t.message}")
+            Log.w("OrcaApp", "NativeCrashHandler install failed: ${t.message}")
         }
 
         // T-android-fgs-timeout-crash: chain an UncaughtExceptionHandler
@@ -297,7 +297,7 @@ class IApp : Application(), ImageLoaderFactory {
                         throwable.message?.contains("did not stop within its timeout") == true)
                     if (isFgsTimeout) {
                         Log.w(
-                            "IApp",
+                            "OrcaApp",
                             "FGS timeout caught; stopping service before deferring to ACRA: ${throwable.message}",
                         )
                         // Stop the service so the system tears the
@@ -309,14 +309,14 @@ class IApp : Application(), ImageLoaderFactory {
                         }
                     }
                 } catch (t: Throwable) {
-                    Log.w("IApp", "FGS-timeout handler internal failure: ${t.message}")
+                    Log.w("OrcaApp", "FGS-timeout handler internal failure: ${t.message}")
                 }
                 // Always defer to the prior handler so ACRA's
                 // dump-and-relaunch flow runs intact.
                 priorHandler?.uncaughtException(thread, throwable)
             }
         } catch (t: Throwable) {
-            Log.w("IApp", "install FGS-timeout handler failed: ${t.message}")
+            Log.w("OrcaApp", "install FGS-timeout handler failed: ${t.message}")
         }
 
         // T-android-crash-freq-share: local fallback for Crashlytics (#458).
@@ -334,7 +334,7 @@ class IApp : Application(), ImageLoaderFactory {
         // point of safe-mode is to stop the bleeding before another
         // segfault rewrites the log files.
         if (com.orca.app.crash.CrashFrequencyDetector.isSafeMode()) {
-            Log.w("IApp", "safe-mode ON — skipping app subsystem init")
+            Log.w("OrcaApp", "safe-mode ON — skipping app subsystem init")
             return
         }
 
@@ -342,7 +342,7 @@ class IApp : Application(), ImageLoaderFactory {
         // logging enabled in Settings, this also kicks off stdout/stderr
         // capture so subsequent println / Throwable.printStackTrace lines from
         // the rest of onCreate land in today's log file. Mirrors iOS
-        // `LoggingManager.startIfEnabled()` (called from IApp.swift:143).
+        // `LoggingManager.startIfEnabled()` (called from OrcaApp.swift:143).
         AppLogger.init(this)
 
         // Bug 2 (MIUI silent kill) diagnostic: write a launch-cycle beacon
@@ -353,7 +353,7 @@ class IApp : Application(), ImageLoaderFactory {
         try {
             com.orca.app.diagnostics.LaunchCycleBeacon.recordLaunch(this)
         } catch (t: Throwable) {
-            Log.w("IApp", "LaunchCycleBeacon.recordLaunch failed: ${t.message}")
+            Log.w("OrcaApp", "LaunchCycleBeacon.recordLaunch failed: ${t.message}")
         }
 
         // Start the main-thread hang watchdog before the heavier subsystems
@@ -396,7 +396,7 @@ class IApp : Application(), ImageLoaderFactory {
         // breaks the Application and produces the GH#147 crash loop.
         skillRepository = SkillRepository(this)
         mcpRepository = MCPRepository(this)
-        memoryRepository = MemoryRepository(java.io.File(filesDir, "i-global/memory"))
+        memoryRepository = MemoryRepository(java.io.File(filesDir, "orca-global/memory"))
         webAppShortcutRepository = WebAppShortcutRepository(database.webAppShortcutDao())
 
         // T-android-safemode-lateinit-crash: every repository the UI layer
@@ -413,7 +413,7 @@ class IApp : Application(), ImageLoaderFactory {
             // crash-share dialog rather than composing against unassigned
             // repositories. Do NOT rethrow: that is what turns a one-off init
             // failure into an unrecoverable launch loop.
-            Log.e("IApp", "subsystem init failed — app will start in degraded mode", t)
+            Log.e("OrcaApp", "subsystem init failed — app will start in degraded mode", t)
             return
         }
 
@@ -425,11 +425,11 @@ class IApp : Application(), ImageLoaderFactory {
         com.orca.app.agent.SoulStore.ensureExists(this)
         com.orca.app.agent.SoulStore.refreshCache(this)
 
-        // T-config: i-config CLI surface — registry / audit log /
+        // T-config: orca-config CLI surface — registry / audit log /
         // master-switch store. Initialized eagerly here so
         // ConfigRegistry.get() is safe from any thread for the rest of
         // the process. Mirrors iOS ConfigRegistry.shared.registerBuiltinsIfNeeded().
-        com.orca.app.config.IConfigPermissionStore.init(this)
+        com.orca.app.config.OrcaConfigPermissionStore.init(this)
         com.orca.app.config.audit.ConfigAuditLog.init(this)
         com.orca.app.config.ConfigRegistry.init(
             this, providerRepository, envVarRepository, chatRepository,
@@ -454,14 +454,14 @@ class IApp : Application(), ImageLoaderFactory {
         // DNS servers after Wi-Fi ↔ cellular swaps or VPN toggles.
         networkMonitor.start(this)
 
-        // Register global /var/i/{memory,skills,shared} bind mounts up-front
+        // Register global /var/orca/{memory,skills,shared} bind mounts up-front
         // so direct file I/O tools (file_read) resolve these paths even before
         // PRoot has booted or any shell has started.
         PRootKernel.registerGlobalBindMounts(this)
 
         // T219-1: load user-mounted external folders and seed PRoot's
         // bindMounts before the first proot invocation, so the very first
-        // `shell_execute` already has `/var/i/mounts/<name>/` visible.
+        // `shell_execute` already has `/var/orca/mounts/<name>/` visible.
         // Entries whose SAF tree URI didn't resolve to a real POSIX path
         // (cloud providers, unmounted SD card) are silently skipped by
         // bindMountSpecs.
@@ -482,7 +482,7 @@ class IApp : Application(), ImageLoaderFactory {
         }
         // T219-6: route launch-time seeding through applyMountedFoldersSnapshot
         // so it (a) reads the live store consistently and (b) materializes the
-        // /var/i/mounts/<name> placeholder dirs that PRoot's `-b` needs.
+        // /var/orca/mounts/<name> placeholder dirs that PRoot's `-b` needs.
         // Note: this runs before PRootKernel.boot, so rootfs may not yet exist —
         // applyMountedFoldersSnapshot tolerates that case (mkdirs fails silently
         // and PRootKernel.boot calls applyMountedFoldersSnapshot again at the
@@ -506,29 +506,29 @@ class IApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-speak", SpeakOffloadHandler(this))
         NativeOffloadServer.register("android-speech", SpeechOffloadHandler(this))
         NativeOffloadServer.register("android-weather", WeatherOffloadHandler(this))
-        // T323: UI-layer automation backed by IAccessibilityService.
+        // T323: UI-layer automation backed by OrcaAccessibilityService.
         NativeOffloadServer.register("android-a11y-cli", AccessibilityOffloadHandler(this))
-        NativeOffloadServer.register("i-model-use", ModelUseOffloadHandler(this, providerRepository))
-        // T-config: i-config — agent-facing settings management
+        NativeOffloadServer.register("orca-model-use", ModelUseOffloadHandler(this, providerRepository))
+        // T-config: orca-config — agent-facing settings management
         // (read/write registered ConfigFields with audit + revert).
         // Mirrors iOS `config_offload_register()` in ISHKernel.m.
         NativeOffloadServer.register(
-            "i-config",
+            "orca-config",
             com.orca.app.sandbox.offload.ConfigOffloadHandler(),
         )
-        NativeOffloadServer.register("i-browser-use", BrowserUseOffloadHandler(this))
-        // T188: i-sessions-cli — agent-side query of chat history.
+        NativeOffloadServer.register("orca-browser-use", BrowserUseOffloadHandler(this))
+        // T188: orca-sessions-cli — agent-side query of chat history.
         // Registers next to the other i-* tools so PRootKernel.
         // installHandlerStubs() picks it up on the next rootfs boot
-        // (writes a 17-byte exit-0 stub at /usr/local/bin/i-sessions-cli
+        // (writes a 17-byte exit-0 stub at /usr/local/bin/orca-sessions-cli
         // so PATH lookup succeeds; PRoot intercepts the execve before
         // the stub runs and routes to this handler).
-        NativeOffloadServer.register("i-sessions-cli", SessionsOffloadHandler(chatRepository))
-        // [T-android-scheduled-tasks-full] i-scheduled — create/list/run
+        NativeOffloadServer.register("orca-sessions-cli", SessionsOffloadHandler(chatRepository))
+        // [T-android-scheduled-tasks-full] orca-scheduled — create/list/run
         // timed AI tasks (new chat / follow-up / re-run), mirroring the in-app
         // Scheduled Tasks editor and the iOS Shortcuts intent set.
         NativeOffloadServer.register(
-            "i-scheduled",
+            "orca-scheduled",
             com.orca.app.sandbox.offload.ScheduledTaskOffloadHandler(this),
         )
         // T322: android-shizuku-cli — privileged Android control via Shizuku.
@@ -539,14 +539,14 @@ class IApp : Application(), ImageLoaderFactory {
         NativeOffloadServer.register("android-shizuku-cli", ShizukuOffloadHandler(this))
         com.orca.app.offload.ShizukuManager.init(this)
 
-        // T-android-i-debug-cli: shell-side CLI wrapper around the in-app
+        // T-android-orca-debug-cli: shell-side CLI wrapper around the in-app
         // DebugServer (127.0.0.1:5321) JSON-RPC. DEBUG-only — Release builds
         // ship neither the DebugServer nor this handler, so the
-        // `/usr/local/bin/i-debug` stub is also absent (PRootKernel.
+        // `/usr/local/bin/orca-debug` stub is also absent (PRootKernel.
         // installHandlerStubs enumerates currently-registered handlers).
         if (BuildConfig.DEBUG) {
             NativeOffloadServer.register(
-                "i-debug",
+                "orca-debug",
                 com.orca.app.sandbox.offload.DebugOffloadHandler(this),
             )
         }
@@ -594,7 +594,7 @@ class IApp : Application(), ImageLoaderFactory {
         }
 
         // [T-android-config-confirm-timeout] Wire the config-confirm background
-        // notifier into the (Context-free) gate, so a i-config approval that
+        // notifier into the (Context-free) gate, so a orca-config approval that
         // is waiting while the app is backgrounded nudges the user before the
         // 120s timeout. Mirrors iOS ConfigConfirmationGate.notifyIfBackgrounded.
         val configConfirmNotifier = com.orca.app.notification.ConfigConfirmNotifier(
@@ -685,7 +685,7 @@ class IApp : Application(), ImageLoaderFactory {
         // Initialize speech-recognition adapter layer (system + provider engines).
         com.orca.app.speech.SpeechRecognitionManager.init(this)
 
-        // Refresh model lists once per calendar day (mirrors iOS IApp.swift).
+        // Refresh model lists once per calendar day (mirrors iOS OrcaApp.swift).
         // Runs per-instance in parallel; `autoRefreshModels` skips instances with custom models.
         providerRepository.refreshAllModelsIfNeeded(
             kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
@@ -704,14 +704,14 @@ class IApp : Application(), ImageLoaderFactory {
                         try {
                             ExecutionCoordinator.broadcastTimezoneChange()
                         } catch (t: Throwable) {
-                            Log.w("IApp", "broadcastTimezoneChange failed: ${t.message}")
+                            Log.w("OrcaApp", "broadcastTimezoneChange failed: ${t.message}")
                         }
                     }
                     android.net.Proxy.PROXY_CHANGE_ACTION -> scope.launch {
                         try {
                             ExecutionCoordinator.broadcastProxyChange()
                         } catch (t: Throwable) {
-                            Log.w("IApp", "broadcastProxyChange failed: ${t.message}")
+                            Log.w("OrcaApp", "broadcastProxyChange failed: ${t.message}")
                         }
                     }
                 }
@@ -730,7 +730,7 @@ class IApp : Application(), ImageLoaderFactory {
             try {
                 com.orca.app.debug.DebugServer(this).start()
             } catch (e: Exception) {
-                Log.w("IApp", "Failed to start debug server: ${e.message}")
+                Log.w("OrcaApp", "Failed to start debug server: ${e.message}")
             }
         }
 
@@ -743,12 +743,12 @@ class IApp : Application(), ImageLoaderFactory {
         // migration runs at most once. Wrapped in runCatching so an
         // unexpected prefs shape never blocks app launch.
         runCatching { migrateGhostAlarms() }
-            .onFailure { Log.w("IApp", "ghost alarm migration failed: ${it.message}") }
+            .onFailure { Log.w("OrcaApp", "ghost alarm migration failed: ${it.message}") }
     }
 
     /**
      * T268: replay any pre-T266 internal alarm/timer entries from
-     * i_alarms_prefs through SET_ALARM / SET_TIMER, then clear the
+     * orca_alarms_prefs through SET_ALARM / SET_TIMER, then clear the
      * prefs blob so subsequent launches no-op. Past-dated entries are
      * dropped (the OS never re-fires them anyway). Idempotent: if the
      * blob is missing or empty the function returns immediately.
@@ -762,7 +762,7 @@ class IApp : Application(), ImageLoaderFactory {
      * commands will no longer surface them.
      */
     private fun migrateGhostAlarms() {
-        val prefs = getSharedPreferences("i_alarms_prefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("orca_alarms_prefs", Context.MODE_PRIVATE)
         val raw = prefs.getString("alarms_json", null) ?: return
         if (raw.isBlank() || raw == "[]") return
         val arr = org.json.JSONArray(raw)
@@ -813,24 +813,24 @@ class IApp : Application(), ImageLoaderFactory {
         // still useless ghosts, and leaving the blob would re-trigger
         // migration on every launch.
         prefs.edit().remove("alarms_json").apply()
-        Log.i("IApp", "T268 ghost alarm migration: migrated=$migrated skipped=$skipped (prefs cleared)")
+        Log.i("OrcaApp", "T268 ghost alarm migration: migrated=$migrated skipped=$skipped (prefs cleared)")
     }
 
     /**
-     * Coil global ImageLoader — registers [IImageFetcher] so `i://`
-     * URIs in Markdown images (e.g. `![alt](i://attachments/x.png)`)
-     * resolve to local files under /var/i/.
+     * Coil global ImageLoader — registers [OrcaImageFetcher] so `orca://`
+     * URIs in Markdown images (e.g. `![alt](orca://attachments/x.png)`)
+     * resolve to local files under /var/orca/.
      */
     override fun newImageLoader(): ImageLoader =
         ImageLoader.Builder(this)
             .components {
-                add(IImageFetcher.Factory())
-                add(IImageFetcher.UriFactory())
+                add(OrcaImageFetcher.Factory())
+                add(OrcaImageFetcher.UriFactory())
                 // T-image-cache-mtime-35133: include File.lastModified() in
                 // memory + disk cache key so Grok-style in-place rewrites of
-                // i://attachments/foo.jpg invalidate Coil's cached bitmap.
-                add(IImageFetcher.MtimeKeyer())
-                add(IImageFetcher.StringMtimeKeyer())
+                // orca://attachments/foo.jpg invalidate Coil's cached bitmap.
+                add(OrcaImageFetcher.MtimeKeyer())
+                add(OrcaImageFetcher.StringMtimeKeyer())
             }
             .build()
 
@@ -871,16 +871,16 @@ class IApp : Application(), ImageLoaderFactory {
         }
         if (!dropFormulaCaches) return
 
-        Log.i("IApp", "onTrimMemory(level=$level): releasing formula bitmap caches")
+        Log.i("OrcaApp", "onTrimMemory(level=$level): releasing formula bitmap caches")
         runCatching { com.orca.app.ui.chat.KatexWebViewPool.evictAll() }
-            .onFailure { Log.w("IApp", "KatexWebViewPool.evictAll failed: ${it.message}") }
+            .onFailure { Log.w("OrcaApp", "KatexWebViewPool.evictAll failed: ${it.message}") }
         runCatching { com.orca.app.ui.markdown.KaTeXRendererCache.evictAll() }
-            .onFailure { Log.w("IApp", "KaTeXRendererCache.evictAll failed: ${it.message}") }
+            .onFailure { Log.w("OrcaApp", "KaTeXRendererCache.evictAll failed: ${it.message}") }
 
         if (level >= TRIM_MEMORY_COMPLETE) {
-            Log.i("IApp", "onTrimMemory(level=$level): tearing down the offscreen KaTeX WebView")
+            Log.i("OrcaApp", "onTrimMemory(level=$level): tearing down the offscreen KaTeX WebView")
             runCatching { com.orca.app.ui.chat.KatexWebViewPool.releaseWebView() }
-                .onFailure { Log.w("IApp", "KatexWebViewPool.releaseWebView failed: ${it.message}") }
+                .onFailure { Log.w("OrcaApp", "KatexWebViewPool.releaseWebView failed: ${it.message}") }
         }
     }
 
@@ -893,7 +893,7 @@ class IApp : Application(), ImageLoaderFactory {
         try {
             com.orca.app.diagnostics.LaunchCycleBeacon.recordCleanExit(this)
         } catch (t: Throwable) {
-            Log.w("IApp", "LaunchCycleBeacon.recordCleanExit failed: ${t.message}")
+            Log.w("OrcaApp", "LaunchCycleBeacon.recordCleanExit failed: ${t.message}")
         }
         super.onTerminate()
     }

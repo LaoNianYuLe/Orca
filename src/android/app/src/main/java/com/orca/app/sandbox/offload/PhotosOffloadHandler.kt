@@ -454,14 +454,14 @@ class PhotosOffloadHandler(private val context: Context) : NativeOffloadHandler 
 
     /**
      * Copy the asset bytes into the CALLING SESSION's offloads dir
-     * (`<filesDir>/i-sessions/<sessionId>/offloads/`) and report the
-     * sandbox-visible `/var/i/offloads/<name>` path plus a `i://`
+     * (`<filesDir>/orca-sessions/<sessionId>/offloads/`) and report the
+     * sandbox-visible `/var/orca/offloads/<name>` path plus a `orca://`
      * URL, matching iOS `PhotosOffload.m` (which exports to
-     * `/var/i/offloads/` directly).
+     * `/var/orca/offloads/` directly).
      *
      * [GH#139] This used to write to `<filesDir>/photos-export/` and return
      * only `host_path`. That path is inside no PRoot bind mount, so the
-     * Linux sandbox cannot read it and `i-open` rejects it (it accepts
+     * Linux sandbox cannot read it and `orca-open` rejects it (it accepts
      * only http/https/about/i URLs) — the agent could list photo
      * metadata but never actually look at an exported photo. An older
      * comment here claimed the handler "doesn't see the session id"; that
@@ -524,12 +524,12 @@ class PhotosOffloadHandler(private val context: Context) : NativeOffloadHandler 
         )
 
         // [GH#139] Session-scoped when we know the caller's chat, so the export
-        // lands in the dir PRoot bind-mounts at /var/i/offloads for THIS
+        // lands in the dir PRoot bind-mounts at /var/orca/offloads for THIS
         // session. Mirrors ModelUseOffloadHandler.sessionScopedHostFile and
         // PRootKernel.resolveSessionHostPath, which use the same layout.
         val sandboxVisible = sessionId != null
         val outDir = if (sandboxVisible) {
-            File(context.filesDir, "i-sessions/$sessionId/offloads").also { it.mkdirs() }
+            File(context.filesDir, "orca-sessions/$sessionId/offloads").also { it.mkdirs() }
         } else {
             File(context.filesDir, "photos-export").also { it.mkdirs() }
         }
@@ -556,23 +556,23 @@ class PhotosOffloadHandler(private val context: Context) : NativeOffloadHandler 
                 .put("format", if (size == "original") "original" else "jpeg")
                 .put("export_size", size)
             // [GH#139] Hand back the paths the agent can actually USE: the
-            // sandbox path for shell tools, and the i:// URL that
-            // `i-open` accepts for in-chat preview / model rendering.
+            // sandbox path for shell tools, and the orca:// URL that
+            // `orca-open` accepts for in-chat preview / model rendering.
             if (sandboxVisible) {
-                data.put("linux_path", "/var/i/offloads/${outFile.name}")
-                    .put("i_url", "i://offloads/${outFile.name}")
+                data.put("linux_path", "/var/orca/offloads/${outFile.name}")
+                    .put("orca_url", "orca://offloads/${outFile.name}")
                     .put(
                         "note",
                         "Exported into this chat's offloads dir. Use `linux_path` from shell " +
-                            "tools, or `i_url` with i-open to preview it in chat.",
+                            "tools, or `i_url` with orca-open to preview it in chat.",
                     )
             } else {
                 data.put(
                     "note",
                     "No chat session for this offload (interactive terminal), so the export " +
                         "went to app-private storage: `host_path` is NOT reachable from the " +
-                        "Linux sandbox and i-open cannot open it. Run the export from a " +
-                        "chat to get a /var/i/offloads path.",
+                        "Linux sandbox and orca-open cannot open it. Run the export from a " +
+                        "chat to get a /var/orca/offloads path.",
                 )
             }
             if (width > 0) data.put("width", width)
@@ -1050,8 +1050,8 @@ Android edge cases vs apple-photos:
     RecoverableSecurityException. Surfaced as `error: write_denied`
     since the CLI sandbox can't show the system consent dialog.
   - Export writes into the calling chat's offloads dir and returns
-    `linux_path` (/var/i/offloads/...) and `i_url`
-    (i://offloads/...) alongside `host_path`, matching iOS. Outside a
+    `linux_path` (/var/orca/offloads/...) and `i_url`
+    (orca://offloads/...) alongside `host_path`, matching iOS. Outside a
     chat (interactive terminal) there is no session dir, so only
     `host_path` is returned and the note says it is not reachable from
     the Linux sandbox.

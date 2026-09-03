@@ -42,7 +42,7 @@ import kotlin.coroutines.resume
  *
  * Writing ENABLED_ACCESSIBILITY_SERVICES requires WRITE_SECURE_SETTINGS, which
  * is not grantable to a normal app. That is why none of the apps surveyed even
- * *detect* the loss. I is in a better position because it already ships a
+ * *detect* the loss. Orca is in a better position because it already ships a
  * Shizuku client: with Shizuku authorized we can run `settings put secure`
  * with shell privilege and repair the grant in place, which was verified to
  * take effect immediately (the service rebinds without a relaunch).
@@ -116,7 +116,7 @@ object AccessibilityRecoveryManager {
 
     /** The `pkg/cls` string the framework expects in ENABLED_ACCESSIBILITY_SERVICES. */
     private fun componentId(context: Context): String =
-        "${context.packageName}/${IAccessibilityService::class.java.name}"
+        "${context.packageName}/${OrcaAccessibilityService::class.java.name}"
 
     private const val PREFS = "a11y_recovery"
     private const val KEY_EVER_GRANTED = "ever_granted"
@@ -138,7 +138,7 @@ object AccessibilityRecoveryManager {
 
     /**
      * Latch that the grant has existed. Called from
-     * [IAccessibilityService.onServiceConnected] — the one moment we know
+     * [OrcaAccessibilityService.onServiceConnected] — the one moment we know
      * for certain the user granted it, whichever route they took (Settings
      * toggle, Shizuku repair, or a restore).
      */
@@ -155,7 +155,7 @@ object AccessibilityRecoveryManager {
      * i.e. the grant itself is gone and only a Settings write can restore it.
      *
      * This asks Settings.Secure rather than checking
-     * `IAccessibilityService.getInstance() != null`, because the two mean
+     * `OrcaAccessibilityService.getInstance() != null`, because the two mean
      * different things and only one of them is repairable:
      *  - instance == null but grant present → the service is mid-(re)bind, or
      *    the OEM killed it and the framework will bring it back. Writing the
@@ -180,7 +180,7 @@ object AccessibilityRecoveryManager {
             isRevokedIn(
                 enabledValue = enabled,
                 pkg = context.packageName,
-                serviceClass = IAccessibilityService::class.java.name,
+                serviceClass = OrcaAccessibilityService::class.java.name,
             )
         } catch (t: Throwable) {
             // A read failure is not evidence of revocation — do not prompt on it.
@@ -279,7 +279,7 @@ object AccessibilityRecoveryManager {
         // The write is async from the framework's perspective; wait for the
         // real signal (our service instance appearing) rather than assuming.
         val bound = withTimeoutOrNull(REBIND_TIMEOUT_MS) {
-            while (IAccessibilityService.getInstance() == null) delay(REBIND_POLL_MS)
+            while (OrcaAccessibilityService.getInstance() == null) delay(REBIND_POLL_MS)
             true
         } == true
 

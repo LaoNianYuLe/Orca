@@ -35,7 +35,7 @@ import com.orca.app.data.repository.SkillRepository
 import com.orca.app.ui.components.DialogTextField
 import com.orca.app.ui.settings.SettingsSection
 import com.orca.app.ui.settings.SkillRowItem
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Bottom sheet showing all skills with per-session enable/disable toggles.
@@ -129,7 +129,7 @@ fun SessionSkillsSheet(
                     Spacer(modifier = Modifier.weight(1f))
                     // Enable/Disable All operate on the FILTERED subset so a
                     // user can bulk-toggle the result of a search.
-                    ITextButton(
+                    OrcaTextButton(
                         onClick = {
                             for (skill in filteredSkills) {
                                 overrides[skill.id] = true
@@ -142,7 +142,7 @@ fun SessionSkillsSheet(
                     ) {
                         Text(stringResource(R.string.session_skills_enable_all), fontSize = 12.sp)
                     }
-                    ITextButton(
+                    OrcaTextButton(
                         onClick = {
                             for (skill in filteredSkills) {
                                 overrides[skill.id] = false

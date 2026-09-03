@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.dp
 import com.orca.app.R
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.components.modelEntryPickerItems
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * T185 — full-screen picker for adding model entries to the agent-loop
@@ -102,8 +102,8 @@ fun AddAgentLoopModelsScreen(
                     }
                 },
                 actions = {
-                    ITextButton(onClick = onBack) { Text(stringResource(R.string.common_cancel)) }
-                    IButton(
+                    OrcaTextButton(onClick = onBack) { Text(stringResource(R.string.common_cancel)) }
+                    OrcaButton(
                         onClick = {
                             // Add in stable order so the section renders
                             // pinned items in the order the user saw them
@@ -191,8 +191,8 @@ fun AddAgentLoopGroupsScreen(
                     }
                 },
                 actions = {
-                    ITextButton(onClick = onBack) { Text(stringResource(R.string.common_cancel)) }
-                    IButton(
+                    OrcaTextButton(onClick = onBack) { Text(stringResource(R.string.common_cancel)) }
+                    OrcaButton(
                         onClick = {
                             // Same stable-order add policy as the entries
                             // picker so the section ordering matches the

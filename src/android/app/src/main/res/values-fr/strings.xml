@@ -302,7 +302,7 @@
     <!-- T336 follow-up: ASK_ONCE granted for the whole app launch -->
     <string name="perm_level_ask_once">Demander à chaque lancement</string>
     <string name="perm_level_not_allowed">Non autorisé</string>
-    <!-- T296: Permissions screen — section headers, i-config switch, tool titles -->
+    <!-- T296: Permissions screen — section headers, orca-config switch, tool titles -->
     <string name="perm_section_config_tool">Outil de configuration</string>
     <!-- T336: dedicated SectionCard per integration CLI. TODO translate (fr) -->
     <string name="perm_tool_a11y_cli">android-a11y-cli</string>
@@ -318,8 +318,8 @@
     <string name="perm_agent_policy">Permission de l\'agent</string>
     <string name="perm_a11y_system_ready">Service activé</string>
     <string name="perm_a11y_system_disabled">Service non activé</string>
-    <string name="perm_allow_i_config">Autoriser i-config</string>
-    <string name="perm_i_config_desc">Lorsque désactivé, l\'agent ne peut ni lire ni modifier les paramètres via i-config. L\'historique des modifications dans Journaux → Modifications de configuration reste accessible. L\'agent recevra une erreur permission_denied et pourra vous guider via des liens profonds.</string>
+    <string name="perm_allow_orca_config">Autoriser orca-config</string>
+    <string name="perm_orca_config_desc">Lorsque désactivé, l\'agent ne peut ni lire ni modifier les paramètres via orca-config. L\'historique des modifications dans Journaux → Modifications de configuration reste accessible. L\'agent recevra une erreur permission_denied et pourra vous guider via des liens profonds.</string>
     <string name="perm_section_privacy">Confidentialité</string>
     <string name="perm_section_media">Média</string>
     <string name="perm_section_system">Système</string>
@@ -663,7 +663,7 @@
 
     <!-- T182 agent loop section i18n -->
     <string name="agent_loop_section_title">Modèles disponibles dans la boucle d\'agent</string>
-    <string name="agent_loop_section_footer">Les modèles et groupes listés ici sont invocables depuis le terminal via i-model-use. L\'agent ne voit que ceux-ci.</string>
+    <string name="agent_loop_section_footer">Les modèles et groupes listés ici sont invocables depuis le terminal via orca-model-use. L\'agent ne voit que ceux-ci.</string>
     <string name="agent_loop_section_empty_hint">Aucun modèle ou groupe ajouté</string>
     <string name="agent_loop_section_add_models">Ajouter des modèles</string>
     <string name="agent_loop_section_add_groups">Ajouter des groupes</string>
@@ -707,7 +707,7 @@
 
     <!-- T235 — Dossiers partagés (fixes : Partagé / Skills / Memory) -->
     <string name="settings_shared_folders">Dossiers partagés</string>
-    <string name="settings_shared_folders_subtitle">Parcourir /var/i : partagé, skills, memory</string>
+    <string name="settings_shared_folders_subtitle">Parcourir /var/orca : partagé, skills, memory</string>
     <string name="shared_folders_title">Dossiers partagés</string>
     <string name="shared_folders_info_banner">Ces dossiers sont visibles dans le bac à sable Linux. Skills et Memory sont gérés par les outils des agents IA — ne les modifiez pas manuellement.</string>
     <string name="shared_folder_name_shared">Partagé</string>
@@ -718,9 +718,9 @@
 
     <!-- T219-2 — Monter des dossiers externes -->
     <string name="settings_mount_external_folders">Monter des dossiers externes</string>
-    <string name="settings_mount_external_folders_subtitle">Lier les dossiers choisis dans /var/i/mounts/</string>
+    <string name="settings_mount_external_folders_subtitle">Lier les dossiers choisis dans /var/orca/mounts/</string>
     <string name="mount_folders_title">Dossiers montés</string>
-    <string name="mount_folders_info_banner">Les dossiers choisis sont liés à /var/i/mounts/&lt;nom&gt;. Jusqu\'à 10 dossiers peuvent être montés simultanément.</string>
+    <string name="mount_folders_info_banner">Les dossiers choisis sont liés à /var/orca/mounts/&lt;nom&gt;. Jusqu\'à 10 dossiers peuvent être montés simultanément.</string>
     <string name="mount_picker_intro_title">Choisir un dossier</string>
     <string name="mount_picker_intro_message">Android n\'autorise pas le montage de tout le stockage interne — choisissez un dossier précis à l\'intérieur, par exemple Documents ou Téléchargements.\n\nLe sélecteur qui s\'ouvre appartient au système. Si un dossier affiche « impossible d\'utiliser ce dossier », entrez dans un sous-dossier ou revenez ici avec le geste Retour.</string>
     <string name="mount_picker_intro_continue">Choisir</string>
@@ -730,7 +730,7 @@
     <string name="mount_add_dialog_title">Ajouter un montage</string>
     <string name="mount_add_source_path">Chemin source</string>
     <string name="mount_add_name_label">Nom du montage</string>
-    <string name="mount_add_name_hint">Sera le nom du dossier sous /var/i/mounts/</string>
+    <string name="mount_add_name_hint">Sera le nom du dossier sous /var/orca/mounts/</string>
     <string name="mount_add_allow_writes">Autoriser l\'écriture</string>
     <string name="mount_add_allow_writes_desc">Si désactivé, les outils file_write / file_edit refusent les écritures ; le shell peut toujours contourner.</string>
     <string name="mount_add_confirm">Ajouter</string>
@@ -829,7 +829,7 @@
     <!-- T-selection-add-to-input — Action du menu de sélection sur appui long -->
     <string name="selection_add_to_chat_input">Ajouter au champ de saisie</string>
     <string name="selection_read_aloud">Lire à voix haute</string>
-    <!-- T-i-textkit boutons du menu de sélection -->
+    <!-- T-orca-textkit boutons du menu de sélection -->
     <string name="selection_copy">Copier</string>
     <string name="selection_copy_markdown">Copier en Markdown</string>
     <string name="selection_copy_rich_text">Copier en texte enrichi</string>
@@ -884,7 +884,7 @@
     <string name="mcp_add">Ajouter un serveur MCP</string>
     <string name="mcp_edit">Modifier le serveur MCP</string>
     <string name="mcp_section_servers">Serveurs</string>
-    <string name="mcp_section_footer">Les serveurs MCP permettent à l’agent d’appeler des outils externes via i-mcp-cli. La configuration est stockée dans /var/i/mcp-servers/servers.json (compatible Claude Desktop).</string>
+    <string name="mcp_section_footer">Les serveurs MCP permettent à l’agent d’appeler des outils externes via orca-mcp-cli. La configuration est stockée dans /var/orca/mcp-servers/servers.json (compatible Claude Desktop).</string>
     <string name="mcp_empty_title">Aucun serveur MCP</string>
     <string name="mcp_empty_action">Ajoutez un serveur avec le bouton +.</string>
     <string name="mcp_transport_http">HTTP</string>

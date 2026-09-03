@@ -187,7 +187,7 @@ class TerminalSession(private val context: Context) {
 
                 if (sessionId != null) {
                     kotlinx.coroutines.delay(300)
-                    writeInput("cd /var/i && clear\n".toByteArray())
+                    writeInput("cd /var/orca && clear\n".toByteArray())
                 }
 
                 readerJob = scope.launch { readLoop() }
@@ -410,7 +410,7 @@ class TerminalSession(private val context: Context) {
         cmd.add("-b"); cmd.add("/dev")
         cmd.add("-b"); cmd.add("/proc")
         cmd.add("-b"); cmd.add("/sys")
-        cmd.add("-w"); cmd.add("/root")
+        cmd.add("-w"); cmd.add("/var/orca")
 
         for ((linuxPath, hostPath) in PRootKernel.bindMounts) {
             cmd.add("-b"); cmd.add("$hostPath:$linuxPath")

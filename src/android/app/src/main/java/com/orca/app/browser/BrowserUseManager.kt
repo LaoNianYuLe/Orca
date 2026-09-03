@@ -387,21 +387,21 @@ class BrowserUseManager(
                 view: WebView, request: WebResourceRequest
             ): android.webkit.WebResourceResponse? {
                 val url = request.url ?: return null
-                if (url.scheme != "i") return null
+                if (url.scheme != "orca") return null
                 return interceptIURL(url)
             }
         }
     }
 
-    /** Resolve i:// URLs to local workspace files. */
+    /** Resolve orca:// URLs to local workspace files. */
     private fun interceptIURL(uri: android.net.Uri): android.webkit.WebResourceResponse? {
         try {
-            // i://workspace/foo.html → /var/i/workspace/foo.html, then
+            // orca://workspace/foo.html → /var/orca/workspace/foo.html, then
             // resolve to the host file via PRoot bind mounts (per-session
-            // workspace lives under filesDir/i-sessions/<sid>/workspace/).
+            // workspace lives under filesDir/orca-sessions/<sid>/workspace/).
             val host = uri.host ?: return null
             val path = uri.path ?: ""
-            val linuxPath = "/var/i/$host$path"
+            val linuxPath = "/var/orca/$host$path"
             val localFile = com.orca.app.sandbox.PRootKernel.resolveHostPath(linuxPath)
             if (localFile == null || !localFile.exists() || !localFile.isFile) {
                 return android.webkit.WebResourceResponse("text/plain", "UTF-8", 404, "Not Found",
@@ -412,7 +412,7 @@ class BrowserUseManager(
             // the agent's session viewport when the page doesn't declare one.
             // Without this, Android WebView falls back to a hardcoded 980 CSS
             // px width regardless of the WebView's measured size, making
-            // `set_viewport` look like a no-op for `i://` HTML pages.
+            // `set_viewport` look like a no-op for `orca://` HTML pages.
             val stream = if (mimeType == "text/html" && lastAppliedViewport != null) {
                 ensureMetaViewport(localFile.readBytes(), lastAppliedViewport!!.first)
             } else {
@@ -422,7 +422,7 @@ class BrowserUseManager(
                 mapOf("Access-Control-Allow-Origin" to "*"),
                 stream)
         } catch (e: Exception) {
-            Log.w(TAG, "i:// intercept error: ${e.message}")
+            Log.w(TAG, "orca:// intercept error: ${e.message}")
             return null
         }
     }
@@ -574,7 +574,7 @@ class BrowserUseManager(
 
         withContext(Dispatchers.Main) {
             // Re-assert the last applied viewport before loadUrl. Intercepted
-            // navigations (i://) served via shouldInterceptRequest skip
+            // navigations (orca://) served via shouldInterceptRequest skip
             // the layout pass that a real network load triggers, so without
             // this the page reports Android WebView's 980px no-meta fallback
             // even when a session override (e.g. 960x540) is active.
@@ -784,7 +784,7 @@ class BrowserUseManager(
     /**
      * Public live-preview snapshot — mirrors iOS `webView.takeSnapshot()`.
      * Called by the UI on a timer (e.g. every 3s while a tool is streaming) so
-     * the I Computer sheet and FloatingToolStatusBar can show the browser
+     * the Orca Computer sheet and FloatingToolStatusBar can show the browser
      * state even for actions that don't save an imageFilePath (get_readable,
      * get_text, execute_js, fetch, etc.).
      */
@@ -1086,7 +1086,7 @@ class BrowserUseManager(
     /**
      * Last CSS-pixel viewport applied via [applyViewport]. Used so [navigate]
      * can re-assert the same size before `loadUrl()` — intercepted
-     * (`i://`) loads skip WebView's measure pass, otherwise stranding the
+     * (`orca://`) loads skip WebView's measure pass, otherwise stranding the
      * page at the 980px no-meta fallback.
      */
     private var lastAppliedViewport: Pair<Int, Int>? = null
@@ -1615,7 +1615,7 @@ class BrowserUseManager(
         // already finished loading (readyState === 'complete') is almost
         // always stable — confirm with two samples 50ms apart and return
         // without paying the 200ms poll interval. Keeps trivial static
-        // pages (e.g. i:// docs) fast at any budget.
+        // pages (e.g. orca:// docs) fast at any budget.
         val readyState = evaluateJavascript(
             "(function(){try{return document.readyState;}catch(e){return '';}})()"
         ).trim('"')

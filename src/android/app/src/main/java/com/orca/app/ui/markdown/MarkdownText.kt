@@ -120,9 +120,9 @@ private fun BlockContent(
             modifier = Modifier.padding(vertical = 4.dp),
             color = color.copy(alpha = 0.3f),
         )
-        is MarkdownParser.Block.Image -> IImageBlock(block)
-        is MarkdownParser.Block.Video -> IVideoBlock(block)
-        is MarkdownParser.Block.Audio -> IAudioBlock(block)
+        is MarkdownParser.Block.Image -> OrcaImageBlock(block)
+        is MarkdownParser.Block.Video -> OrcaVideoBlock(block)
+        is MarkdownParser.Block.Audio -> OrcaAudioBlock(block)
     }
 }
 
@@ -671,22 +671,22 @@ private fun parseInline(
 // ─── Media blocks (inline image / video / audio) ────────────────────────────
 
 /**
- * Resolve a URL used in Markdown (`i://...` or a plain path) to a host
+ * Resolve a URL used in Markdown (`orca://...` or a plain path) to a host
  * File, suitable for MediaPlayer, MediaMetadataRetriever, or file share
  * intents. Returns null when the path can't be resolved or the file is
- * missing. Mirrors IImageFetcher's resolution logic so inline media
+ * missing. Mirrors OrcaImageFetcher's resolution logic so inline media
  * tracks the same rules as inline images.
  */
 private fun resolveMediaFile(url: String): File? {
     if (url.isBlank()) return null
     // Strip a real query string, but NOT `#`: attachment filenames can
-    // contain '#' (e.g. `foo #China.mp4`). `i://` URLs don't use
+    // contain '#' (e.g. `foo #China.mp4`). `orca://` URLs don't use
     // fragments, so truncating at '#' would lose part of the filename.
     val stripped = url.substringBefore('?')
     val hostFile: File? = when {
-        stripped.startsWith("i://") -> {
-            val decoded = java.net.URLDecoder.decode(stripped.removePrefix("i://"), "UTF-8")
-            PRootKernel.resolveHostPath("/var/i/$decoded")
+        stripped.startsWith("orca://") -> {
+            val decoded = java.net.URLDecoder.decode(stripped.removePrefix("orca://"), "UTF-8")
+            PRootKernel.resolveHostPath("/var/orca/$decoded")
         }
         stripped.startsWith("file://") -> File(Uri.parse(stripped).path ?: return null)
         stripped.startsWith("/") -> File(stripped)
@@ -732,7 +732,7 @@ private fun openMediaExternally(context: Context, file: File, mime: String) {
 // -- Image block --
 
 @Composable
-private fun IImageBlock(block: MarkdownParser.Block.Image) {
+private fun OrcaImageBlock(block: MarkdownParser.Block.Image) {
     val surfaceBg = MaterialTheme.colorScheme.surfaceVariant
     val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
     AsyncImage(
@@ -752,8 +752,8 @@ private fun IImageBlock(block: MarkdownParser.Block.Image) {
 // -- Video block (thumbnail card + tap to open system player) --
 
 @Composable
-private fun IVideoBlock(block: MarkdownParser.Block.Video) {
-    android.util.Log.d("MdMedia", "IVideoBlock url=${block.url} alt=${block.alt}")
+private fun OrcaVideoBlock(block: MarkdownParser.Block.Video) {
+    android.util.Log.d("MdMedia", "OrcaVideoBlock url=${block.url} alt=${block.alt}")
     val context = LocalContext.current
     val file = remember(block.url) { resolveMediaFile(block.url) }
     val filename = remember(block.url) { filenameFromUrl(block.url) }
@@ -843,7 +843,7 @@ private fun IVideoBlock(block: MarkdownParser.Block.Video) {
 // -- Audio block (inline play/pause + progress) --
 
 @Composable
-private fun IAudioBlock(block: MarkdownParser.Block.Audio) {
+private fun OrcaAudioBlock(block: MarkdownParser.Block.Audio) {
     val file = remember(block.url) { resolveMediaFile(block.url) }
     val filename = remember(block.url) { filenameFromUrl(block.url) }
 

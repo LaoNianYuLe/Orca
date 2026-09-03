@@ -338,8 +338,7 @@ private fun ProviderInstanceRow(
     ) {
         Box(modifier = Modifier.size(30.dp)) {
             ProviderBrandBadge(
-                providerId = instance.providerType.name.lowercase(),
-                displayName = instance.label,
+                instance = instance,
             )
             Box(
                 modifier = Modifier

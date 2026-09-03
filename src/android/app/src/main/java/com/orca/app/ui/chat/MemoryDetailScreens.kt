@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.orca.app.R
 import com.orca.app.data.repository.MemoryRepository
 import com.orca.app.ui.theme.ChatColors
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Stateless detail body composables used by [SessionMemorySheet] when a row
@@ -256,7 +256,7 @@ fun RevokeConfirmDialog(
         title = { Text(stringResource(R.string.memory_revoke_dialog_title)) },
         text = { Text(stringResource(R.string.memory_revoke_dialog_message)) },
         confirmButton = {
-            ITextButton(onClick = onConfirm) {
+            OrcaTextButton(onClick = onConfirm) {
                 Text(
                     stringResource(R.string.memory_action_revoke),
                     color = MaterialTheme.colorScheme.error,
@@ -264,7 +264,7 @@ fun RevokeConfirmDialog(
             }
         },
         dismissButton = {
-            ITextButton(onClick = onDismiss) {
+            OrcaTextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
             }
         },
@@ -293,7 +293,7 @@ fun MutationResultDialog(
         onDismissRequest = onDismiss,
         text = { Text(msg) },
         confirmButton = {
-            ITextButton(onClick = onDismiss) { Text("OK") }
+            OrcaTextButton(onClick = onDismiss) { Text("OK") }
         },
     )
 }

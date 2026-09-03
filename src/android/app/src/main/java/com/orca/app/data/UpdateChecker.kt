@@ -34,14 +34,9 @@ import java.util.concurrent.TimeUnit
 object UpdateChecker {
 
     private const val TAG = "UpdateChecker"
-    private const val OWNER = "I"
-    // T133: the public repo is I/I (org + repo share a name).
-    // Previously pointed at I/IApp, which is the private dev
-    // mirror — every API call 404'd, which we mistranslated as "no release
-    // published". The 0.1-preview release is published as a prerelease on
-    // I/I with a IApp-*.apk asset attached.
-    private const val REPO = "I"
-    private const val DOWNLOAD_FILENAME = "i-update.apk"
+    private const val OWNER = "LaoNianYuLe"
+    private const val REPO = "Orca"
+    private const val DOWNLOAD_FILENAME = "orca-update.apk"
     /**
      * Sub-directory of `filesDir` where we stage downloaded update APKs. We
      * moved off `cacheDir/shared/` (the original location) so the OS can't
@@ -258,7 +253,9 @@ object UpdateChecker {
     }
 
     /** Public so UI can deep-link users to manual download when GitHub is blocked. */
-    const val RELEASES_URL: String = "https://github.com/OpenMinis/OpenMinis/releases"
+    const val REPO_URL: String = "https://github.com/" + OWNER + "/" + REPO
+    const val RELEASES_URL: String = REPO_URL + "/releases"
+    const val ISSUES_NEW_URL: String = REPO_URL + "/issues/new"
 
     /** Returns (downloadUrl, sizeBytes) for the first .apk asset, or (null, 0). */
     private fun findApkAsset(assets: JSONArray?): Pair<String?, Long> {
@@ -289,7 +286,7 @@ object UpdateChecker {
     }
 
     /**
-     * Stream the APK from [url] into `${cacheDir}/shared/i-update.apk`,
+     * Stream the APK from [url] into `${filesDir}/updates/orca-<version>.apk`,
      * surfacing progress (0..1) through [onProgress] roughly every 64 KiB.
      * Returns the on-disk [File] on success so the caller can hand it to
      * [installApk]. The path is intentionally inside `shared/` because that's
@@ -313,7 +310,7 @@ object UpdateChecker {
             val safeName = versionName
                 ?.replace(Regex("[^A-Za-z0-9._-]"), "_")
                 ?.takeIf { it.isNotEmpty() }
-                ?.let { "i-$it.apk" }
+                ?.let { "orca-$it.apk" }
                 ?: DOWNLOAD_FILENAME
             val outFile = File(outDir, safeName)
             // A previous, possibly-aborted download could leave a stale APK

@@ -302,7 +302,7 @@
     <!-- T336 follow-up: ASK_ONCE granted for the whole app launch -->
     <string name="perm_level_ask_once">起動ごとに確認</string>
     <string name="perm_level_not_allowed">許可しない</string>
-    <!-- T296: Permissions screen — section headers, i-config switch, tool titles -->
+    <!-- T296: Permissions screen — section headers, orca-config switch, tool titles -->
     <string name="perm_section_config_tool">設定ツール</string>
     <!-- T336: dedicated SectionCard per integration CLI. TODO translate (ja) -->
     <string name="perm_tool_a11y_cli">android-a11y-cli</string>
@@ -318,8 +318,8 @@
     <string name="perm_agent_policy">エージェント権限</string>
     <string name="perm_a11y_system_ready">サービス有効</string>
     <string name="perm_a11y_system_disabled">サービス無効</string>
-    <string name="perm_allow_i_config">i-config を許可</string>
-    <string name="perm_i_config_desc">無効にすると、エージェントは i-config 経由で設定を読み取ったり変更したりできなくなります。ログ → 設定変更 の履歴は引き続き閲覧できます。エージェントは permission_denied エラーを受け取り、ディープリンクで操作を案内します。</string>
+    <string name="perm_allow_orca_config">orca-config を許可</string>
+    <string name="perm_orca_config_desc">無効にすると、エージェントは orca-config 経由で設定を読み取ったり変更したりできなくなります。ログ → 設定変更 の履歴は引き続き閲覧できます。エージェントは permission_denied エラーを受け取り、ディープリンクで操作を案内します。</string>
     <string name="perm_section_privacy">プライバシー</string>
     <string name="perm_section_media">メディア</string>
     <string name="perm_section_system">システム</string>
@@ -782,7 +782,7 @@
 
     <!-- T182 agent loop section i18n -->
     <string name="agent_loop_section_title">エージェントループで使えるモデル</string>
-    <string name="agent_loop_section_footer">ここに表示されているモデルとグループはターミナルから i-model-use で呼び出せます。エージェントが認識するのはこれらだけです。</string>
+    <string name="agent_loop_section_footer">ここに表示されているモデルとグループはターミナルから orca-model-use で呼び出せます。エージェントが認識するのはこれらだけです。</string>
     <string name="agent_loop_section_empty_hint">追加されたモデルやグループはありません</string>
     <string name="agent_loop_section_add_models">モデルを追加</string>
     <string name="agent_loop_section_add_groups">グループを追加</string>
@@ -826,7 +826,7 @@
 
     <!-- T235 — 共有フォルダ（固定: 共有 / スキル / メモリ） -->
     <string name="settings_shared_folders">共有フォルダ</string>
-    <string name="settings_shared_folders_subtitle">/var/i の共有・スキル・メモリを参照</string>
+    <string name="settings_shared_folders_subtitle">/var/orca の共有・スキル・メモリを参照</string>
     <string name="shared_folders_title">共有フォルダ</string>
     <string name="shared_folders_info_banner">これらのディレクトリは Linux サンドボックス内から参照できます。Skills と Memory は AI エージェントのツールが管理します — 手動で編集しないでください。</string>
     <string name="shared_folder_name_shared">共有</string>
@@ -837,9 +837,9 @@
 
     <!-- T219-2 — 外部フォルダのマウント -->
     <string name="settings_mount_external_folders">外部フォルダをマウント</string>
-    <string name="settings_mount_external_folders_subtitle">選択したフォルダを /var/i/mounts/ にバインド</string>
+    <string name="settings_mount_external_folders_subtitle">選択したフォルダを /var/orca/mounts/ にバインド</string>
     <string name="mount_folders_title">マウント済みフォルダ</string>
-    <string name="mount_folders_info_banner">選択したフォルダは /var/i/mounts/&lt;name&gt; にバインドマウントされます。同時に最大 10 個までマウントできます。</string>
+    <string name="mount_folders_info_banner">選択したフォルダは /var/orca/mounts/&lt;name&gt; にバインドマウントされます。同時に最大 10 個までマウントできます。</string>
     <string name="mount_picker_intro_title">マウントするフォルダを選択</string>
     <string name="mount_picker_intro_message">Android では内部ストレージ全体をマウントできません。ドキュメントやダウンロードなど、その中の具体的なフォルダを選んでください。\n\n次に開くのはシステムのファイル選択画面です。「このフォルダは使用できません」と表示された場合は、サブフォルダに入るか、システムの戻る操作でここに戻ってください。</string>
     <string name="mount_picker_intro_continue">選択する</string>
@@ -849,7 +849,7 @@
     <string name="mount_add_dialog_title">マウントを追加</string>
     <string name="mount_add_source_path">ソースパス</string>
     <string name="mount_add_name_label">マウント名</string>
-    <string name="mount_add_name_hint">/var/i/mounts/ 配下のフォルダ名になります</string>
+    <string name="mount_add_name_hint">/var/orca/mounts/ 配下のフォルダ名になります</string>
     <string name="mount_add_allow_writes">書き込みを許可</string>
     <string name="mount_add_allow_writes_desc">オフにすると file_write / file_edit ツールは書き込みを拒否しますが、shell からは依然として書き込めます。</string>
     <string name="mount_add_confirm">追加</string>
@@ -955,7 +955,7 @@
     <!-- T-selection-add-to-input — 長押し選択メニュー「入力欄に追加」 -->
     <string name="selection_add_to_chat_input">入力欄に追加</string>
     <string name="selection_read_aloud">読み上げ</string>
-    <!-- T-i-textkit 選択メニューボタン -->
+    <!-- T-orca-textkit 選択メニューボタン -->
     <string name="selection_copy">コピー</string>
     <string name="selection_copy_markdown">Markdown をコピー</string>
     <string name="selection_copy_rich_text">リッチテキストをコピー</string>
@@ -1001,7 +1001,7 @@
     <string name="mcp_add">MCP サーバーを追加</string>
     <string name="mcp_edit">MCP サーバーを編集</string>
     <string name="mcp_section_servers">サーバー</string>
-    <string name="mcp_section_footer">MCP サーバーを使うと、エージェントが i-mcp-cli を介して外部ツールを呼び出せます。設定は /var/i/mcp-servers/servers.json に保存されます（Claude Desktop 互換）。</string>
+    <string name="mcp_section_footer">MCP サーバーを使うと、エージェントが orca-mcp-cli を介して外部ツールを呼び出せます。設定は /var/orca/mcp-servers/servers.json に保存されます（Claude Desktop 互換）。</string>
     <string name="mcp_empty_title">MCP サーバーがありません</string>
     <string name="mcp_empty_action">+ ボタンでサーバーを追加します。</string>
     <string name="mcp_transport_http">HTTP</string>

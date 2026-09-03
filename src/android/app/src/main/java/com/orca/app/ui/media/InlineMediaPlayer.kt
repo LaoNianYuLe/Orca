@@ -308,7 +308,7 @@ private fun formatDuration(ms: Int): String {
  * Uses AndroidView(VideoView) to avoid ExoPlayer dependency.
  */
 @Composable
-fun IFullscreenVideoPlayer(
+fun OrcaFullscreenVideoPlayer(
     file: File,
     onDismiss: () -> Unit,
 ) {

@@ -1165,7 +1165,7 @@ private fun isBlockquoteLine(trimmed: String): Boolean {
  * references stay inline (Compose doesn't render inline bitmap attachments in
  * text here, but the `[alt]` link fallback is acceptable for images).
  *
- * Why: LLMs very commonly emit `"Here's the video: ![robot](i://attachments/x.mp4)"`
+ * Why: LLMs very commonly emit `"Here's the video: ![robot](orca://attachments/x.mp4)"`
  * on a single line alongside explanatory text. Without this split, the line
  * becomes one Paragraph and the video markdown is rendered as just a blue
  * `[alt]` link — no preview card, no tap-to-play.
@@ -1897,8 +1897,8 @@ private fun RenderBlock(block: MdBlock) {
             val context = LocalContext.current
             val sessionId = LocalMarkdownSessionId.current
             // Resolve to a host File via the session-scoped resolver before
-            // handing off to Coil. AsyncImage(model = "i://...") routes
-            // through IImageFetcher → PRootKernel.resolveHostPath, which
+            // handing off to Coil. AsyncImage(model = "orca://...") routes
+            // through OrcaImageFetcher → PRootKernel.resolveHostPath, which
             // reads the *global* bindMounts map — last-writer-wins across
             // sessions. When another session booted its shell more recently,
             // that global lookup answers with the wrong session's path (or
@@ -2250,10 +2250,10 @@ private fun BrokenImagePlaceholder(alt: String?) {
 // ─── Media helpers ──────────────────────────────────────────────────────────
 
 /**
- * Resolve a markdown media URL (`i://attachments/foo.mp4`, file://, or
+ * Resolve a markdown media URL (`orca://attachments/foo.mp4`, file://, or
  * plain absolute path) to a host File.
  *
- * First tries `PRootKernel.resolveHostPath` (same as IImageFetcher). If
+ * First tries `PRootKernel.resolveHostPath` (same as OrcaImageFetcher). If
  * that fails — e.g. bind mounts are pointing at a different session, or the
  * file was written under a `__new__...` draft id that predates
  * `ensureSession()` rename — we fall back to scanning all per-session
@@ -2264,14 +2264,14 @@ private fun BrokenImagePlaceholder(alt: String?) {
 internal fun resolveMdMediaFile(context: Context, url: String, sessionId: String? = null): File? {
     if (url.isBlank()) return null
     // Strip a real query (`?`), but NOT `#` — attachment filenames legitimately
-    // contain '#' (hashtags). `i://` URLs don't carry fragments anyway,
+    // contain '#' (hashtags). `orca://` URLs don't carry fragments anyway,
     // and truncating here would hide the '.mp4' extension and the file's real
     // name from the resolver.
     val stripped = url.substringBefore('?')
     val primary: File? = when {
-        stripped.startsWith("i://") -> {
-            val decoded = java.net.URLDecoder.decode(stripped.removePrefix("i://"), "UTF-8")
-            val linuxPath = "/var/i/$decoded"
+        stripped.startsWith("orca://") -> {
+            val decoded = java.net.URLDecoder.decode(stripped.removePrefix("orca://"), "UTF-8")
+            val linuxPath = "/var/orca/$decoded"
             // Prefer the session-scoped resolver when the caller supplied a
             // sessionId: the global `bindMounts` map is overwritten every time
             // another session boots its shell, so without sessionId we'd route
@@ -2289,19 +2289,19 @@ internal fun resolveMdMediaFile(context: Context, url: String, sessionId: String
         return primary
     }
 
-    // Fallback: search every i-sessions/<id>/{attachments,workspace,offloads,browser}
+    // Fallback: search every orca-sessions/<id>/{attachments,workspace,offloads,browser}
     // subtree for a file whose basename matches. Handles leftover files from a
     // draft session whose bind mount has already switched over, and the case
     // where `resolveHostPath`'s global bindMounts map points at a different
     // session than the one owning this message.
-    if (!stripped.startsWith("i://")) {
+    if (!stripped.startsWith("orca://")) {
         android.util.Log.d("MdStream", "resolveMdMediaFile primary miss url=$url (non-i scheme, no fallback)")
         return null
     }
-    val decoded = java.net.URLDecoder.decode(stripped.removePrefix("i://"), "UTF-8")
+    val decoded = java.net.URLDecoder.decode(stripped.removePrefix("orca://"), "UTF-8")
     val basename = decoded.substringAfterLast('/')
     val subdir = decoded.substringBefore('/', missingDelimiterValue = "").takeIf { it.isNotEmpty() } ?: "attachments"
-    val root = File(context.filesDir, "i-sessions")
+    val root = File(context.filesDir, "orca-sessions")
     if (root.isDirectory) {
         root.listFiles()?.forEach { sessionDir ->
             val candidate = File(sessionDir, "$subdir/$basename")
@@ -2311,8 +2311,8 @@ internal fun resolveMdMediaFile(context: Context, url: String, sessionId: String
             }
         }
     }
-    // Also probe `i-global/<subdir>` for shared/memory/skills buckets.
-    val globalCandidate = File(context.filesDir, "i-global/$subdir/$basename")
+    // Also probe `orca-global/<subdir>` for shared/memory/skills buckets.
+    val globalCandidate = File(context.filesDir, "orca-global/$subdir/$basename")
     if (globalCandidate.exists() && globalCandidate.isFile) {
         android.util.Log.d("MdStream", "resolveMdMediaFile url=$url -> global=${globalCandidate.absolutePath}")
         return globalCandidate
@@ -2384,7 +2384,7 @@ private fun RenderMdVideo(block: MdBlock.Video) {
     }
 
     if (showPlayer && file != null) {
-        com.orca.app.ui.media.IFullscreenVideoPlayer(
+        com.orca.app.ui.media.OrcaFullscreenVideoPlayer(
             file = file,
             onDismiss = { showPlayer = false },
         )

@@ -26,12 +26,12 @@ class PhotosImportPathArgTest {
 
     @Test
     fun `positional path is accepted`() {
-        assertEquals("/var/i/offloads/p.jpg", resolvePath(listOf("import", "/var/i/offloads/p.jpg")))
+        assertEquals("/var/orca/offloads/p.jpg", resolvePath(listOf("import", "/var/orca/offloads/p.jpg")))
     }
 
     @Test
     fun `path flag still works`() {
-        assertEquals("/var/i/offloads/p.jpg", resolvePath(listOf("import", "--path", "/var/i/offloads/p.jpg")))
+        assertEquals("/var/orca/offloads/p.jpg", resolvePath(listOf("import", "--path", "/var/orca/offloads/p.jpg")))
     }
 
     @Test

@@ -384,7 +384,7 @@ private val HANDLE_HIT_SIZE_DP = 56.dp
 private val HANDLE_DOT_SIZE_DP = 14.dp
 
 @Composable
-fun ISelectionHandlesHost(
+fun OrcaSelectionHandlesHost(
     controller: SelectionController,
     listState: LazyListState,
     reverseLayout: Boolean = false,
@@ -620,7 +620,7 @@ private class HandlePositionProvider(
 
 /**
  * Floating action toolbar rendered above the active selection. Mirrors
- * [IMarkdownTextToolbarHost] (which is driven by Compose's
+ * [OrcaMarkdownTextToolbarHost] (which is driven by Compose's
  * SelectionContainer) but consumes our SelectionController state directly.
  *
  * Empty selection → not rendered. Whenever the selection's bounding rect is
@@ -632,7 +632,7 @@ private class HandlePositionProvider(
  * Bundle of side-effecting callbacks the toolbar surfaces as buttons.
  * Pass null to hide a button (e.g. "Add to Input" is hidden when the
  * caller has no composer to receive the text). Mirrors the action set of
- * the older [IMarkdownTextToolbar] so the per-button UX stays the
+ * the older [OrcaMarkdownTextToolbar] so the per-button UX stays the
  * same across both selection systems.
  */
 data class SelectionToolbarActions(
@@ -649,7 +649,7 @@ data class SelectionToolbarActions(
 )
 
 @Composable
-fun ISelectionToolbarHost(
+fun OrcaSelectionToolbarHost(
     controller: SelectionController,
     actions: SelectionToolbarActions? = null,
     /**
@@ -815,7 +815,7 @@ fun ISelectionToolbarHost(
                 //
                 // This is the toolbar that ACTUALLY shows for a ITextKit
                 // selection (a table-cell long-press). The table actions were
-                // previously wired only into IMarkdownTextToolbar — the
+                // previously wired only into OrcaMarkdownTextToolbar — the
                 // Compose-SelectionContainer toolbar that this ITextKit
                 // selection never triggers — so the buttons registered fine
                 // (debug.selectionState: tableActionsHit=true) but appeared in
@@ -911,14 +911,14 @@ fun ISelectionToolbarHost(
                 val overflowItems = items.drop(inlineCount)
 
                 inlineItems.forEachIndexed { index, item ->
-                    if (index > 0) IToolbarDivider()
-                    IToolbarButton(label = item.label, onClick = item.onClick)
+                    if (index > 0) OrcaToolbarDivider()
+                    OrcaToolbarButton(label = item.label, onClick = item.onClick)
                 }
                 if (overflowItems.isNotEmpty()) {
-                    IToolbarDivider()
+                    OrcaToolbarDivider()
                     var overflowOpen by remember(items.size) { mutableStateOf(false) }
                     Box {
-                        IToolbarButton(label = "⋯") { overflowOpen = true }
+                        OrcaToolbarButton(label = "⋯") { overflowOpen = true }
                         androidx.compose.material3.DropdownMenu(
                             expanded = overflowOpen,
                             onDismissRequest = { overflowOpen = false },
@@ -953,7 +953,7 @@ private class SelectionAction(val label: String, val onClick: () -> Unit)
 private const val MAX_INLINE_SELECTION_ACTIONS = 3
 
 @Composable
-private fun IToolbarDivider() {
+private fun OrcaToolbarDivider() {
     Box(
         modifier = Modifier
             .padding(vertical = 8.dp)
@@ -964,7 +964,7 @@ private fun IToolbarDivider() {
 }
 
 @Composable
-private fun IToolbarButton(label: String, onClick: () -> Unit) {
+private fun OrcaToolbarButton(label: String, onClick: () -> Unit) {
     Text(
         text = label,
         style = MaterialTheme.typography.labelLarge,

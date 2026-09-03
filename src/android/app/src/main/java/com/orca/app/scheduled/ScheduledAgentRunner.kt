@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.app.NotificationCompat
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.debug.HeadlessChatRunner
 import com.orca.app.logging.AppLogger
 import com.orca.app.service.AgentForegroundService
@@ -58,17 +58,17 @@ object ScheduledAgentRunner {
      *   ~10s broadcast budget and gets the whole process ANR-killed, along
      *   with every PRoot sandbox child. The alarm path passing the default
      *   `true` was exactly that bug. Waiting is only safe off a broadcast —
-     *   e.g. the i-scheduled CLI, which runs in its own offload thread.
+     *   e.g. the orca-scheduled CLI, which runs in its own offload thread.
      * @return the session id once the action has been DISPATCHED (resolved +
      *   prompt sent), or null when the runner couldn't even start (no provider,
-     *   target chat gone, IApp not initialized).
+     *   target chat gone, OrcaApp not initialized).
      */
     suspend fun run(
         context: Context,
         task: ScheduledTask,
         waitForCompletion: Boolean = true,
     ): String? {
-        // [T-android-scheduled-lateinit-crash-156] `as? IApp` only rules out
+        // [T-android-scheduled-lateinit-crash-156] `as? OrcaApp` only rules out
         // a null / wrong-type Application — it does NOT mean the Application is
         // INITIALIZED, which is what the old comment here claimed. Every
         // `app.chatRepository` read below goes through a lateinit getter that
@@ -85,14 +85,14 @@ object ScheduledAgentRunner {
         // Skipping the run is the right degradation: the task stays scheduled
         // and its next occurrence was already armed by the receiver before this
         // call, so a skipped fire self-heals on the following launch.
-        val app = context.applicationContext as? IApp ?: run {
-            AppLogger.error(TAG, "Application is not IApp — skipping task ${task.id}")
+        val app = context.applicationContext as? OrcaApp ?: run {
+            AppLogger.error(TAG, "Application is not OrcaApp — skipping task ${task.id}")
             return null
         }
         if (!app.subsystemsReady()) {
             AppLogger.error(
                 TAG,
-                "IApp subsystems not initialized (safe-mode or failed init) — skipping task ${task.id}",
+                "OrcaApp subsystems not initialized (safe-mode or failed init) — skipping task ${task.id}",
             )
             return null
         }
@@ -152,7 +152,7 @@ object ScheduledAgentRunner {
      *     RetryRunIntent which has no prompt param).
      */
     private suspend fun dispatch(
-        app: IApp,
+        app: OrcaApp,
         task: ScheduledTask,
         sessionId: String,
         wait: Boolean,
@@ -186,7 +186,7 @@ object ScheduledAgentRunner {
         )
     }
 
-    private suspend fun resolveSessionId(app: IApp, task: ScheduledTask): String? {
+    private suspend fun resolveSessionId(app: OrcaApp, task: ScheduledTask): String? {
         return when (val mode = task.targetMode) {
             is ScheduledTargetMode.AppendToSession -> {
                 // Follow-up: the target session must still exist. If the user
@@ -292,7 +292,7 @@ object ScheduledAgentRunner {
         sessionId: String,
         preview: String,
     ) {
-        val deepLink = Uri.parse("i://session/$sessionId")
+        val deepLink = Uri.parse("orca://session/$sessionId")
         val openIntent = Intent(Intent.ACTION_VIEW, deepLink).apply {
             setPackage(context.packageName)
         }

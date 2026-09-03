@@ -27,7 +27,7 @@ class ScheduledNotificationReceiver : BroadcastReceiver() {
         const val EXTRA_ID = "scheduled_notification_id"
         const val EXTRA_TITLE = "scheduled_notification_title"
         const val EXTRA_BODY = "scheduled_notification_body"
-        const val CHANNEL_ID = "i_agent_notifications"
+        const val CHANNEL_ID = "orca_agent_notifications"
         private const val TAG = "ScheduledNotifReceiver"
 
         /**

@@ -9,9 +9,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Standalone Room database for provider config. Lives in `provider.db`,
- * separate from `i.db` (sessions/messages/etc), so that downgrading
+ * separate from `orca.db` (sessions/messages/etc), so that downgrading
  * to a version that doesn't know about these tables does NOT crash on
- * `i.db`. Old builds simply ignore provider.db and continue to read
+ * `orca.db`. Old builds simply ignore provider.db and continue to read
  * provider config from the legacy SharedPreferences JSON mirror — which
  * we keep writing on every save so it's never stale.
  *

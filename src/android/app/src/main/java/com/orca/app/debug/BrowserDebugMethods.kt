@@ -1,7 +1,7 @@
 package com.orca.app.debug
 
 import android.content.Context
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.browser.BrowserAction
 import com.orca.app.browser.BrowserActionInput
 import com.orca.app.browser.BrowserTabPool
@@ -13,8 +13,8 @@ import org.json.JSONObject
  * Browser-debug RPC handlers (`debug.browser.*`).
  *
  * Mirrors the iOS `debug.browser.*` surface in `docs/debug-server-api.md`. All
- * methods operate on the application-scoped [IApp.sharedBrowserTabPool]
- * (the same pool the in-shell `i-browser-use` agent drives) so external
+ * methods operate on the application-scoped [OrcaApp.sharedBrowserTabPool]
+ * (the same pool the in-shell `orca-browser-use` agent drives) so external
  * automation sees the tabs the user has actually opened.
  *
  * Tab-id conventions mirror iOS: each method accepts an optional `tabId`. When
@@ -24,8 +24,8 @@ import org.json.JSONObject
 internal object BrowserDebugMethods {
 
     private fun pool(context: Context): BrowserTabPool {
-        val app = context.applicationContext as? IApp
-            ?: throw RPCException(-32000, "IApp not initialized")
+        val app = context.applicationContext as? OrcaApp
+            ?: throw RPCException(-32000, "OrcaApp not initialized")
         return app.sharedBrowserTabPool
     }
 

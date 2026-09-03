@@ -115,7 +115,7 @@ class STDIOTransport:
             {
                 "protocolVersion": "2025-06-18",
                 "capabilities": {},
-                "clientInfo": {"name": "i-mcp-cli", "version": "1.0.0"},
+                "clientInfo": {"name": "orca-mcp-cli", "version": "1.0.0"},
             },
         )
         self._send(proc, "notifications/initialized", notify=True)

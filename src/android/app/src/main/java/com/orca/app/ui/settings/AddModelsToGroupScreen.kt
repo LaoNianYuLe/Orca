@@ -28,8 +28,8 @@ import com.orca.app.data.model.SystemVoiceEntries
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.components.PickerModalityFilter
 import com.orca.app.ui.components.modelEntryPickerItems
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaTextButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,8 +89,8 @@ fun AddModelsToGroupScreen(
                     }
                 },
                 actions = {
-                    ITextButton(onClick = onBack) { Text(stringResource(R.string.common_cancel)) }
-                    IButton(
+                    OrcaTextButton(onClick = onBack) { Text(stringResource(R.string.common_cancel)) }
+                    OrcaButton(
                         onClick = {
                             val updated = group.copy(
                                 memberEntryIds = (group.memberEntryIds + selectedIds).toMutableList()

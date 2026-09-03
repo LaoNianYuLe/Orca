@@ -46,7 +46,7 @@ object PendingUpdateStore {
 
     private var prefs: SharedPreferences? = null
 
-    /** Idempotent. Safe to call from IApp.onCreate. */
+    /** Idempotent. Safe to call from OrcaApp.onCreate. */
     fun init(context: Context) {
         if (prefs != null) return
         prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

@@ -66,9 +66,9 @@ import com.orca.app.R
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.IOutlinedButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaOutlinedButton
+import com.orca.app.ui.components.OrcaTextButton
 import com.orca.app.ui.components.SectionTextField
 import kotlin.math.roundToInt
 
@@ -361,7 +361,7 @@ fun ModelGroupDetailScreen(
                                         IconButton(onClick = { showMenu = true }) {
                                             Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.model_group_detail_more_options))
                                         }
-                                        com.orca.app.ui.components.IMenu(
+                                        com.orca.app.ui.components.OrcaMenu(
                                             expanded = showMenu,
                                             onDismissRequest = { showMenu = false },
                                         ) {
@@ -390,7 +390,7 @@ fun ModelGroupDetailScreen(
             // obvious and leaves "Delete group" alone at the bottom.
             item {
                 Spacer(Modifier.height(12.dp))
-                IOutlinedButton(
+                OrcaOutlinedButton(
                     onClick = onAddModels,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -562,7 +562,7 @@ fun ModelGroupDetailScreen(
             // destructive action, with nothing adjacent to mis-tap.
             item {
                 Spacer(Modifier.height(20.dp))
-                IButton(
+                OrcaButton(
                     onClick = { showDeleteDialog = true },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -591,7 +591,7 @@ fun ModelGroupDetailScreen(
                 Text(stringResource(R.string.model_group_detail_remove_named_model_confirm, name))
             },
             confirmButton = {
-                ITextButton(
+                OrcaTextButton(
                     onClick = {
                         val newIds = memberIds.toMutableList().apply { remove(removingId) }
                         memberIds = newIds
@@ -603,7 +603,7 @@ fun ModelGroupDetailScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { entryToRemove = null }) { Text(stringResource(R.string.common_cancel)) }
+                OrcaTextButton(onClick = { entryToRemove = null }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -615,7 +615,7 @@ fun ModelGroupDetailScreen(
             title = { Text(stringResource(R.string.model_group_detail_delete_group)) },
             text = { Text(stringResource(R.string.model_group_detail_delete_named_group_confirm, group.name)) },
             confirmButton = {
-                ITextButton(
+                OrcaTextButton(
                     onClick = {
                         providerRepository.removeGroup(groupId)
                         showDeleteDialog = false
@@ -626,7 +626,7 @@ fun ModelGroupDetailScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                OrcaTextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }

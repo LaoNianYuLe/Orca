@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
  * - Skip silently if the app is currently in foreground — the user is
  *   already looking at the chat, no need to interrupt.
  * - Tap on the notification deep-links into the originating chat via
- *   `i://session/<sessionId>` (existing
+ *   `orca://session/<sessionId>` (existing
  *   `DeepLinkHandler.OpenSession` path).
  *
  * On Android the absence of `responseSummary` from the spec is
@@ -99,7 +99,7 @@ class BackgroundTaskNotifier(
             return
         }
 
-        val deepLink = Uri.parse("i://session/$sessionId")
+        val deepLink = Uri.parse("orca://session/$sessionId")
         val launchIntent = Intent(Intent.ACTION_VIEW, deepLink).apply {
             // FLAG_ACTIVITY_NEW_TASK because we're posting from a
             // background scope without an Activity context.
@@ -137,7 +137,7 @@ class BackgroundTaskNotifier(
 
     /**
      * T298: cancel every notification posted on the
-     * [CHANNEL_ID] channel. Called from IApp's foreground transition
+     * [CHANNEL_ID] channel. Called from OrcaApp's foreground transition
      * (Activity start count 0 → 1) so the user never finds a stale "task
      * completed" entry waiting in the tray when they open the app — they
      * just saw the result, the notification has served its purpose.
@@ -182,6 +182,6 @@ class BackgroundTaskNotifier(
 
     companion object {
         private const val TAG = "TaskNotifier"
-        const val CHANNEL_ID = "i_task_completed"
+        const val CHANNEL_ID = "orca_task_completed"
     }
 }

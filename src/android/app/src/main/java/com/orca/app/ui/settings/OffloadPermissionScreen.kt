@@ -27,12 +27,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.orca.app.R
-import com.orca.app.accessibility.IAccessibilityService
+import com.orca.app.accessibility.OrcaAccessibilityService
 import com.orca.app.logging.AppLogger
 import com.orca.app.offload.OffloadPermissionManager
 import com.orca.app.offload.ShizukuManager
-import com.orca.app.ui.components.IMenu
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaMenu
+import com.orca.app.ui.components.OrcaTextButton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -53,7 +53,7 @@ fun OffloadPermissionScreen(
 
     var showResetConfirm by remember { mutableStateOf(false) }
 
-    val configEnabled by com.orca.app.config.IConfigPermissionStore.enabled.collectAsState()
+    val configEnabled by com.orca.app.config.OrcaConfigPermissionStore.enabled.collectAsState()
 
     val context = LocalContext.current
 
@@ -62,7 +62,7 @@ fun OffloadPermissionScreen(
         // Re-poll once a second so coming back from system Accessibility
         // settings flips the row without a manual refresh.
         while (true) {
-            a11yEnabled = isA11yServiceEnabled(context) || IAccessibilityService.getInstance() != null
+            a11yEnabled = isA11yServiceEnabled(context) || OrcaAccessibilityService.getInstance() != null
             delay(1000)
         }
     }
@@ -72,21 +72,21 @@ fun OffloadPermissionScreen(
         title = stringResource(R.string.perm_title),
         onBack = onBack,
         actions = {
-            ITextButton(onClick = { showResetConfirm = true }) {
+            OrcaTextButton(onClick = { showResetConfirm = true }) {
                 Text(stringResource(R.string.perm_reset_all))
             }
         },
     ) {
-        // T-config: master switch for the i-config CLI surface.
+        // T-config: master switch for the orca-config CLI surface.
         SettingsSection(
             header = stringResource(R.string.perm_section_config_tool),
-            footer = stringResource(R.string.perm_i_config_desc),
+            footer = stringResource(R.string.perm_orca_config_desc),
         ) {
             SettingsSwitchRow(
-                title = stringResource(R.string.perm_allow_i_config),
+                title = stringResource(R.string.perm_allow_orca_config),
                 checked = configEnabled,
                 onCheckedChange = {
-                    com.orca.app.config.IConfigPermissionStore.setEnabled(it)
+                    com.orca.app.config.OrcaConfigPermissionStore.setEnabled(it)
                 },
                 showDivider = false,
             )
@@ -153,17 +153,17 @@ fun OffloadPermissionScreen(
             title = { Text(stringResource(R.string.perm_reset_confirm_title)) },
             text = { Text(stringResource(R.string.perm_reset_confirm_text)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     OffloadPermissionManager.resetAll()
-                    com.orca.app.config.IConfigPermissionStore.setEnabled(true)
-                    AppLogger.info("PermissionsScreen", "user confirmed Reset All — all tool permissions cleared, i-config switch reset to default")
+                    com.orca.app.config.OrcaConfigPermissionStore.setEnabled(true)
+                    AppLogger.info("PermissionsScreen", "user confirmed Reset All — all tool permissions cleared, orca-config switch reset to default")
                     showResetConfirm = false
                 }) {
                     Text(stringResource(R.string.perm_reset_confirm))
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showResetConfirm = false }) {
+                OrcaTextButton(onClick = { showResetConfirm = false }) {
                     Text(stringResource(R.string.common_cancel))
                 }
             },
@@ -290,7 +290,7 @@ private fun AgentPolicyRow(
         // edge so it grows down-and-left from the trailing chip instead
         // of Material3's default down-and-right (which on a narrow phone
         // pushed the menu off the screen edge).
-        IMenu(expanded = expanded, onDismissRequest = { expanded = false }, alignEnd = true) {
+        OrcaMenu(expanded = expanded, onDismissRequest = { expanded = false }, alignEnd = true) {
             for (level in OffloadPermissionManager.PermissionLevel.entries) {
                 DropdownMenuItem(
                     text = {
@@ -341,7 +341,7 @@ private fun PermissionRow(
         // edge so it grows down-and-left from the trailing chip instead
         // of Material3's default down-and-right (which on a narrow phone
         // pushed the menu off the screen edge).
-        IMenu(expanded = expanded, onDismissRequest = { expanded = false }, alignEnd = true) {
+        OrcaMenu(expanded = expanded, onDismissRequest = { expanded = false }, alignEnd = true) {
             for (level in OffloadPermissionManager.PermissionLevel.entries) {
                 DropdownMenuItem(
                     text = {
@@ -406,7 +406,7 @@ private fun levelColor(level: OffloadPermissionManager.PermissionLevel): Color =
 }
 
 private fun isA11yServiceEnabled(context: Context): Boolean {
-    val expected = "${context.packageName}/${IAccessibilityService::class.java.name}"
+    val expected = "${context.packageName}/${OrcaAccessibilityService::class.java.name}"
     val enabled = Settings.Secure.getString(
         context.contentResolver,
         Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,

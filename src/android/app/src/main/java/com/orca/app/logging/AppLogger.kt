@@ -19,6 +19,10 @@ import java.util.Locale
  */
 object AppLogger {
 
+    /** Filename prefix for the rotating daily log. */
+    const val DAILY_LOG_PREFIX = "orca-"
+    val DAILY_LOG_PREFIXES = listOf(DAILY_LOG_PREFIX)
+
     private const val TAG = "AppLogger"
     private const val LOG_DIR = "logs"
     // [T-android-log-retention-15d] 15 days, matching iOS logRetentionDays
@@ -38,7 +42,7 @@ object AppLogger {
      * early as possible so the read-only helpers below can find
      * `filesDir/logs` even when [init] never ran.
      *
-     * [init] is called from IApp.onCreate AFTER the safe-mode
+     * [init] is called from OrcaApp.onCreate AFTER the safe-mode
      * early-return, so on a launch following a crash burst [logDir] stays
      * null — and every reader keyed off it ([listLogFiles],
      * [listLogFileMetas], [readLog], [totalSize]) reported "no logs".
@@ -181,7 +185,7 @@ object AppLogger {
         val parenIdx = if (slashIdx >= 0) rawLine.indexOf('(', slashIdx) else -1
         if (slashIdx >= 0 && parenIdx > slashIdx) {
             val tag = rawLine.substring(slashIdx + 1, parenIdx).trim()
-            if (tag.startsWith("I.") || tag == "AppLogger") return
+            if (tag.startsWith("I.") || tag.startsWith("Orca.") || tag == "AppLogger") return
         }
         try {
             val now = Date()
@@ -306,7 +310,7 @@ object AppLogger {
         val timestamp = timestampFormat.format(now)
 
         // Also output to logcat
-        val logcatTag = "I.$category"
+        val logcatTag = "Orca.$category"
         when (level) {
             "ERROR" -> Log.e(logcatTag, message)
             "WARN" -> Log.w(logcatTag, message)
@@ -330,7 +334,7 @@ object AppLogger {
         if (date != currentDate || writer == null) {
             writer?.close()
             val dir = logDir ?: throw IllegalStateException("AppLogger not initialized")
-            val file = File(dir, "i-$date.log")
+            val file = File(dir, "$DAILY_LOG_PREFIX$date.log")
             writer = PrintWriter(FileWriter(file, true))
             currentDate = date
         }
@@ -363,9 +367,9 @@ object AppLogger {
     /**
      * Capped, prefix-filtered log listing for the UI.
      *
-     * - `prefix`: filename starts-with filter (e.g. `"i-"` for daily
-     *   logs, `"crash-"` / `"native-crash-"` for crash reports). Empty
-     *   string returns all `.log` files.
+     * - `prefixes`: filename starts-with filters, matched as OR (e.g.
+     *   [DAILY_LOG_PREFIXES] for daily logs, `"crash-"` / `"native-crash-"`
+     *   for crash reports). An empty list returns all `.log` files.
      * - `limit`: keep at most this many files, sorted by name descending
      *   (newest first, since both daily and crash filenames embed
      *   YYYY-MM-DD prefixes that sort correctly).
@@ -377,10 +381,11 @@ object AppLogger {
      *
      * Pure data; safe to call from `Dispatchers.IO`.
      */
-    fun listLogFileMetas(prefix: String, limit: Int): List<LogFileMeta> {
+    fun listLogFileMetas(prefixes: List<String>, limit: Int): List<LogFileMeta> {
         val dir = resolveLogDir() ?: return emptyList()
         val files = dir.listFiles { f ->
-            f.extension == "log" && (prefix.isEmpty() || f.name.startsWith(prefix))
+            f.extension == "log" &&
+                (prefixes.isEmpty() || prefixes.any { p -> f.name.startsWith(p) })
         } ?: return emptyList()
         // Sort then cap BEFORE the per-file stat — File.listFiles already
         // populated name internally, but length()/lastModified() are
@@ -410,7 +415,7 @@ object AppLogger {
         // just-deleted file; a FileWriter on an unlinked inode keeps writing to
         // the zombie file (invisible on disk) until currentDate changes or the
         // writer is nulled. Drop it and reset currentDate so the next
-        // getWriter() reopens a fresh i-<date>.log on the following write.
+        // getWriter() reopens a fresh orca-<date>.log on the following write.
         // @Synchronized shares getWriter()'s monitor so this can't race a write.
         writer?.close()
         writer = null

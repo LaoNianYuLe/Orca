@@ -80,7 +80,7 @@ import com.orca.app.provider.catalog.ProviderSpec
 import com.orca.app.R
 import kotlinx.coroutines.launch
 import java.util.UUID
-import com.orca.app.ui.components.IButton
+import com.orca.app.ui.components.OrcaButton
 import com.orca.app.ui.components.RowLabel
 import com.orca.app.ui.components.SectionTextField
 
@@ -631,7 +631,7 @@ private fun ColumnScope.ApiKeyConfigSection(
 
     // ── Save button (outside any section — terminal action) ────────────
     Spacer(Modifier.height(20.dp))
-    IButton(
+    OrcaButton(
         onClick = {
             val trimmedBase = customBaseURL.trim()
             val instance = ProviderInstance(
@@ -749,7 +749,7 @@ private fun ColumnScope.OAuthConfigSection(
             }
         }
         Spacer(Modifier.height(20.dp))
-        IButton(
+        OrcaButton(
             onClick = {
                 val instance = ProviderInstance(
                     id = pendingInstanceId,
@@ -775,7 +775,7 @@ private fun ColumnScope.OAuthConfigSection(
             footer = stringResource(R.string.add_provider_opens_the_provider_s_web_sign_in_flow_af),
         ) {
             SettingsCardBlock {
-                IButton(
+                OrcaButton(
                     onClick = {
                         isAuthenticating = true
                         errorMessage = null
@@ -910,7 +910,7 @@ private fun ColumnScope.OAuthConfigSection(
         }
 
         Spacer(Modifier.height(20.dp))
-        IButton(
+        OrcaButton(
             onClick = {
                 val trimmedBase = customBaseURL.trim()
                 val instance = ProviderInstance(

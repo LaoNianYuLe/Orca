@@ -1,7 +1,7 @@
 package com.orca.app.ui.settings
 
 import com.orca.app.R
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.content.Context
 import android.text.format.Formatter
@@ -83,7 +83,7 @@ fun StorageManagementScreen(
                 dbSize = databaseSize(context)
 
                 val allSessions = chatDao.listSessions()
-                val sessionsDir = File(context.filesDir, "i-sessions")
+                val sessionsDir = File(context.filesDir, "orca-sessions")
                 val mediaDir = File(context.filesDir, "media")
 
                 val mediaSizes = mediaSizesBySession(mediaDir, allSessions.map { it.id }.toSet())
@@ -177,7 +177,7 @@ fun SessionStorageDetailScreen(
     var isClearing by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
 
-    val sessionsDir = File(context.filesDir, "i-sessions")
+    val sessionsDir = File(context.filesDir, "orca-sessions")
     val mediaDir = File(context.filesDir, "media")
 
     fun reload() {
@@ -283,7 +283,7 @@ fun SessionStorageDetailScreen(
                 Text("This will delete ${Formatter.formatFileSize(context, totalSize)} of files. This action cannot be undone.")
             },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     showClearDialog = false
                     isClearing = true
                     scope.launch {
@@ -303,7 +303,7 @@ fun SessionStorageDetailScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                OrcaTextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -367,7 +367,7 @@ private fun directorySize(dir: File): Long {
 }
 
 private fun databaseSize(context: Context): Long {
-    val dbFile = context.getDatabasePath("i.db")
+    val dbFile = context.getDatabasePath("orca.db")
     var size = if (dbFile.exists()) dbFile.length() else 0L
     val wal = File(dbFile.path + "-wal")
     val shm = File(dbFile.path + "-shm")

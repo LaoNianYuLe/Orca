@@ -18,7 +18,7 @@ import org.junit.Test
 class AccessibilityRecoveryManagerTest {
 
     private val PKG = "com.orca.app"
-    private val CLS = "com.orca.app.accessibility.IAccessibilityService"
+    private val CLS = "com.orca.app.accessibility.OrcaAccessibilityService"
 
     private fun revoked(value: String?) =
         AccessibilityRecoveryManager.isRevokedIn(value, PKG, CLS)
@@ -48,7 +48,7 @@ class AccessibilityRecoveryManagerTest {
     fun `abbreviated entry is recognized`() {
         // The framework normalizes to this form when it rewrites the value.
         // This is the regression that would otherwise loop the repair prompt.
-        assertFalse(revoked("$PKG/.accessibility.IAccessibilityService"))
+        assertFalse(revoked("$PKG/.accessibility.OrcaAccessibilityService"))
     }
 
     @Test
@@ -81,7 +81,7 @@ class AccessibilityRecoveryManagerTest {
 
     @Test
     fun `a different package with a same-named class does not match`() {
-        assertTrue(revoked("com.other.app/com.orca.app.accessibility.IAccessibilityService"))
+        assertTrue(revoked("com.other.app/com.orca.app.accessibility.OrcaAccessibilityService"))
     }
 
     @Test

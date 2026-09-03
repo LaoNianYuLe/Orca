@@ -2,7 +2,7 @@ package com.orca.app.debug
 
 import android.content.Context
 import androidx.lifecycle.ViewModelProvider
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.data.model.ThinkingLevel
 import com.orca.app.ui.chat.ChatViewModel
 import com.orca.app.ui.chat.ChatViewModelStore
@@ -33,9 +33,9 @@ internal object HeadlessChatRunner {
     /** sessionId → ViewModelProvider that owns its single ChatViewModel. */
     private val providers = mutableMapOf<String, ViewModelProvider>()
 
-    private fun app(context: Context): IApp =
-        context.applicationContext as? IApp
-            ?: throw RPCException(-32000, "IApp not initialized")
+    private fun app(context: Context): OrcaApp =
+        context.applicationContext as? OrcaApp
+            ?: throw RPCException(-32000, "OrcaApp not initialized")
 
     @Synchronized
     private fun providerFor(context: Context, sessionId: String): ViewModelProvider {

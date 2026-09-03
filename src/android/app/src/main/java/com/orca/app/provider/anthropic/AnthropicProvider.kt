@@ -286,8 +286,11 @@ class AnthropicProvider(
      *   Returns null when the prompt is null/empty (iOS parity — no empty `system` field).
      */
     internal fun resolveSystemPrompt(userPrompt: String?): JSONArray? {
-        val claudeCodePrefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
         if (isOAuth) {
+            // Only the OAuth path needs this. Its getter throws when the build config
+            // field is empty, so reading it on the API-key path would break key users
+            // over a value they never use.
+            val claudeCodePrefix = com.orca.app.auth.ClaudeOAuthManager.ANTHROPIC_OAUTH_IDENTIFIER_PROMPT
             // Strip the prefix if the caller already prepended it; the tail is the real user prompt.
             val tail = when {
                 userPrompt == null -> ""
@@ -996,7 +999,7 @@ class AnthropicProvider(
         // everywhere else.
         builder.applyUserAgentOverride(
             customUserAgent,
-            defaultUserAgent = if (isOAuth) null else com.orca.app.provider.IUserAgent.DEFAULT,
+            defaultUserAgent = if (isOAuth) null else com.orca.app.provider.OrcaUserAgent.DEFAULT,
         )
         return builder.build()
     }

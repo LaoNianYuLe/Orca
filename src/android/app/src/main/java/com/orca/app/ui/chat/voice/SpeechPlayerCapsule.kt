@@ -60,7 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import com.orca.app.speech.VoiceOutputState
 import kotlinx.coroutines.delay
@@ -230,7 +230,7 @@ fun SpeechPlayerCapsule(
         // config .voiceOutput()): bound Voice Output group + System TTS + every
         // provider section with audio-output models and Quick Test — replacing
         // the first-cut flat candidate list.
-        val repo = (LocalContext.current.applicationContext as? IApp)?.providerRepository
+        val repo = (LocalContext.current.applicationContext as? OrcaApp)?.providerRepository
         if (repo != null) {
             VoiceOutputPickerSheet(
                 providerRepository = repo,

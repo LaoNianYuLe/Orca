@@ -17,9 +17,9 @@ import java.io.File
  * Mirrors [SkillRepository] in architecture, but the source of truth for the
  * server list is a single Claude-Desktop-compatible JSON file rather than a
  * SQLite table:
- *   - Server configs live in `/var/i/mcp-servers/servers.json` (host:
- *     `i-global/mcp-servers/servers.json`) in the `{ "mcpServers": { … } }`
- *     format. This is the SAME file the `i-mcp-cli` Python tool reads/writes
+ *   - Server configs live in `/var/orca/mcp-servers/servers.json` (host:
+ *     `orca-global/mcp-servers/servers.json`) in the `{ "mcpServers": { … } }`
+ *     format. This is the SAME file the `orca-mcp-cli` Python tool reads/writes
  *     inside PRoot, and the file browser can edit — so all three surfaces stay
  *     in sync without an Android-side sync layer (matches Android's local-only
  *     skills/provider model; no CloudKit / whole-file sync here).
@@ -64,7 +64,7 @@ class MCPRepository(private val context: Context) {
         /**
          * Per-server startup/handshake timeout (seconds) for a STDIO server's
          * first MCP `initialize`. I config, not MCP protocol; enforcement is
-         * entirely in the in-guest `i-mcp-cli` daemon. Round-tripped verbatim
+         * entirely in the in-guest `orca-mcp-cli` daemon. Round-tripped verbatim
          * so an edit/import/export never drops it. Null = daemon default (60s).
          * [T-mcp-startup-timeout]
          */
@@ -99,9 +99,9 @@ class MCPRepository(private val context: Context) {
         McpDbHelper(context).writableDatabase
     }
 
-    /** Host dir backing `/var/i/mcp-servers` (mirrors skills' i-global dir). */
+    /** Host dir backing `/var/orca/mcp-servers` (mirrors skills' orca-global dir). */
     private val mcpDir: File
-        get() = File(context.filesDir, "i-global/mcp-servers")
+        get() = File(context.filesDir, "orca-global/mcp-servers")
 
     private val serversFile: File
         get() = File(mcpDir, "servers.json")
@@ -448,7 +448,7 @@ class MCPRepository(private val context: Context) {
         val selected = enabled.take(MAX_MCPS_IN_PROMPT)
 
         return buildString {
-            append("Available MCP Servers (use i-mcp-cli to discover and call):\n")
+            append("Available MCP Servers (use orca-mcp-cli to discover and call):\n")
             for (s in selected) {
                 var note = s.note ?: ""
                 if (note.length > MAX_NOTE_LENGTH) note = note.substring(0, MAX_NOTE_LENGTH) + "…"
@@ -457,12 +457,12 @@ class MCPRepository(private val context: Context) {
                 append("\n")
             }
             append("\n")
-            append("To use: run `i-mcp-cli tools <server>` to see available tools,\n")
-            append("then `i-mcp-cli call <server> <tool> [args]` to invoke.\n")
+            append("To use: run `orca-mcp-cli tools <server>` to see available tools,\n")
+            append("then `orca-mcp-cli call <server> <tool> [args]` to invoke.\n")
             // [T-mcp-dollar-var-systemprompt-android] Document the $$VAR runtime
             // env placeholder (mirrors iOS 5fa9e6a9). Agent-facing English — not
             // localized; wording must match iOS verbatim.
-            append("When adding or modifying an MCP server config (via i-mcp-cli add / the UI), use \$\$VARNAME in env/headers/url values as a placeholder resolved at runtime from the system/App environment variables — do not hardcode secrets; reference an existing App environment variable as \$\$NAME.")
+            append("When adding or modifying an MCP server config (via orca-mcp-cli add / the UI), use \$\$VARNAME in env/headers/url values as a placeholder resolved at runtime from the system/App environment variables — do not hardcode secrets; reference an existing App environment variable as \$\$NAME.")
         }
     }
 

@@ -39,7 +39,7 @@ object ConfigBridge {
     }
 
     /** First-line gate — returns true when the master switch is on. */
-    fun isEnabled(): Boolean = IConfigPermissionStore.isEnabled
+    fun isEnabled(): Boolean = OrcaConfigPermissionStore.isEnabled
 
     /**
      * [T-android-config-feature-unavailable] Envelope for a field whose feature
@@ -55,15 +55,15 @@ object ConfigBridge {
         put("user_message", "The setting '$path' isn't available on this device: $reason")
     }
 
-    /** Standardised "i-config disabled" envelope. Includes user_message. */
+    /** Standardised "orca-config disabled" envelope. Includes user_message. */
     fun disabledErrorEnvelope(): JSONObject = JSONObject().apply {
         put("ok", false)
         put("error", "permission_denied")
-        put("reason", "i-config is disabled in Settings → Permissions.")
+        put("reason", "orca-config is disabled in Settings → Permissions.")
         put(
             "user_message",
-            "Orca tried to change a setting but i-config is currently disabled. " +
-                "You can enable it at [Settings → Permissions](i://settings/permissions), " +
+            "Orca tried to change a setting but orca-config is currently disabled. " +
+                "You can enable it at [Settings → Permissions](orca://settings/permissions), " +
                 "then ask me again. Or change the setting yourself directly through the relevant Settings screen."
         )
     }
@@ -190,7 +190,7 @@ object ConfigBridge {
     }
 
     private fun readFieldRaw(path: String): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val field = ConfigRegistry.get().resolveField(path) ?: return JSONObject().apply {
             put("ok", false)
             put("error", "unknown_path")
@@ -199,7 +199,7 @@ object ConfigBridge {
         if (field.access == ConfigAccess.HIDDEN) return JSONObject().apply {
             put("ok", false)
             put("error", "permission_denied")
-            put("reason", "'$path' is intentionally not exposed to i-config.")
+            put("reason", "'$path' is intentionally not exposed to orca-config.")
         }
         // [T-android-config-feature-unavailable] The device/OS lacks the
         // feature entirely — answer precisely instead of reporting a value the
@@ -214,7 +214,7 @@ object ConfigBridge {
                 put("display_name", field.displayName)
             }
         } catch (e: ConfigError.PermissionDenied) {
-            // [T-i-config-provider-add] Forward PermissionDenied verbatim
+            // [T-orca-config-provider-add] Forward PermissionDenied verbatim
             // — used by fields that are editable but unreadable (notably
             // providers.<id>.apiKey: writes accepted, reads guarded). Without
             // this branch the previous generic catch reported "read_failed"
@@ -253,7 +253,7 @@ object ConfigBridge {
         if (page > totalPages) {
             val pgWord = if (totalPages == 1) "page" else "pages"
             return "Page $page is out of range (only $totalPages $pgWord available). " +
-                "Try: i-config get $path$filterFragment --page $totalPages"
+                "Try: orca-config get $path$filterFragment --page $totalPages"
         }
         if (totalPages <= 1) {
             val itemWord = if (total == 1) "item" else "items"
@@ -261,7 +261,7 @@ object ConfigBridge {
         }
         if (page < totalPages) {
             return "Showing page $page of $totalPages ($pageCount of $total items). " +
-                "To get more, use: i-config get $path$filterFragment --page ${page + 1} --page-size $pageSize"
+                "To get more, use: orca-config get $path$filterFragment --page ${page + 1} --page-size $pageSize"
         }
         return "Showing page $page of $totalPages ($pageCount of $total items). This is the last page."
     }
@@ -280,7 +280,7 @@ object ConfigBridge {
         actorRaw: String,
         sessionId: String?,
     ): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         // Bridge runs on the offload worker thread; the gate itself
         // does its own context switch to Main for the dialog.
         return runBlocking {
@@ -349,7 +349,7 @@ object ConfigBridge {
                         put("reason", "Collection '${coll.basePath}' does not allow .remove.")
                     }
                 }
-                // [T-i-config-provider-add] Redact credential values
+                // [T-orca-config-provider-add] Redact credential values
                 // (apiKey / oauthToken / manualOAuthToken) BEFORE they reach
                 // the confirmation sheet or the audit log. The collection's
                 // add() still receives the un-redacted `parsedValue` so it
@@ -401,7 +401,7 @@ object ConfigBridge {
 
             if (field.access != ConfigAccess.READWRITE) {
                 val reason = if (field.access == ConfigAccess.HIDDEN) {
-                    "'$rawPath' is intentionally not exposed to i-config."
+                    "'$rawPath' is intentionally not exposed to orca-config."
                 } else {
                     "'$rawPath' is read-only."
                 }
@@ -495,7 +495,7 @@ object ConfigBridge {
                 }
             }
 
-            // [T-i-config-provider-add] Mask credential writes the
+            // [T-orca-config-provider-add] Mask credential writes the
             // same way collection-add does: detect by the path's last
             // segment matching ConfigValue.SECRET_KEYS (apiKey /
             // oauthToken / manualOAuthToken). Field still gets the un-
@@ -657,7 +657,7 @@ object ConfigBridge {
                             r.field.write(r.newValue)
                             displayName = r.field.displayName
                             displayPath = r.field.path
-                            // [T-i-config-provider-add] If this is a
+                            // [T-orca-config-provider-add] If this is a
                             // credential field, audit/display rows pull
                             // from the redacted copy so the secret never
                             // reaches the audit DB or the user's screen.
@@ -731,8 +731,8 @@ object ConfigBridge {
                         put("ok", true)
                         put("applied", applied)
                         put("audit_ids", auditIds)
-                        put("audit_url", "i://settings/logs?tab=config-audit")
-                        put("user_message", "Settings updated. Review or revert at [Logs → Config Changes](i://settings/logs?tab=config-audit).")
+                        put("audit_url", "orca://settings/logs?tab=config-audit")
+                        put("user_message", "Settings updated. Review or revert at [Logs → Config Changes](orca://settings/logs?tab=config-audit).")
                     }
                 }
             }
@@ -755,7 +755,7 @@ object ConfigBridge {
         val scope: String,
         val oldValue: ConfigValue,
         val newValue: ConfigValue,
-        // [T-i-config-provider-add] When non-null, audit / display
+        // [T-orca-config-provider-add] When non-null, audit / display
         // logging uses this instead of `newValue` — the executor still
         // applies `newValue` un-redacted so the credential reaches the
         // collection's add(). null = no redaction needed (use newValue
@@ -816,7 +816,7 @@ object ConfigBridge {
     // -- audit --
 
     fun auditList(limit: Int, scope: String?): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val entries = ConfigAuditLog.get().recent(limit, scope)
         val usage = ConfigAuditLog.get().usage()
         return JSONObject().apply {
@@ -829,7 +829,7 @@ object ConfigBridge {
     }
 
     fun auditGet(id: String): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val e = ConfigAuditLog.get().get(id) ?: return JSONObject().apply {
             put("ok", false)
             put("error", "not_found")
@@ -872,7 +872,7 @@ object ConfigBridge {
         sessionId: String?,
         skipConfirmation: Boolean,
     ): JSONObject {
-        if (!IConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
+        if (!OrcaConfigPermissionStore.isEnabled) return disabledErrorEnvelope()
         val entry = ConfigAuditLog.get().get(id) ?: return JSONObject().apply {
             put("ok", false)
             put("error", "not_found")
@@ -947,7 +947,7 @@ object ConfigBridge {
         val res = runBlocking {
             performWriteBatch(
                 items = items,
-                caption = "i-config audit revert ${entry.id.take(8)}",
+                caption = "orca-config audit revert ${entry.id.take(8)}",
                 actorRaw = actorRaw,
                 sessionId = sessionId,
                 skipConfirmation = skipConfirmation,

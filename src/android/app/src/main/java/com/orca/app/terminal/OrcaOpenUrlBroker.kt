@@ -7,16 +7,16 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Process-wide broker for URLs captured from shell stdout via the OSC
- * `IOpenURL` marker (emitted by `/usr/local/bin/i-open`). The active
+ * `OrcaOpenURL` marker (emitted by `/usr/local/bin/orca-open`). The active
  * chat screen collects [pendingUrl] and routes the captured URL into its
  * existing link-tap handler, which in turn dispatches:
  *
  *   * `http(s)://` / `about:`  → `UrlPreviewSheet` via `LocalInAppBrowserLauncher`
- *   * `i://<deep-link>`    → `DeepLinkHandler`
- *   * `i://<host>/<path>`  → in-app file preview by extension
+ *   * `orca://<deep-link>`    → `DeepLinkHandler`
+ *   * `orca://<host>/<path>`  → in-app file preview by extension
  *
  * Whichever observer handles the URL calls [consume] so sibling observers
- * skip it. This mirrors iOS `IOpenURLBroker`.
+ * skip it. This mirrors iOS `OrcaOpenURLBroker`.
  *
  * The broker also tracks which top-most host ([toolSheetVisible] /
  * [terminalVisible]) is currently presented so the chat screen can defer web
@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * flags are kept for parity so future callers can opt into the same
  * coordination pattern without reshuffling the API.
  */
-object IOpenUrlBroker {
+object OrcaOpenUrlBroker {
     private val _pendingUrl = MutableStateFlow<Uri?>(null)
     val pendingUrl: StateFlow<Uri?> = _pendingUrl.asStateFlow()
 
@@ -49,7 +49,7 @@ object IOpenUrlBroker {
     fun setTerminalVisible(visible: Boolean) { _terminalVisible.value = visible }
 
     /**
-     * Schemes `i-open` may emit and that the host knows how to route.
+     * Schemes `orca-open` may emit and that the host knows how to route.
      *   * `http` / `https` / `about` → in-app WebView preview
      *   * `i`                    → deep link or in-app file preview
      */

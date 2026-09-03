@@ -69,7 +69,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -204,7 +204,7 @@ fun FileBrowserScreen(
             title = { Text(stringResource(R.string.filebrowser_delete_title, item.name)) },
             text = { Text(stringResource(R.string.filebrowser_delete_message)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     viewModel.deleteItem(item)
                     deleteTarget = null
                 }) {
@@ -212,7 +212,7 @@ fun FileBrowserScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { deleteTarget = null }) {
+                OrcaTextButton(onClick = { deleteTarget = null }) {
                     Text(stringResource(R.string.cancel))
                 }
             },
@@ -236,7 +236,7 @@ fun FileBrowserScreen(
             title = { Text(stringResource(R.string.filebrowser_error_title)) },
             text = { Text(msg) },
             confirmButton = {
-                ITextButton(onClick = { viewModel.dismissError() }) {
+                OrcaTextButton(onClick = { viewModel.dismissError() }) {
                     Text("OK")  // OK is locale-neutral
                 }
             },
@@ -286,8 +286,8 @@ private fun FileItemRow(
     onAddToHome: (com.orca.app.webapp.WebAppSource.HostFile) -> Unit,
 ) {
     // T-pwa-3: long-press menu for .html / .htm files whose host path
-    // sits under a recognised PRoot bind mount (`/var/i/shared` or
-    // `/var/i/mounts/<n>`). Computed lazily because the bindMounts
+    // sits under a recognised PRoot bind mount (`/var/orca/shared` or
+    // `/var/orca/mounts/<n>`). Computed lazily because the bindMounts
     // map can change while the screen is open (mount add/remove).
     val ext = item.file.extension.lowercase()
     val isHtml = !item.isDirectory && (ext == "html" || ext == "htm")
@@ -391,7 +391,7 @@ private fun FileItemRow(
     // WebApp entry point (TODO webapp-hidden).
     run {
         val context = LocalContext.current
-        com.orca.app.ui.components.IMenu(
+        com.orca.app.ui.components.OrcaMenu(
             expanded = menuExpanded,
             onDismissRequest = { menuExpanded = false },
         ) {
@@ -467,7 +467,7 @@ private fun MoreMenu(
         IconButton(onClick = { expanded = true }) {
             Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.filebrowser_more_action))
         }
-        com.orca.app.ui.components.IMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        com.orca.app.ui.components.OrcaMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             // Display options — sort key choices first so the most
             // frequent toggle (sort) is the closest tap.
             for (key in FileSortKey.entries) {

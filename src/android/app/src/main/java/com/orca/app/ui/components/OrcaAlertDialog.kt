@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.orca.app.R
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * App-wide confirmation dialog. Tighter than the Material 3 default
@@ -30,7 +30,7 @@ import com.orca.app.ui.components.ITextButton
  * the pattern iOS uses for `UIAlertActionStyle.destructive`.
  */
 @Composable
-fun IAlertDialog(
+fun OrcaAlertDialog(
     onDismissRequest: () -> Unit,
     title: String,
     confirmText: String,
@@ -91,13 +91,13 @@ fun IAlertDialog(
                             .padding(horizontal = 8.dp, vertical = 8.dp),
                         horizontalAlignment = Alignment.End,
                     ) {
-                        ITextButton(onClick = onDismiss) {
+                        OrcaTextButton(onClick = onDismiss) {
                             Text(dismissText)
                         }
-                        ITextButton(onClick = onConfirm) {
+                        OrcaTextButton(onClick = onConfirm) {
                             Text(text = confirmText, color = confirmColor)
                         }
-                        ITextButton(onClick = onNeutral) {
+                        OrcaTextButton(onClick = onNeutral) {
                             Text(text = neutralText, color = confirmColor)
                         }
                     }
@@ -108,11 +108,11 @@ fun IAlertDialog(
                             .padding(horizontal = 8.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.End,
                     ) {
-                        ITextButton(onClick = onDismiss) {
+                        OrcaTextButton(onClick = onDismiss) {
                             Text(dismissText)
                         }
                         Spacer(modifier = Modifier.width(4.dp))
-                        ITextButton(onClick = onConfirm) {
+                        OrcaTextButton(onClick = onConfirm) {
                             Text(text = confirmText, color = confirmColor)
                         }
                     }

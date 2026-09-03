@@ -2,14 +2,14 @@
 
 When a server's `command` is something like `npx`/`uvx` that isn't installed in
 the minimal Alpine rootfs, resolve it silently (log only, never touch stdout)
-so the agent's `i-mcp-cli call` just works. Shared iOS/Android.
+so the agent's `orca-mcp-cli call` just works. Shared iOS/Android.
 """
 
 import os
 import shutil
 import subprocess
 
-LOG_PATH = "/var/i/mcp-servers/mcp-cli.log"
+LOG_PATH = "/var/orca/mcp-servers/mcp-cli.log"
 
 
 def _log(msg):

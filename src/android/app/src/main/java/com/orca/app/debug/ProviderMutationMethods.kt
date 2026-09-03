@@ -1,7 +1,7 @@
 package com.orca.app.debug
 
 import android.content.Context
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.data.model.FallbackStrategy
 import com.orca.app.data.model.ImageEndpointMode
 import com.orca.app.data.model.LLMModel
@@ -32,8 +32,8 @@ import java.util.UUID
 internal object ProviderMutationMethods {
 
     private fun repo(context: Context): ProviderRepository =
-        (context.applicationContext as? IApp
-            ?: throw RPCException(-32000, "IApp not initialized")).providerRepository
+        (context.applicationContext as? OrcaApp
+            ?: throw RPCException(-32000, "OrcaApp not initialized")).providerRepository
 
     // ─── Instances ──────────────────────────────────────────────────────────
 
@@ -124,7 +124,7 @@ internal object ProviderMutationMethods {
         // authentication request chain with a fixed client UA — overriding it can
         // break the handshake or be rejected upstream. Reject any write (including
         // the empty-string clear) for non-apiKey instances, mirroring the
-        // i-config writer guard in ProvidersCollection.kt.
+        // orca-config writer guard in ProvidersCollection.kt.
         val customUserAgent: String? = if (params.has("customUserAgent")) {
             if (current.credentialType != ProviderCredential.apiKey) {
                 throw RPCException(-32602, "Custom User-Agent is only supported for third-party API-key providers. OAuth providers (Anthropic/Codex) use their own authentication UA and cannot be overridden.")

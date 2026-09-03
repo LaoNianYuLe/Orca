@@ -61,7 +61,7 @@ class ModelsCollection(
             ?: throw ConfigError.InvalidValue("Expected JSON object")
 
         // Accept `instance_id` (canonical, matches iOS) or `provider_id`
-        // (CLI-facing alias documented in `i-config` help). Either
+        // (CLI-facing alias documented in `orca-config` help). Either
         // must be a non-empty UUID of an existing provider instance.
         val instanceId = (
             (obj["instance_id"] as? ConfigValue.Str)?.value
@@ -231,7 +231,7 @@ class ModelsCollection(
     // -- Capability fields (modalities / contextWindow / derived) --
 
     /**
-     * Canonical names matching `i-model-use list` so the two tools
+     * Canonical names matching `orca-model-use list` so the two tools
      * agree on terminology. Order is meaningful for [encodeModalities]'
      * stable output. Mirrors iOS `modalityNamesInOrder`.
      */
@@ -256,7 +256,7 @@ class ModelsCollection(
         val outputs = ovOutputs ?: baseOutputs
 
         // Translate models.dev short tokens (e.g. "text", "image") into
-        // direction-suffixed names that match `i-model-use list`.
+        // direction-suffixed names that match `orca-model-use list`.
         val out = LinkedHashSet<String>()
         for (m in inputs) appendDirectional(out, m, "input")
         for (m in outputs) appendDirectional(out, m, "output")

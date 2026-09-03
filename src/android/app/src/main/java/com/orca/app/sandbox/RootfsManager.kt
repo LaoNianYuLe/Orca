@@ -68,6 +68,7 @@ class RootfsManager private constructor(private val context: Context) {
     suspend fun installIfNeeded() = withContext(Dispatchers.IO) {
         if (isInstalled) {
             Log.d(TAG, "Rootfs already installed at $rootfsDir")
+            ensureOrcaWorkspace()
             _installState.value = RootfsInstallState.Installed
             return@withContext
         }
@@ -122,20 +123,13 @@ class RootfsManager private constructor(private val context: Context) {
             // Write arch marker
             archFile.writeText(ARCH)
 
-            // Pre-create /var/i directories. Mirrors iOS
+            // Pre-create /var/orca directories. Mirrors iOS
             // RootfsManager.swift:76-80 (attachments/offloads/workspace/skills/
             // shared) plus Android-specific `memory` kept from prior parity work.
-            // T219-6: also pre-create `mounts/` so PRoot's `-b host:/var/i/mounts/<name>`
+            // T219-6: also pre-create `mounts/` so PRoot's `-b host:/var/orca/mounts/<name>`
             // has the parent directory to bind into; without this, PRoot silently
             // skips bind mounts whose target path doesn't exist.
-            val iSubdirs = listOf("attachments", "offloads", "workspace", "skills", "memory", "shared", "mounts")
-            for (subdir in iSubdirs) {
-                File(rootfsDir, "var/i/$subdir").mkdirs()
-            }
-
-            // Pre-create /opt/bin — appears in PATH so users can drop third-party
-            // binaries here without first `mkdir -p`. Matches iOS PATH layout.
-            File(rootfsDir, "opt/bin").mkdirs()
+            ensureOrcaWorkspace()
 
             // Write resolv.conf from system DNS (fallback to 8.8.8.8)
             refreshDns()
@@ -153,6 +147,53 @@ class RootfsManager private constructor(private val context: Context) {
             Log.e(TAG, "Rootfs installation failed", t)
             _installState.value = RootfsInstallState.Failed(t.message ?: t.javaClass.simpleName)
             throw t
+        }
+    }
+
+    /**
+     * Ensure `/var/orca/{attachments,offloads,workspace,...}` exists even when
+     * rootfs was extracted by an older APK that mkdir'd `/var/i` instead.
+     * Also folds leftover empty/skeleton `var/i` into `var/orca` (no full
+     * BrandMigration restore — only directory move of names we own).
+     */
+    private fun ensureOrcaWorkspace() {
+        val subdirs = listOf("attachments", "offloads", "workspace", "skills", "memory", "shared", "mounts")
+        for (subdir in subdirs) {
+            File(rootfsDir, "var/orca/$subdir").mkdirs()
+        }
+        File(rootfsDir, "opt/bin").mkdirs()
+        migrateLegacyVarI()
+    }
+
+    private fun migrateLegacyVarI() {
+        val legacy = File(rootfsDir, "var/i")
+        if (!legacy.isDirectory) return
+        val destRoot = File(rootfsDir, "var/orca")
+        destRoot.mkdirs()
+        mergeDirectoryPreferDest(legacy, destRoot)
+        val leftover = legacy.listFiles()
+        if (leftover.isNullOrEmpty()) {
+            legacy.delete()
+            Log.i(TAG, "Removed empty legacy var/i")
+        } else {
+            Log.w(TAG, "Left ${leftover.size} item(s) under var/i (dest already had those names)")
+        }
+    }
+
+    private fun mergeDirectoryPreferDest(src: File, dest: File) {
+        dest.mkdirs()
+        val children = src.listFiles() ?: return
+        for (child in children) {
+            val target = File(dest, child.name)
+            if (!target.exists()) {
+                if (!child.renameTo(target)) {
+                    child.copyRecursively(target, overwrite = false)
+                    child.deleteRecursively()
+                }
+            } else if (child.isDirectory && target.isDirectory) {
+                mergeDirectoryPreferDest(child, target)
+                if (child.listFiles().isNullOrEmpty()) child.delete()
+            }
         }
     }
 
@@ -244,7 +285,7 @@ class RootfsManager private constructor(private val context: Context) {
      * Ensure session-specific directories exist on the host filesystem.
      */
     fun ensureSessionDirs(sessionId: String) {
-        val sessionBase = File(context.filesDir, "i-sessions/$sessionId")
+        val sessionBase = File(context.filesDir, "orca-sessions/$sessionId")
         val subdirs = listOf("attachments", "offloads", "workspace", "browser")
         for (subdir in subdirs) {
             File(sessionBase, subdir).mkdirs()
@@ -352,21 +393,21 @@ class RootfsManager private constructor(private val context: Context) {
         // --isolated or via a venv). Safe: this is a single-tenant sandbox.
         val markerRemoved = removeExternallyManagedMarker()
 
-        // [T-mcp-cli-readonly-android] Make the shipped i-mcp-cli Python lib
+        // [T-mcp-cli-readonly-android] Make the shipped orca-mcp-cli Python lib
         // read-only inside the guest so a user can't `vi`-tamper the bundled
-        // scripts (mirrors iOS #707). Scoped to /usr/local/lib/i-mcp-cli/
-        // ONLY — the wrapper at /usr/local/bin/i-mcp-cli stays executable +
+        // scripts (mirrors iOS #707). Scoped to /usr/local/lib/orca-mcp-cli/
+        // ONLY — the wrapper at /usr/local/bin/orca-mcp-cli stays executable +
         // writable (app-managed). Re-applied on every boot AFTER the copy; the
         // copyAssetDir leaf-copy above re-opens read-only files writable first,
         // so the next app-upgrade overlay still overwrites cleanly.
         val lockedCount = lockMcpCliLibReadOnly()
 
         val elapsedMs = (System.nanoTime() - startNs) / 1_000_000.0
-        Log.i(TAG, "[DefaultMount] Done. $fileCount file(s) overlaid, $markerRemoved EXTERNALLY-MANAGED marker(s) removed, $lockedCount i-mcp-cli lib path(s) locked read-only in %.1fms".format(elapsedMs))
+        Log.i(TAG, "[DefaultMount] Done. $fileCount file(s) overlaid, $markerRemoved EXTERNALLY-MANAGED marker(s) removed, $lockedCount orca-mcp-cli lib path(s) locked read-only in %.1fms".format(elapsedMs))
     }
 
     /**
-     * [T-mcp-cli-readonly-android] Set the `/usr/local/lib/i-mcp-cli/`
+     * [T-mcp-cli-readonly-android] Set the `/usr/local/lib/orca-mcp-cli/`
      * subtree read-only for the guest: directories 0555 (read+execute, no
      * write), files 0444 (read-only). Java's File API has no octal chmod, so
      * we use setWritable(false, false) + setReadable(true, false)
@@ -377,7 +418,7 @@ class RootfsManager private constructor(private val context: Context) {
      * upgrade path working across boots.
      */
     private fun lockMcpCliLibReadOnly(): Int {
-        val libDir = File(rootfsDir, "usr/local/lib/i-mcp-cli")
+        val libDir = File(rootfsDir, "usr/local/lib/orca-mcp-cli")
         if (!libDir.isDirectory) return 0
         var count = 0
         // walkBottomUp so child files are locked before their parent dir loses
@@ -425,7 +466,7 @@ class RootfsManager private constructor(private val context: Context) {
             val dest = File(targetBase, prefix)
             dest.parentFile?.mkdirs()
             // [T-mcp-cli-readonly-android] A prior boot may have set this file
-            // (and its dir) read-only — the i-mcp-cli lib subtree, locked
+            // (and its dir) read-only — the orca-mcp-cli lib subtree, locked
             // below. Re-open both writable before overwriting, otherwise an app
             // upgrade can't replace the shipped file: truncating an existing
             // file needs write on the FILE, and creating a new one needs write

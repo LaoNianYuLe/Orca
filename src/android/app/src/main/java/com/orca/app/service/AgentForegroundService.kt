@@ -15,7 +15,7 @@ import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,10 +63,18 @@ class AgentForegroundService : Service() {
                 putExtra(EXTRA_SESSION_COUNT, sessionCount)
                 putExtra(EXTRA_TOOL_STATUS, toolStatus)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                // Android 12+ throws ForegroundServiceStartNotAllowedException
+                // when the app is backgrounded without an eligible start.
+                // Overlay-without-SYSTEM_ALERT_WINDOW is a separate permission
+                // gap; this catch keeps the agent loop from crashing the process.
+                Log.w(TAG, "Failed to start AgentForegroundService: ${e.message}")
             }
         }
 
@@ -124,10 +132,10 @@ class AgentForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         // Safe-mode bail-out. When CrashFrequencyDetector tripped in
-        // IApp.onCreate, the Application skipped its lateinit init
+        // OrcaApp.onCreate, the Application skipped its lateinit init
         // for repositories — but a sticky FG service that was running
         // pre-crash will still be re-created by the system on the next
-        // process spawn. Reading IApp.backgroundSettingsRepository
+        // process spawn. Reading OrcaApp.backgroundSettingsRepository
         // from ToolOverlayController.<init> here would throw
         // UninitializedPropertyAccessException and write a second crash
         // log, which is exactly the "detection logic recursively
@@ -291,7 +299,7 @@ class AgentForegroundService : Service() {
      * overlay doesn't draw on top of the chat itself.
      */
     private fun startOverlayObserver() {
-        val app = applicationContext as? IApp ?: return
+        val app = applicationContext as? OrcaApp ?: return
         overlayController = ToolOverlayController(applicationContext).apply {
             // [T-android-overlay-reply-status-34599] Tap-to-open or X
             // dismissal clears the lingered completion state so the
@@ -710,7 +718,7 @@ class AgentForegroundService : Service() {
         )
 
         // T-bg-overlay phase 1: enrich the ongoing notification.
-        // Title:   "I is using <Tool>"  (or session-count summary when idle/between turns)
+        // Title:   "Orca is using <Tool>"  (or session-count summary when idle/between turns)
         // Text:    one-line "<sessionLabel> · <elapsed>" so the always-visible row stays compact
         // BigText: full status string from SessionActivityTracker.currentToolStatus when expanded
         // Progress: indeterminate while a tool is in flight (isToolRunning), hidden otherwise
@@ -721,7 +729,7 @@ class AgentForegroundService : Service() {
         // [T-android-live-update-completed] In the completed resting state the
         // title/status must stop describing work in progress. `toolName` is
         // already null by then (setInactive clears it), so the old code fell
-        // through to the generic "I is running" title while the icon fell
+        // through to the generic "Orca is running" title while the icon fell
         // through to the wrench (toolSmallIconRes' else branch) — a finished
         // task rendered exactly like a running one.
         val titleText = when {
@@ -757,11 +765,11 @@ class AgentForegroundService : Service() {
         // Application, NOT against an uninitialized lateinit — the safe call
         // succeeds and then the GETTER throws
         // UninitializedPropertyAccessException. This service can be restarted
-        // by the system with no Activity, so it can observe a IApp whose
+        // by the system with no Activity, so it can observe a OrcaApp whose
         // onCreate early-returned under safe-mode. Gate on subsystemsReady()
         // first; a notification built without the dynamic-island style is a
         // cosmetic downgrade, a crash here kills the FGS mid-task.
-        val iApp = (applicationContext as? IApp)?.takeIf { it.subsystemsReady() }
+        val iApp = (applicationContext as? OrcaApp)?.takeIf { it.subsystemsReady() }
         val dynamicIslandUserEnabled =
             iApp?.backgroundSettingsRepository?.dynamicIslandEnabled?.value == true
         val dynamicIslandOn = DynamicIslandSupport.isDynamicIslandActive(

@@ -2,8 +2,8 @@ package com.orca.app.ui.onboarding
 
 import com.orca.app.R
 import androidx.compose.ui.res.stringResource
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -99,7 +99,7 @@ fun OnboardingModelSelectionScreen(
                     }
                 },
                 actions = {
-                    ITextButton(onClick = onBack) {
+                    OrcaTextButton(onClick = onBack) {
                         Text(stringResource(R.string.common_skip))
                     }
                 },
@@ -217,7 +217,7 @@ fun OnboardingModelSelectionScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            IButton(
+            OrcaButton(
                 onClick = {
                     if (selected.isNotEmpty()) {
                         val group = ModelGroup(name = "Default Models")

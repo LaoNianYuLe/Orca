@@ -1,18 +1,18 @@
 #!/bin/sh
-# i-mcp-cli — IApp MCP (Model Context Protocol) client for iSH/PRoot.
+# orca-mcp-cli — Orca MCP (Model Context Protocol) client for iSH/PRoot.
 #
 # Thin sh wrapper: ensures the python3 + httpx runtime is present, then execs
 # the shared Python implementation. The Python under
-# /usr/local/lib/i-mcp-cli is platform-neutral and is shipped identically
+# /usr/local/lib/orca-mcp-cli is platform-neutral and is shipped identically
 # on iOS (iSH) and Android (PRoot/Alpine) — keep it POSIX + dependency-light.
 #
-# Data file: /var/i/mcp-servers/servers.json (mcpServers object format,
-# Claude-Desktop compatible). Logs: /var/i/mcp-servers/mcp-cli.log.
+# Data file: /var/orca/mcp-servers/servers.json (mcpServers object format,
+# Claude-Desktop compatible). Logs: /var/orca/mcp-servers/mcp-cli.log.
 # Diagnostics go to the log, never to stdout (stdout is reserved for the
 # JSON the agent parses).
 
-LOG="/var/i/mcp-servers/mcp-cli.log"
-mkdir -p /var/i/mcp-servers 2>/dev/null
+LOG="/var/orca/mcp-servers/mcp-cli.log"
+mkdir -p /var/orca/mcp-servers 2>/dev/null
 _log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG" 2>/dev/null; }
 
 # Ensure python3 is available.
@@ -28,4 +28,4 @@ if ! python3 -c "import httpx" 2>/dev/null; then
     pip install --quiet --break-system-packages httpx >> "$LOG" 2>&1
 fi
 
-exec python3 /usr/local/lib/i-mcp-cli/main.py "$@"
+exec python3 /usr/local/lib/orca-mcp-cli/main.py "$@"

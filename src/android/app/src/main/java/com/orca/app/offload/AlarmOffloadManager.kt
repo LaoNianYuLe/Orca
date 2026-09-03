@@ -24,9 +24,9 @@ class AlarmOffloadManager(private val context: Context) {
 
     companion object {
         private const val TAG = "AlarmOffloadManager"
-        private const val PREFS_NAME = "i_alarms_prefs"
+        private const val PREFS_NAME = "orca_alarms_prefs"
         private const val KEY_ALARMS = "alarms_json"
-        const val CHANNEL_ID = "i_alarms"
+        const val CHANNEL_ID = "orca_alarms"
         private const val CHANNEL_NAME = "Orca Alarms & Timers"
 
         const val EXTRA_ALARM_ID = "alarm_id"

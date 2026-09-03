@@ -25,18 +25,27 @@ import java.security.KeyStore
  *     Tink keyset prefs file + the AndroidKeystore alias, then retry
  *     once. The user loses stored credentials (they need to re-paste
  *     their API key / re-login OAuth) but the app boots.
- *  3. If recreate still fails: fall back to a PLAIN-TEXT
- *     SharedPreferences so the rest of the app sees an empty,
- *     read-write store and never crashes. Plain-text fallback is a
- *     last-resort safety net — the on-disk file is named with a
- *     "_plain_fallback" suffix so it's distinguishable from real
- *     encrypted state and never gets promoted back to the encrypted
- *     slot on the next launch.
+ *  3. If recreate still fails: fall back to an in-memory store so the
+ *     rest of the app sees an empty, read-write SharedPreferences and
+ *     never crashes.
+ *
+ * Step 3 used to write a plain-text XML file. That turned a Keystore
+ * fault into silent cleartext persistence of API keys and OAuth refresh
+ * tokens, readable by `adb backup` and by any same-UID process — a worse
+ * outcome than the crash it was avoiding. It is now [InMemorySharedPreferences]:
+ * same crash-free contract, but the values never reach disk and die with
+ * the process. Callers that persist secrets should treat a fallback store
+ * as empty and prompt the user to re-authenticate.
+ *
+ * Any `_plain_fallback` files left by earlier builds are deleted on first
+ * use so old cleartext copies do not linger.
  */
 object EncryptedPrefsFactory {
     private const val TAG = "EncryptedPrefsFactory"
 
     fun safeCreate(context: Context, fileName: String): SharedPreferences {
+        purgeLegacyPlaintextFallback(context, fileName)
+
         runCatching { return build(context, fileName) }
             .onFailure { Log.w(TAG, "first create($fileName) failed: ${it.message}") }
 
@@ -51,8 +60,30 @@ object EncryptedPrefsFactory {
                 Log.e(TAG, "rebuild($fileName) after wipe failed: ${it.message}", it)
             }
 
-        Log.w(TAG, "falling back to plain SharedPreferences for $fileName — credentials lost")
-        return context.getSharedPreferences("${fileName}_plain_fallback", Context.MODE_PRIVATE)
+        Log.e(
+            TAG,
+            "encrypted store for $fileName is unusable — serving an in-memory store. " +
+                "Stored credentials are gone and nothing will persist this session; " +
+                "the user must re-enter them.",
+        )
+        return InMemorySharedPreferences()
+    }
+
+    /**
+     * Earlier builds degraded to a plain-text `<name>_plain_fallback.xml`.
+     * Devices that hit that path still have secrets sitting in cleartext, and
+     * nothing else ever deletes the file. Remove it whenever this factory runs.
+     */
+    private fun purgeLegacyPlaintextFallback(context: Context, fileName: String) {
+        runCatching {
+            val legacy = File(
+                File(context.applicationInfo.dataDir, "shared_prefs"),
+                "${fileName}_plain_fallback.xml",
+            )
+            if (legacy.exists() && legacy.delete()) {
+                Log.w(TAG, "deleted legacy plain-text fallback for $fileName")
+            }
+        }.onFailure { Log.w(TAG, "purge legacy fallback failed: ${it.message}") }
     }
 
     private fun build(context: Context, fileName: String): SharedPreferences {

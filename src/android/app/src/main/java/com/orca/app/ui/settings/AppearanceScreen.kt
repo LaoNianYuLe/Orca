@@ -2,7 +2,7 @@ package com.orca.app.ui.settings
 
 import com.orca.app.R
 import com.orca.app.data.repository.AppIconRepository
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -403,7 +403,7 @@ fun AppearanceScreen(
         // -- Chat Title (T-chat-title-pill) --
         // Sticky session-title pill that appears at the top of the chat
         // when the user scrolls back through history. Default ON; toggle
-        // also reachable via `i-config set appearance.show_chat_title`.
+        // also reachable via `orca-config set appearance.show_chat_title`.
         SettingsSection(
             header = stringResource(R.string.appearance_section_chat_title),
             footer = stringResource(R.string.appearance_show_chat_title_footer),
@@ -491,7 +491,7 @@ fun AppearanceScreen(
                         .padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    ITextButton(onClick = {
+                    OrcaTextButton(onClick = {
                         chatInputLevel = 0; messageLevel = 0; appBaseLevel = 0
                         prefs.edit()
                             .putInt(KEY_FONT_CHAT_INPUT, 0)

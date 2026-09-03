@@ -59,7 +59,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.orca.app.sandbox.TerminalSession
-import com.orca.app.terminal.IOpenUrlBroker
+import com.orca.app.terminal.OrcaOpenUrlBroker
 import com.orca.app.ui.terminal.canvas.TerminalNativeViewCompose
 import com.orca.app.ui.terminal.canvas.TerminalInputView
 import com.orca.app.ui.terminal.canvas.rememberTerminalInputController
@@ -82,7 +82,7 @@ fun TerminalScreen(
     initCommand: String? = null,
     /**
      * When non-null, binds this terminal to the given chat session —
-     * TerminalSession.start() will chdir into /var/i and pick up the
+     * TerminalSession.start() will chdir into /var/orca and pick up the
      * session's env vars (mirrors iOS "Open Terminal" from chat).
      */
     sessionId: String? = null,
@@ -117,7 +117,10 @@ fun TerminalScreen(
     LaunchedEffect(Unit) {
         if (!terminalSession.isRunning) terminalSession.start(sessionId = sessionId)
         if (!initCommand.isNullOrBlank()) {
-            // Pre-fill at the prompt without newline so the user can review.
+            // Whether this only pre-fills depends on the caller: sendText folds
+            // CR/LF to CR, which the TTY reads as Enter. Deep links are stripped
+            // of control bytes in DeepLinkHandler.sanitizeInitCommand, so that
+            // path can only pre-fill. In-app callers keep the ability to submit.
             kotlinx.coroutines.delay(500)
             terminalSession.sendText(initCommand)
         }
@@ -144,24 +147,24 @@ fun TerminalScreen(
     // (still composed underneath this destination's stack) doesn't try to
     // present its own preview sheet on top — mirrors iOS ISHTerminalView.
     DisposableEffect(Unit) {
-        IOpenUrlBroker.setTerminalVisible(true)
-        onDispose { IOpenUrlBroker.setTerminalVisible(false) }
+        OrcaOpenUrlBroker.setTerminalVisible(true)
+        onDispose { OrcaOpenUrlBroker.setTerminalVisible(false) }
     }
 
-    // OSC 1337 IOpenURL emitted by `/usr/local/bin/i-open` is parsed
-    // by TerminalEmulator and forwarded to IOpenUrlBroker. From the
+    // OSC 1337 OrcaOpenURL emitted by `/usr/local/bin/orca-open` is parsed
+    // by TerminalEmulator and forwarded to OrcaOpenUrlBroker. From the
     // standalone terminal we only route web schemes (http(s)/about) into an
-    // in-app WebView preview; i://-style chat resources need ChatScreen's
+    // in-app WebView preview; orca://-style chat resources need ChatScreen's
     // resolver and aren't reachable here, so we still consume them to avoid
     // leaking a stale pendingUrl back to chat on next attach.
     var previewUrl by remember { mutableStateOf<String?>(null) }
-    val pendingUrl by IOpenUrlBroker.pendingUrl.collectAsStateEffect()
+    val pendingUrl by OrcaOpenUrlBroker.pendingUrl.collectAsStateEffect()
     LaunchedEffect(pendingUrl) {
         val uri = pendingUrl ?: return@LaunchedEffect
-        if (IOpenUrlBroker.isWebScheme(uri.scheme)) {
+        if (OrcaOpenUrlBroker.isWebScheme(uri.scheme)) {
             previewUrl = uri.toString()
         }
-        IOpenUrlBroker.consume()
+        OrcaOpenUrlBroker.consume()
     }
 
     // T290: Layered layout — top bar fixed, canvas fills middle, accessory
@@ -198,18 +201,32 @@ fun TerminalScreen(
                         terminalSession.setWindowSize(cols, rows)
                     },
                     onTap = { inputController.requestFocus() },
+                    onPaste = { text ->
+                        emulator.scrollOffset = 0
+                        if (emulator.bracketedPaste) {
+                            terminalSession.sendRawBytes("\u001b[200~".toByteArray())
+                            terminalSession.sendText(text)
+                            terminalSession.sendRawBytes("\u001b[201~".toByteArray())
+                        } else {
+                            terminalSession.sendText(text)
+                        }
+                    },
                 )
                 TerminalInputView(
                     onInput = { bytes ->
                         // Any user input snaps back to live tail so typing is visible.
                         emulator.scrollOffset = 0
-                        if (ctrlActive && bytes.size == 1) {
+                        if (ctrlActive && bytes.isNotEmpty()) {
                             val ch = bytes[0].toInt().toChar().uppercaseChar()
-                            if (ch in 'A'..'Z') {
+                            if (bytes.size == 1 && ch in 'A'..'Z') {
                                 terminalSession.sendRawBytes(byteArrayOf((ch - 'A' + 1).toByte()))
-                                ctrlActive = false
-                                return@TerminalInputView
+                            } else {
+                                // IME multi-byte / non-letter: don't trap the
+                                // next key behind a sticky Ctrl.
+                                terminalSession.sendRawBytes(bytes)
                             }
+                            ctrlActive = false
+                            return@TerminalInputView
                         }
                         terminalSession.sendRawBytes(bytes)
                     },
@@ -268,6 +285,7 @@ fun TerminalScreen(
                 onSendRaw = { bytes ->
                     emulator.scrollOffset = 0
                     terminalSession.sendRawBytes(bytes)
+                    ctrlActive = false
                 },
                 onArrow = { dir ->
                     emulator.scrollOffset = 0
@@ -275,6 +293,7 @@ fun TerminalScreen(
                         byteArrayOf(0x1B, 'O'.code.toByte())
                     else byteArrayOf(0x1B, '['.code.toByte())
                     terminalSession.sendRawBytes(prefix + byteArrayOf(dir.code.toByte()))
+                    ctrlActive = false
                 },
             )
         }
@@ -397,7 +416,7 @@ private fun KeyboardAccessoryBar(
         // carriage return to run a command line / trigger an in-CLI prompt.
         // This writes CR (0x0D) on the same raw-PTY path as Esc/Tab/C-c.
         // Placed right after Tab, mirroring iOS fa3d2f8c.
-        QuickCommandButton("⏎", iconText = "⏎") { onSendRaw(byteArrayOf(0x0D)) }
+        QuickCommandButton("⏎") { onSendRaw(byteArrayOf(0x0D)) }
         QuickCommandButton("Ctrl", iconText = "^", isActive = ctrlActive, onClick = onCtrlToggle)
         QuickCommandButton("\u2191", icon = Icons.Default.KeyboardArrowUp) { onArrow('A') }
         QuickCommandButton("\u2193", icon = Icons.Default.KeyboardArrowDown) { onArrow('B') }

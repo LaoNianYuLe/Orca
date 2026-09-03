@@ -8,18 +8,18 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Master switch controlling whether the agent can use the
- * `i-config` CLI at all. Disabling short-circuits every CLI call
+ * `orca-config` CLI at all. Disabling short-circuits every CLI call
  * before any field lookup, ConfirmationGate enqueue, or audit write.
  *
- * The flag itself is intentionally not settable through i-config:
+ * The flag itself is intentionally not settable through orca-config:
  * the registry registers a hidden placeholder on the same path so any
  * agent attempt to flip the switch returns `permission_denied`.
  *
- * Mirrors iOS `IConfigPermissionStore`.
+ * Mirrors iOS `OrcaConfigPermissionStore`.
  */
-object IConfigPermissionStore {
-    private const val PREFS = "i_config_permission"
-    private const val KEY = "i_config_enabled"
+object OrcaConfigPermissionStore {
+    private const val PREFS = "orca_config_permission"
+    private const val KEY = "orca_config_enabled"
 
     /** Default: true (preserves existing behaviour for upgrade users). */
     private const val DEFAULT_ENABLED = true
@@ -32,7 +32,7 @@ object IConfigPermissionStore {
     /** Hot-path read used by the offload bridge before any work. */
     val isEnabled: Boolean get() = _enabled.value
 
-    /** Call once early — typically from IApp.onCreate. Idempotent. */
+    /** Call once early — typically from OrcaApp.onCreate. Idempotent. */
     fun init(context: Context) {
         if (prefs != null) return
         val p = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

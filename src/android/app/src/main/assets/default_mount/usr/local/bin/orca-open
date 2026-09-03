@@ -1,14 +1,14 @@
 #!/bin/sh
-# i-open — IApp URL interceptor for the PRoot sandbox.
+# orca-open — Orca URL interceptor for the PRoot sandbox.
 #
 # Stands in for xdg-open / sensible-browser / www-browser / BROWSER, and also
 # doubles as the in-app preview opener for chat resources. Any argument is
-# emitted to stdout wrapped in an OSC 1337 escape sequence that the IApp
+# emitted to stdout wrapped in an OSC 1337 escape sequence that the Orca
 # host parses and routes to the appropriate built-in viewer:
 #
 #   * http:// https:// about:*                 → in-app WebView preview
-#   * /var/i/<host>/<path>  (absolute)     → converted to i://<host>/<path>
-#     i://attachments/...  i://workspace/...  i://shared/... etc.
+#   * /var/orca/<host>/<path>  (absolute)     → converted to orca://<host>/<path>
+#     orca://attachments/...  orca://workspace/...  orca://shared/... etc.
 #                                              → routed by extension:
 #                                                 images → image viewer
 #                                                 markdown → markdown preview
@@ -17,7 +17,7 @@
 #                                                 audio/video → media player
 #                                                 else → share sheet
 #
-# Protocol: ESC ] 1337 ; IOpenURL = <url> BEL
+# Protocol: ESC ] 1337 ; OrcaOpenURL = <url> BEL
 #   - ESC = 0x1B, BEL = 0x07
 #   - Host scanner strips the whole sequence from the displayed output.
 #
@@ -30,52 +30,52 @@ ESC=$(printf '\033')
 BEL=$(printf '\007')
 
 emit_marker() {
-    printf '%s]1337;IOpenURL=%s%s\n' "$ESC" "$1" "$BEL"
+    printf '%s]1337;OrcaOpenURL=%s%s\n' "$ESC" "$1" "$BEL"
 }
 
 emit() {
     case "$1" in
         http://*|https://*|about:*)
             emit_marker "$1"
-            printf 'Opened in I browser: %s\n' "$1"
+            printf 'Opened in Orca browser: %s\n' "$1"
             ;;
-        i://*)
-            # Already a i:// URL — pass through.
+        orca://*)
+            # Already a orca:// URL — pass through.
             emit_marker "$1"
-            printf 'Opened in I preview: %s\n' "$1"
+            printf 'Opened in Orca preview: %s\n' "$1"
             ;;
-        /var/i/*)
-            # Convert /var/i/<host>/<path> → i://<host>/<path>
+        /var/orca/*)
+            # Convert /var/orca/<host>/<path> → orca://<host>/<path>
             # so the host can resolve it to the real sandbox location and
             # pick the right in-app preview by extension.
-            rel="${1#/var/i/}"
+            rel="${1#/var/orca/}"
             case "$rel" in
                 */*)
                     host="${rel%%/*}"
                     path="${rel#*/}"
-                    emit_marker "i://$host/$path"
-                    printf 'Opened in I preview: i://%s/%s\n' "$host" "$path"
+                    emit_marker "orca://$host/$path"
+                    printf 'Opened in Orca preview: orca://%s/%s\n' "$host" "$path"
                     ;;
                 *)
-                    # e.g. /var/i/workspace with no trailing path — a bare
+                    # e.g. /var/orca/workspace with no trailing path — a bare
                     # directory. Not previewable; treat as non-URL.
-                    printf 'i-open: not a previewable resource: %s\n' "$1" >&2
+                    printf 'orca-open: not a previewable resource: %s\n' "$1" >&2
                     return 0
                     ;;
             esac
             ;;
         *)
-            # Non-URL, non-/var/i path: print a hint but don't fail — mimic
+            # Non-URL, non-/var/orca path: print a hint but don't fail — mimic
             # xdg-open best-effort so shell scripts that chain it don't abort.
-            printf 'i-open: not a URL or chat resource, ignoring: %s\n' "$1" >&2
+            printf 'orca-open: not a URL or chat resource, ignoring: %s\n' "$1" >&2
             return 0
             ;;
     esac
 }
 
 if [ $# -eq 0 ]; then
-    echo "Usage: i-open <url-or-path>" >&2
-    echo "  url-or-path: http(s):// URL, i:// URL, or /var/i/<host>/<path>" >&2
+    echo "Usage: orca-open <url-or-path>" >&2
+    echo "  url-or-path: http(s):// URL, orca:// URL, or /var/orca/<host>/<path>" >&2
     exit 1
 fi
 

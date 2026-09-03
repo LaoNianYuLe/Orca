@@ -65,7 +65,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import com.orca.app.data.repository.WebAppShortcutRepository
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +78,7 @@ import java.util.UUID
  * Source of HTML bytes for the "Add to Home Screen" sheet. T-pwa-2 only
  * supported chat-attachment URIs; T-pwa-3 adds [HostFile] for FileBrowser
  * rows where we already know an absolute Linux path under
- * `/var/i/shared/...` or `/var/i/mounts/<name>/...` and don't
+ * `/var/orca/shared/...` or `/var/orca/mounts/<name>/...` and don't
  * need to copy bytes — the shortcut links to the live file in place.
  */
 sealed class WebAppSource {
@@ -92,7 +92,7 @@ sealed class WebAppSource {
 
     /**
      * FileBrowser row → host file already on disk, link in place.
-     * [linuxPath] is the absolute `/var/i/...` path the shortcut
+     * [linuxPath] is the absolute `/var/orca/...` path the shortcut
      * persists; [pathScope] is `shared` or `mount`; [scopeContext] is
      * null for shared, the mount name for mount.
      */
@@ -369,7 +369,7 @@ fun AddToHomeSheet(
                                 is IconChoice.Gallery -> "file:${c.uri}"
                                 is IconChoice.Preset -> "preset:${c.preset.name.lowercase()}"
                             }
-                            val app = context.applicationContext as IApp
+                            val app = context.applicationContext as OrcaApp
                             val entity = when (source) {
                                 is WebAppSource.ChatAttachment -> {
                                     // htmlPath stays relative under the
@@ -389,7 +389,7 @@ fun AddToHomeSheet(
                                 }
                                 is WebAppSource.HostFile -> {
                                     // T-pwa-3: link in place — htmlPath is the
-                                    // /var/i/... linux path; WebAppPathResolver
+                                    // /var/orca/... linux path; WebAppPathResolver
                                     // routes through PRootKernel.resolveHostPath.
                                     app.webAppShortcutRepository.create(
                                         htmlPath = source.linuxPath,

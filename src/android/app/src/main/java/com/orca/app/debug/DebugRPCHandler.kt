@@ -179,7 +179,7 @@ class DebugRPCHandler(private val context: Context) {
             }
             // [T-android-sessions-cli-full] DEBUG-only invocation of the
             // SessionsOffloadHandler — parallels debug.modelUse.exec so test
-            // harnesses can verify i-sessions-cli (list / search /
+            // harnesses can verify orca-sessions-cli (list / search /
             // messages, incl. --full) end-to-end without an in-shell prompt.
             "debug.sessions.exec" -> {
                 if (!BuildConfig.DEBUG) {
@@ -187,14 +187,14 @@ class DebugRPCHandler(private val context: Context) {
                 }
                 handleSessionsExec(params)
             }
-            // [T-i-config-provider-add] DEBUG-only invocation of the
+            // [T-orca-config-provider-add] DEBUG-only invocation of the
             // ConfigOffloadHandler — parallels debug.modelUse.exec so test
-            // harnesses can exercise i-config (get / set / set-batch /
+            // harnesses can exercise orca-config (get / set / set-batch /
             // audit-*) without driving an in-shell prompt. The handler
             // re-uses the production ConfigBridge code path; we override
             // skipConfirmation under the hood via a dedicated arg the
             // production CLI never exposes.
-            "debug.iConfig.exec" -> {
+            "debug.orcaConfig.exec" -> {
                 if (!BuildConfig.DEBUG) {
                     throw RPCException(-32601, "Method not found: $method. Call 'rpc.discover' to list available methods.")
                 }
@@ -220,8 +220,8 @@ class DebugRPCHandler(private val context: Context) {
             put("totalLogSize", AppLogger.totalSize())
             put("diskUsage", JSONObject().apply {
                 put("filesDir", dirSize(filesDir))
-                put("sessions", dirSize(File(filesDir, "i-sessions")))
-                put("global", dirSize(File(filesDir, "i-global")))
+                put("sessions", dirSize(File(filesDir, "orca-sessions")))
+                put("global", dirSize(File(filesDir, "orca-global")))
             })
         }
     }
@@ -315,12 +315,12 @@ class DebugRPCHandler(private val context: Context) {
     /**
      * [diag] Raw list of a host-filesystem directory, bypassing the PRoot
      * bindMounts/rootfs resolver. Constrained to filesDir to avoid poking
-     * at arbitrary paths. Use `i-sessions` (default) to enumerate every
+     * at arbitrary paths. Use `orca-sessions` (default) to enumerate every
      * session's attachments/workspace/... directories and find files that
      * were written into a session we no longer have mounted.
      */
     private fun handleRawLS(params: JSONObject): Any {
-        val subPath = params.optString("path", "i-sessions")
+        val subPath = params.optString("path", "orca-sessions")
         if (subPath.contains("..")) throw RPCException(-32602, "Invalid path: '..' not allowed")
         val recursive = params.optBoolean("recursive", true)
         val maxDepth = params.optInt("maxDepth", 4)
@@ -731,7 +731,7 @@ class DebugRPCHandler(private val context: Context) {
 
     private fun metaObject(): JSONObject {
         return JSONObject().apply {
-            put("app", "IApp")
+            put("app", "OrcaApp")
             put("version", BuildConfig.VERSION_NAME)
             put("build", BuildConfig.VERSION_CODE)
             put("device", "${Build.MANUFACTURER} ${Build.MODEL}")
@@ -829,7 +829,7 @@ class DebugRPCHandler(private val context: Context) {
      * Run a command inside the PRoot sandbox for the given session and return
      * `{ output, exit_code }`. Mirrors iOS `debug.shellExecute`. Debug-only;
      * meant for integration-test harnesses that need to drive shell tools
-     * (`i-browser-use`, `i-open`, …) without going through the agent.
+     * (`orca-browser-use`, `orca-open`, …) without going through the agent.
      *
      * Params:
      *   command  (string, required) — command line to run under /bin/sh -c.
@@ -846,9 +846,9 @@ class DebugRPCHandler(private val context: Context) {
         val timeoutSec = params.optInt("timeout", 60).coerceIn(1, 900)
 
         // Mirror ChatViewModel's terminal lineCallback: scan raw lines for
-        // OSC IOpenURL markers before TerminalSanitizer strips them and
+        // OSC OrcaOpenURL markers before TerminalSanitizer strips them and
         // hand captured URLs to the broker so test harnesses driving
-        // `i-open` via this RPC trigger the same in-app preview flow as
+        // `orca-open` via this RPC trigger the same in-app preview flow as
         // real chat shell output.
         val capturedUrls = mutableListOf<String>()
         val result = try {
@@ -857,7 +857,7 @@ class DebugRPCHandler(private val context: Context) {
                 command = command,
                 timeout = timeoutSec * 1000L,
                 lineCallback = { rawLine ->
-                    val (_, urls) = com.orca.app.terminal.IUrlMarker.extract(rawLine)
+                    val (_, urls) = com.orca.app.terminal.OrcaUrlMarker.extract(rawLine)
                     capturedUrls.addAll(urls)
                 },
             )
@@ -865,7 +865,7 @@ class DebugRPCHandler(private val context: Context) {
             throw RPCException(-32000, "Shell execute failed: ${e.message}")
         }
         for (raw in capturedUrls) {
-            com.orca.app.terminal.IOpenUrlBroker.offer(raw)
+            com.orca.app.terminal.OrcaOpenUrlBroker.offer(raw)
         }
         return JSONObject()
             .put("output", result.output)
@@ -977,7 +977,7 @@ class DebugRPCHandler(private val context: Context) {
 
     /**
      * Stub for parity with iOS `debug.cloudSync`. Android does not have an
-     * iCloud-equivalent built into IApp, so we report disabled and an
+     * iCloud-equivalent built into OrcaApp, so we report disabled and an
      * empty device list rather than fail the call. Lets cross-platform
      * harnesses skip the check uniformly.
      */
@@ -1140,7 +1140,7 @@ class DebugRPCHandler(private val context: Context) {
     /**
      * Direct invocation of [com.orca.app.sandbox.offload.ModelUseOffloadHandler]
      * for e2e harnesses. Mirrors [handleShizukuExec]; lets callers exercise the
-     * `i-model-use` CLI without going through a real Alpine shell prompt.
+     * `orca-model-use` CLI without going through a real Alpine shell prompt.
      * DEBUG-only.
      */
     private fun handleModelUseExec(params: JSONObject): JSONObject {
@@ -1171,11 +1171,11 @@ class DebugRPCHandler(private val context: Context) {
         } else argvTail
 
         AppLogger.info("DebugRPC", "debug.modelUse.exec argv=${finalArgv.joinToString(" ")}")
-        val app = context.applicationContext as com.orca.app.IApp
+        val app = context.applicationContext as com.orca.app.OrcaApp
         val handler = com.orca.app.sandbox.offload.ModelUseOffloadHandler(context, app.providerRepository)
         val request = com.orca.app.sandbox.NativeOffloadRequest(
             pid = -1,
-            argv = listOf("i-model-use") + finalArgv,
+            argv = listOf("orca-model-use") + finalArgv,
             env = emptyMap(),
             cwd = "/",
             sessionId = null,
@@ -1192,7 +1192,7 @@ class DebugRPCHandler(private val context: Context) {
      * [T-android-sessions-cli-full] Direct invocation of
      * [com.orca.app.sandbox.offload.SessionsOffloadHandler] for e2e
      * harnesses. Mirrors [handleModelUseExec]; lets callers exercise the
-     * `i-sessions-cli` CLI (list / search / messages, incl. --full)
+     * `orca-sessions-cli` CLI (list / search / messages, incl. --full)
      * without going through a real Alpine shell prompt. DEBUG-only.
      */
     private fun handleSessionsExec(params: JSONObject): JSONObject {
@@ -1209,11 +1209,11 @@ class DebugRPCHandler(private val context: Context) {
         }
 
         AppLogger.info("DebugRPC", "debug.sessions.exec argv=${argvTail.joinToString(" ")}")
-        val app = context.applicationContext as com.orca.app.IApp
+        val app = context.applicationContext as com.orca.app.OrcaApp
         val handler = com.orca.app.sandbox.offload.SessionsOffloadHandler(app.chatRepository)
         val request = com.orca.app.sandbox.NativeOffloadRequest(
             pid = -1,
-            argv = listOf("i-sessions-cli") + argvTail,
+            argv = listOf("orca-sessions-cli") + argvTail,
             env = emptyMap(),
             cwd = "/",
             sessionId = null,
@@ -1227,7 +1227,7 @@ class DebugRPCHandler(private val context: Context) {
     }
 
     /**
-     * [T-i-config-provider-add] DEBUG-only i-config invocation
+     * [T-orca-config-provider-add] DEBUG-only orca-config invocation
      * that BYPASSES the user-confirmation gate. Targets the same code
      * path the offload CLI hits (ConfigBridge.performWriteBatch /
      * readField / auditList), so harnesses can verify add / set / get
@@ -1291,14 +1291,14 @@ class DebugRPCHandler(private val context: Context) {
                 val skip = params.optBoolean("skipConfirmation", true)
                 AppLogger.info(
                     "DebugRPC",
-                    "debug.iConfig.exec set items=${items.length()} skipConfirmation=$skip",
+                    "debug.orcaConfig.exec set items=${items.length()} skipConfirmation=$skip",
                 )
                 // Hop to the main thread because performWriteBatch is a
                 // suspend fun that uses Dispatchers.Main internally.
                 kotlinx.coroutines.runBlocking {
                     com.orca.app.config.ConfigBridge.performWriteBatch(
                         items = items,
-                        caption = "debug.iConfig.exec",
+                        caption = "debug.orcaConfig.exec",
                         actorRaw = "debug-rpc",
                         sessionId = null,
                         skipConfirmation = skip,
@@ -1317,7 +1317,7 @@ class DebugRPCHandler(private val context: Context) {
                 val filter = params.optString("filter", "").takeIf { it.isNotEmpty() }
                 val page = params.optInt("page", 0)
                 val pageSize = params.optInt("pageSize", 0)
-                AppLogger.info("DebugRPC", "debug.iConfig.exec get path=$path")
+                AppLogger.info("DebugRPC", "debug.orcaConfig.exec get path=$path")
                 com.orca.app.config.ConfigBridge.readField(
                     path = path,
                     filter = filter,
@@ -1326,8 +1326,8 @@ class DebugRPCHandler(private val context: Context) {
                 )
             }
             // Discovery. Without these a caller has to know a collection's
-            // writable paths in advance; `topics` is `i-config --help`'s
-            // index and `topic-help` is `i-config <topic> --help`.
+            // writable paths in advance; `topics` is `orca-config --help`'s
+            // index and `topic-help` is `orca-config <topic> --help`.
             "topics" -> JSONObject().apply {
                 put("ok", true)
                 put("topics", com.orca.app.config.ConfigBridge.allTopics())

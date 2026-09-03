@@ -53,6 +53,7 @@ fun TerminalNativeViewCompose(
     fontSizeSp: Float = 13f,
     onResize: (cols: Int, rows: Int) -> Unit,
     onTap: () -> Unit = {},
+    onPaste: (String) -> Unit = {},
 ) {
     val typeface = rememberJetBrainsMonoTypeface()
     AndroidView(
@@ -60,12 +61,12 @@ fun TerminalNativeViewCompose(
         factory = { ctx ->
             TerminalNativeView(ctx, typeface).apply {
                 setFontSizeSp(fontSizeSp)
-                attachEmulator(emulator, onResize, onTap)
+                attachEmulator(emulator, onResize, onTap, onPaste)
             }
         },
         update = { view ->
             view.setFontSizeSp(fontSizeSp)
-            view.attachEmulator(emulator, onResize, onTap)
+            view.attachEmulator(emulator, onResize, onTap, onPaste)
         },
     )
 }
@@ -78,6 +79,7 @@ class TerminalNativeView @JvmOverloads constructor(
     private var emulator: TerminalEmulator? = null
     private var onResize: (cols: Int, rows: Int) -> Unit = { _, _ -> }
     private var onTap: () -> Unit = {}
+    private var onPaste: (String) -> Unit = {}
 
     private val basePaint = Paint().apply {
         this.typeface = this@TerminalNativeView.typeface
@@ -116,10 +118,12 @@ class TerminalNativeView @JvmOverloads constructor(
         emulator: TerminalEmulator,
         onResize: (Int, Int) -> Unit,
         onTap: () -> Unit,
+        onPaste: (String) -> Unit = {},
     ) {
         this.emulator = emulator
         this.onResize = onResize
         this.onTap = onTap
+        this.onPaste = onPaste
         invalidate()
     }
 
@@ -268,7 +272,9 @@ class TerminalNativeView @JvmOverloads constructor(
             override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
                 menu.add(Menu.NONE, MENU_COPY, 0, android.R.string.copy)
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-                menu.add(Menu.NONE, MENU_SELECT_ALL, 1, android.R.string.selectAll)
+                menu.add(Menu.NONE, MENU_PASTE, 1, android.R.string.paste)
+                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                menu.add(Menu.NONE, MENU_SELECT_ALL, 2, android.R.string.selectAll)
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                 return true
             }
@@ -285,6 +291,17 @@ class TerminalNativeView @JvmOverloads constructor(
                                 cb.setPrimaryClip(ClipData.newPlainText("Orca Shell", text))
                             }
                         }
+                        mode.finish()
+                        true
+                    }
+                    MENU_PASTE -> {
+                        val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val text = cb.primaryClip
+                            ?.takeIf { it.itemCount > 0 }
+                            ?.getItemAt(0)
+                            ?.coerceToText(context)
+                            ?.toString()
+                        if (!text.isNullOrEmpty()) onPaste(text)
                         mode.finish()
                         true
                     }
@@ -407,7 +424,8 @@ class TerminalNativeView @JvmOverloads constructor(
 
     companion object {
         private const val MENU_COPY = 1
-        private const val MENU_SELECT_ALL = 2
+        private const val MENU_PASTE = 2
+        private const val MENU_SELECT_ALL = 3
     }
 }
 

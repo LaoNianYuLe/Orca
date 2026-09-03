@@ -1,4 +1,4 @@
 #!/bin/sh
-# IApp URL interceptor — routes gnome-open into the host-side
-# OpenOffloadHandler via i-open. See i-open for details.
-exec /usr/local/bin/i-open "$@"
+# Orca URL interceptor — routes gnome-open into the host-side
+# OpenOffloadHandler via orca-open. See orca-open for details.
+exec /usr/local/bin/orca-open "$@"

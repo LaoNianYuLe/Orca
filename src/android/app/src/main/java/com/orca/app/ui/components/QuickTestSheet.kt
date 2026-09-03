@@ -193,7 +193,7 @@ fun QuickTestSheet(
                         contentDescription = stringResource(R.string.quicktest_run_again),
                     )
                 }
-                ITextButton(onClick = onDismiss) {
+                OrcaTextButton(onClick = onDismiss) {
                     Text(stringResource(R.string.quicktest_done))
                 }
             }

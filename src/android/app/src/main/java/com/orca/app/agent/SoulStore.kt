@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * SoulStore (`src/ios/Agent/Session/SoulStore.swift`, commit 6370d5a).
  *
  * SOUL.md lives next to GLOBAL.md and the daily memory logs under
- * `<filesDir>/i-global/memory/`. Format: YAML frontmatter delimited
+ * `<filesDir>/orca-global/memory/`. Format: YAML frontmatter delimited
  * by `---` followed by a Markdown body. The body becomes Layer 1 of the
  * system prompt; `name` + `emoji` drive the chat assistant bubble header.
  *
@@ -172,14 +172,14 @@ sealed class SoulBodyLimitCheck {
 /**
  * File-system helpers + cached metadata. Methods are intentionally
  * `Context`-scoped instead of taking a global singleton — keeps the
- * dependency surface explicit and avoids depending on IApp from
+ * dependency surface explicit and avoids depending on OrcaApp from
  * non-application call sites (tests, previews).
  */
 object SoulStore {
 
     private const val TAG = "SoulStore"
     private const val FILE_NAME = "SOUL.md"
-    private const val MEMORY_SUBDIR = "i-global/memory"
+    private const val MEMORY_SUBDIR = "orca-global/memory"
 
     fun fileLocation(context: Context): File =
         File(File(context.filesDir, MEMORY_SUBDIR), FILE_NAME)
@@ -187,7 +187,7 @@ object SoulStore {
     // -- Body length rules (language-aware) ----------------------------
     //
     // The personality body has a hard cap applied at every write surface
-    // (Settings UI Save button, i-config writer, and the
+    // (Settings UI Save button, orca-config writer, and the
     // prompt-build-time fallback in `SystemPromptBuilder`). The cap is
     // language-dependent: CJK text is information-dense per character so
     // 1600 chars is the limit; Latin / mixed text gets a 1000-word cap.
@@ -399,7 +399,7 @@ object SystemPromptBuilder {
     /**
      * Patterns used by [scrubInjections] to drop prompt-injection lines
      * from the personality body at prompt-build time. Exposed so write
-     * paths (i-config `soul.body` setter) can reject the same set
+     * paths (orca-config `soul.body` setter) can reject the same set
      * of patterns rather than silently scrubbing — see iOS parity:
      * the agent should see a clear error, not a silent edit.
      */
@@ -472,7 +472,7 @@ object SystemPromptBuilder {
         val soulEditHint =
             "---\n" +
             "SOUL.md fields (name / style / lang / body) can be edited two ways:\n" +
-            "1. Tool: call `i-config` to propose changes (user must approve).\n" +
+            "1. Tool: call `orca-config` to propose changes (user must approve).\n" +
             "2. UI: ask the user to go to Settings → Soul to edit directly.\n" +
             "Pick whichever the user finds easier in context. Do not say you cannot change your personality."
 

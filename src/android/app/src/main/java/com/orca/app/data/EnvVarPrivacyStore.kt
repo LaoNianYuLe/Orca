@@ -34,7 +34,7 @@ object EnvVarPrivacyStore {
     /** Hot-path read used by the redactor before any work. */
     val isEnabled: Boolean get() = _enabled.value
 
-    /** Call once early — from IApp.onCreate. Idempotent. */
+    /** Call once early — from OrcaApp.onCreate. Idempotent. */
     fun init(context: Context) {
         if (prefs != null) return
         val p = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

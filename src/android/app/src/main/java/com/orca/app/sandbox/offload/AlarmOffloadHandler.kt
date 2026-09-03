@@ -38,7 +38,7 @@ class AlarmOffloadHandler(private val context: Context) : NativeOffloadHandler {
     // T268: AlarmOffloadManager dependency dropped — this handler is now a
     // pure intent-dispatch surface (system Clock's SET_ALARM / SET_TIMER /
     // SHOW_ALARMS). The manager + its SharedPreferences are still around so
-    // the one-shot ghost migration in IApp.onCreate can flush any
+    // the one-shot ghost migration in OrcaApp.onCreate can flush any
     // pre-T266 entries; the manager will be deleted once that bake is over.
 
     override fun handle(request: NativeOffloadRequest): NativeOffloadResult {
@@ -408,7 +408,7 @@ class AlarmOffloadHandler(private val context: Context) : NativeOffloadHandler {
 
     companion object {
         private const val TAG = "AlarmOffload"
-        private const val VIEW_URL = "i://views/alarm"
+        private const val VIEW_URL = "orca://views/alarm"
         private const val HELP = """android-alarm — schedule alarms and timers (mirrors apple-alarm)
 
 Usage:
@@ -436,7 +436,7 @@ Examples:
   android-alarm timer --duration 5m --label "Tea"
   android-alarm open
 
-set/timer return JSON with `view_url: i://views/alarm` and
+set/timer return JSON with `view_url: orca://views/alarm` and
 `system_alarm: "ok"` on success.
 """
     }

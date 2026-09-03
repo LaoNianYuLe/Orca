@@ -43,7 +43,7 @@ import com.orca.app.R
  * Settings → Shared Folders. Mirrors iOS SharedFoldersView.
  *
  * Three fixed entries — Shared (R/W), Skills (read-only), Memory (read-only) —
- * exposing the first-class /var/i/{shared,skills,memory} dirs to a native
+ * exposing the first-class /var/orca/{shared,skills,memory} dirs to a native
  * browse UI. Skills and Memory are agent-tool-maintained and intentionally
  * read-only here so the user doesn't desync them by hand.
  */
@@ -188,7 +188,7 @@ internal object SharedFolderRegistry {
         SharedFolderEntry(
             id = "shared",
             nameRes = R.string.shared_folder_name_shared,
-            linuxPath = "/var/i/shared",
+            linuxPath = "/var/orca/shared",
             writable = true,
             icon = Icons.Outlined.Folder,
             iconColor = Color(0xFF007AFF),
@@ -196,7 +196,7 @@ internal object SharedFolderRegistry {
         SharedFolderEntry(
             id = "skills",
             nameRes = R.string.shared_folder_name_skills,
-            linuxPath = "/var/i/skills",
+            linuxPath = "/var/orca/skills",
             writable = false,
             icon = Icons.Outlined.AutoAwesome,
             iconColor = Color(0xFFAF52DE),
@@ -204,7 +204,7 @@ internal object SharedFolderRegistry {
         SharedFolderEntry(
             id = "memory",
             nameRes = R.string.shared_folder_name_memory,
-            linuxPath = "/var/i/memory",
+            linuxPath = "/var/orca/memory",
             writable = false,
             icon = Icons.Outlined.Psychology,
             iconColor = Color(0xFFFF2D55),

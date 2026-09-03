@@ -1,7 +1,7 @@
 package com.orca.app.ui.settings
 
 import com.orca.app.R
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -144,7 +144,7 @@ fun MemoryManagementScreen(
             title = { Text(stringResource(R.string.memory_delete_confirm_title, deleteFileName ?: "")) },
             text = { Text(stringResource(R.string.memory_delete_confirm_text)) },
             confirmButton = {
-                ITextButton(onClick = {
+                OrcaTextButton(onClick = {
                     deleteFileName?.let {
                         memoryRepository.deleteFile(it)
                         files = memoryRepository.listAllFiles()
@@ -155,7 +155,7 @@ fun MemoryManagementScreen(
                 }
             },
             dismissButton = {
-                ITextButton(onClick = { deleteFileName = null }) {
+                OrcaTextButton(onClick = { deleteFileName = null }) {
                     Text(stringResource(R.string.common_cancel))
                 }
             },
@@ -289,7 +289,7 @@ fun MemoryFileEditScreen(
                 actions = {
                     // [T-global-memory-save-always-visible] Always render Save —
                     // no hasChanges gate (see KDoc above).
-                    ITextButton(onClick = {
+                    OrcaTextButton(onClick = {
                         try {
                             memoryRepository.saveFile(fileName, content)
                             saveError = null

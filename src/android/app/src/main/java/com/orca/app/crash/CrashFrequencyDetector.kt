@@ -259,7 +259,7 @@ object CrashFrequencyDetector {
             }
             pendingShareFiles = recent.sortedByDescending { it.lastModified() }
             // T-android-crash-detected-halt: enter safe-mode BEFORE the
-            // rest of IApp.onCreate finishes and any Activity / VM
+            // rest of OrcaApp.onCreate finishes and any Activity / VM
             // starts restoring sessions. Cleared once the user dismisses
             // the share dialog in [maybeShowOnActivity].
             setSafeMode(true)
@@ -286,7 +286,7 @@ object CrashFrequencyDetector {
      * change / second resume doesn't re-prompt.
      *
      * [onClosed] fires after any of the three exit paths (Share /
-     * Dismiss / Cancel). When IApp.onCreate has early-returned (safe
+     * Dismiss / Cancel). When OrcaApp.onCreate has early-returned (safe
      * mode), MainActivity passes `finish()` here so the half-init app
      * doesn't linger on screen.
      */
@@ -393,12 +393,12 @@ object CrashFrequencyDetector {
             .sortedByDescending { it.lastModified() }
             .take(PICK_CRASH_LIMIT)
 
-        // Daily AppLogger logs (i-YYYY-MM-DD.log) for the last 3
+        // Daily AppLogger logs (orca-YYYY-MM-DD.log) for the last 3
         // days. Default unchecked — they're large and only useful for
         // tracking down what the agent was doing right before the
         // crash; the user opts in when they care about that context.
         val dailyLogs = (logsDir.listFiles { f ->
-            f.name.startsWith("i-") && f.name.endsWith(".log")
+            com.orca.app.logging.AppLogger.DAILY_LOG_PREFIXES.any { f.name.startsWith(it) } && f.name.endsWith(".log")
         } ?: emptyArray<File>())
             .toList()
             .filter { now - it.lastModified() <= PICK_RUN_LOG_WINDOW_MS }
@@ -890,7 +890,7 @@ object CrashFrequencyDetector {
         if (readable.isEmpty()) return null
         val shareDir = File(ctx.cacheDir, "share").apply { mkdirs() }
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-        val zipFile = File(shareDir, "i-logs-$stamp.zip")
+        val zipFile = File(shareDir, "orca-logs-$stamp.zip")
         ZipOutputStream(FileOutputStream(zipFile).buffered()).use { zout ->
             val buf = ByteArray(64 * 1024)
             for (f in readable) {

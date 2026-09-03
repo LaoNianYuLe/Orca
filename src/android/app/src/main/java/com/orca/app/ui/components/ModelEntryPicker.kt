@@ -208,8 +208,7 @@ fun LazyListScope.modelEntryPickerItems(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 ProviderBrandBadge(
-                    providerId = instance.providerType.name.lowercase(),
-                    displayName = instance.label,
+                    instance = instance,
                     modifier = Modifier.size(30.dp),
                 )
                 Spacer(Modifier.width(10.dp))
@@ -285,8 +284,8 @@ fun LazyListScope.modelEntryPickerItems(
                     SelectionDot(isSelected)
                     Spacer(Modifier.width(10.dp))
                     ProviderBrandBadge(
-                        providerId = instance.providerType.name.lowercase(),
-                        displayName = instance.label,
+                        instance = instance,
+                        model = firstEntry.model,
                         modifier = Modifier.size(30.dp),
                     )
                     Spacer(Modifier.width(10.dp))
@@ -338,8 +337,8 @@ fun LazyListScope.modelEntryPickerItems(
                             SelectionDot(isSelected)
                             Spacer(Modifier.width(10.dp))
                             ProviderBrandBadge(
-                                providerId = instance.providerType.name.lowercase(),
-                                displayName = instance.label,
+                                instance = instance,
+                                model = entry.model,
                                 modifier = Modifier.size(30.dp),
                             )
                             Spacer(Modifier.width(10.dp))

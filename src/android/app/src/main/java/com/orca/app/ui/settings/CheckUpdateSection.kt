@@ -44,8 +44,8 @@ import com.orca.app.BuildConfig
 import com.orca.app.R
 import com.orca.app.data.UpdateChecker
 import kotlinx.coroutines.launch
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Settings section that talks to [UpdateChecker] to surface a "Check for
@@ -317,11 +317,11 @@ private fun UpdateDialog(
         },
         confirmButton = {
             if (needsInstallPerm) {
-                IButton(onClick = onOpenSettings) {
+                OrcaButton(onClick = onOpenSettings) {
                     Text(stringResource(R.string.check_update_open_install_settings))
                 }
             } else {
-                IButton(
+                OrcaButton(
                     onClick = onDownload,
                     enabled = downloadProgress == null,
                 ) {
@@ -343,7 +343,7 @@ private fun UpdateDialog(
             }
         },
         dismissButton = {
-            ITextButton(onClick = onDismiss, enabled = downloadProgress == null) {
+            OrcaTextButton(onClick = onDismiss, enabled = downloadProgress == null) {
                 Text(stringResource(R.string.cancel))
             }
         },

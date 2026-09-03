@@ -426,7 +426,7 @@
 
     <!-- T182 agent loop section i18n -->
     <string name="agent_loop_section_title">智慧型代理循環可用模型</string>
-    <string name="agent_loop_section_footer">這裡列出的模型和群組可以在終端機透過 i-model-use 呼叫。只有這些對智慧型代理可見。</string>
+    <string name="agent_loop_section_footer">這裡列出的模型和群組可以在終端機透過 orca-model-use 呼叫。只有這些對智慧型代理可見。</string>
     <string name="agent_loop_section_empty_hint">尚未新增模型或群組</string>
     <string name="agent_loop_section_add_models">新增模型</string>
     <string name="agent_loop_section_add_groups">新增群組</string>
@@ -476,7 +476,7 @@
 
     <!-- T235 — 共享資料夾（固定: 共享 / 技能 / 記憶） -->
     <string name="settings_shared_folders">共享資料夾</string>
-    <string name="settings_shared_folders_subtitle">瀏覽 /var/i 下的共享、技能、記憶目錄</string>
+    <string name="settings_shared_folders_subtitle">瀏覽 /var/orca 下的共享、技能、記憶目錄</string>
     <string name="shared_folders_title">共享資料夾</string>
     <string name="shared_folders_info_banner">這些目錄在 Linux 沙箱內可見，技能與記憶由 AI 代理工具自動維護，請勿手動修改。</string>
     <string name="shared_folder_name_shared">共享</string>
@@ -487,9 +487,9 @@
 
     <!-- T219-2 — 掛載外部資料夾 -->
     <string name="settings_mount_external_folders">掛載外部資料夾</string>
-    <string name="settings_mount_external_folders_subtitle">將選取的資料夾繫結到 /var/i/mounts/</string>
+    <string name="settings_mount_external_folders_subtitle">將選取的資料夾繫結到 /var/orca/mounts/</string>
     <string name="mount_folders_title">已掛載資料夾</string>
-    <string name="mount_folders_info_banner">選取的資料夾會被繫結到 /var/i/mounts/&lt;name&gt;。最多可同時掛載 10 個資料夾。</string>
+    <string name="mount_folders_info_banner">選取的資料夾會被繫結到 /var/orca/mounts/&lt;name&gt;。最多可同時掛載 10 個資料夾。</string>
     <string name="mount_picker_intro_title">選擇要掛載的資料夾</string>
     <string name="mount_picker_intro_message">Android 不允許掛載整個內部儲存空間，請選擇其中一個具體的資料夾，例如「文件」或「下載」。\n\n接下來開啟的是系統檔案選擇器。若某個資料夾顯示「無法使用此資料夾」，請進入它的子資料夾，或用系統返回手勢回到這裡。</string>
     <string name="mount_picker_intro_continue">去選擇</string>
@@ -499,7 +499,7 @@
     <string name="mount_add_dialog_title">新增掛載</string>
     <string name="mount_add_source_path">來源路徑</string>
     <string name="mount_add_name_label">掛載名稱</string>
-    <string name="mount_add_name_hint">將作為 /var/i/mounts/ 下的資料夾名</string>
+    <string name="mount_add_name_hint">將作為 /var/orca/mounts/ 下的資料夾名</string>
     <string name="mount_add_allow_writes">允許寫入</string>
     <string name="mount_add_allow_writes_desc">關閉後，file_write/file_edit 工具會拒絕寫入；但 shell 仍可繞過此限制。</string>
     <string name="mount_add_confirm">新增</string>
@@ -622,7 +622,7 @@
     <!-- T-selection-add-to-input — 長按選擇選單「加到輸入框」動作 -->
     <string name="selection_add_to_chat_input">加入到輸入框</string>
     <string name="selection_read_aloud">朗讀</string>
-    <!-- T-i-textkit 選擇選單按鈕 -->
+    <!-- T-orca-textkit 選擇選單按鈕 -->
     <string name="selection_copy">複製</string>
     <string name="selection_copy_markdown">複製 Markdown</string>
     <string name="selection_copy_rich_text">複製富文本</string>
@@ -681,7 +681,7 @@
     <string name="mcp_add">新增 MCP 伺服器</string>
     <string name="mcp_edit">編輯 MCP 伺服器</string>
     <string name="mcp_section_servers">伺服器</string>
-    <string name="mcp_section_footer">MCP 伺服器讓 AI 透過 i-mcp-cli 呼叫外部工具。設定儲存在 /var/i/mcp-servers/servers.json（與 Claude Desktop 相容）。</string>
+    <string name="mcp_section_footer">MCP 伺服器讓 AI 透過 orca-mcp-cli 呼叫外部工具。設定儲存在 /var/orca/mcp-servers/servers.json（與 Claude Desktop 相容）。</string>
     <string name="mcp_empty_title">尚無 MCP 伺服器</string>
     <string name="mcp_empty_action">點擊 + 按鈕新增伺服器。</string>
     <string name="mcp_transport_http">HTTP</string>

@@ -47,8 +47,8 @@ import com.orca.app.data.model.ModelGroup
 import com.orca.app.data.model.ProviderInstance
 import com.orca.app.data.model.ProviderType
 import com.orca.app.data.repository.ProviderRepository
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Multi-step onboarding flow shown on first launch.
@@ -92,7 +92,7 @@ private fun WelcomeStep(onNext: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(48.dp))
-            IButton(onClick = onNext, modifier = Modifier.fillMaxWidth(0.6f)) {
+            OrcaButton(onClick = onNext, modifier = Modifier.fillMaxWidth(0.6f)) {
                 Text(stringResource(R.string.onboarding_get_started))
             }
         }
@@ -167,7 +167,7 @@ private fun ApiKeyStep(
 
             Spacer(Modifier.height(16.dp))
 
-            IButton(
+            OrcaButton(
                 onClick = {
                     if (apiKey.isNotBlank()) {
                         val instance = ProviderInstance(
@@ -199,10 +199,10 @@ private fun ApiKeyStep(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                ITextButton(onClick = onSkip) {
+                OrcaTextButton(onClick = onSkip) {
                     Text(stringResource(R.string.common_skip))
                 }
-                IButton(onClick = onNext, enabled = saved) {
+                OrcaButton(onClick = onNext, enabled = saved) {
                     Text(stringResource(R.string.common_next))
                 }
             }
@@ -335,10 +335,10 @@ private fun ModelSelectionStep(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                ITextButton(onClick = onComplete) {
+                OrcaTextButton(onClick = onComplete) {
                     Text(stringResource(R.string.common_skip))
                 }
-                IButton(
+                OrcaButton(
                     onClick = {
                         // Create default model group from selections
                         if (selected.isNotEmpty()) {

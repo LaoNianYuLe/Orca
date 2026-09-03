@@ -273,7 +273,7 @@ private fun FloatingMenuButton(
                 modifier = Modifier.size(24.dp),
             )
         }
-        com.orca.app.ui.components.IMenu(
+        com.orca.app.ui.components.OrcaMenu(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false },
             alignEnd = true,
@@ -323,7 +323,7 @@ private fun FloatingMenuButton(
                     onOpenExternal()
                 },
             )
-            com.orca.app.ui.components.IMenuDivider()
+            com.orca.app.ui.components.OrcaMenuDivider()
             androidx.compose.material3.DropdownMenuItem(
                 text = {
                     androidx.compose.material3.Text(

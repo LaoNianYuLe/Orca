@@ -28,8 +28,8 @@ import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.components.RowLabel
 import com.orca.app.ui.components.SectionTextField
 import com.orca.app.R
-import com.orca.app.ui.components.IButton
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaButton
+import com.orca.app.ui.components.OrcaTextButton
 
 /**
  * Detail / edit screen for a single ModelEntry. T210: brought to iOS
@@ -101,7 +101,7 @@ fun ModelEntryDetailScreen(
         onBack = null,
         centerTitle = true,
         navigation = {
-            ITextButton(
+            OrcaTextButton(
                 onClick = onBack,
                 modifier = Modifier.padding(start = 8.dp),
                 colors = ButtonDefaults.textButtonColors(
@@ -110,7 +110,7 @@ fun ModelEntryDetailScreen(
             ) { Text(stringResource(R.string.common_cancel)) }
         },
         actions = {
-            IButton(
+            OrcaButton(
                 onClick = {
                     val baseInputs = baseModel.inputModalities ?: emptyList()
                     val baseOutputs = baseModel.outputModalities ?: emptyList()

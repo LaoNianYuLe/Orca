@@ -64,7 +64,7 @@
          readdir a mounted external folder. Capped at API 29 — ignored on 11+. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <!-- T219: Mount External Folders bind-mounts SAF-picked tree URIs into
-         /var/i/mounts/ via PRoot. PRoot's bind translates `readdir(/var/i/mounts/X)`
+         /var/orca/mounts/ via PRoot. PRoot's bind translates `readdir(/var/orca/mounts/X)`
          into a host-side `readdir(/storage/emulated/0/...)` running as the app uid.
          Without MANAGE_EXTERNAL_STORAGE, FuseDaemon (MediaProvider) silently filters
          out files owned by other packages from getdents64 results — so an Obsidian
@@ -152,8 +152,10 @@
     </queries>
 
     <application
-        android:name=".IApp"
+        android:name=".OrcaApp"
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:largeHeap="true"
         android:requestLegacyExternalStorage="true"
         android:preserveLegacyExternalStorage="true"
@@ -164,13 +166,13 @@
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@style/Theme.I">
+        android:theme="@style/Theme.Orca">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.I"
+            android:theme="@style/Theme.Orca"
             android:windowSoftInputMode="adjustResize">
             <!-- T-android-dynamic-app-icon: LAUNCHER intent-filter moved
                  to the <activity-alias> entries below so the user can pick
@@ -179,13 +181,13 @@
                  itself never appears in the launcher directly, but all
                  internal Intent(this, MainActivity::class.java) startActivity
                  calls keep working because MainActivity is always enabled.
-                 The i:// deep-link filter stays on MainActivity since
+                 The orca:// deep-link filter stays on MainActivity since
                  deep-links never go through the LAUNCHER category. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="i" />
+                <data android:scheme="orca" />
             </intent-filter>
         </activity>
 
@@ -210,7 +212,7 @@
             <!-- T-android-app-icon-shortcuts: app-icon long-press quick
                  actions (mirrors iOS QuickActionRouter / UIApplicationShortcutItem).
                  Three static shortcuts (new_chat / voice_chat / camera_chat)
-                 launch MainActivity via i://action/<name> deep-link.
+                 launch MainActivity via orca://action/<name> deep-link.
                  The shortcuts meta-data must live on the alias that owns
                  the LAUNCHER filter, not on MainActivity itself. -->
             <meta-data
@@ -254,7 +256,7 @@
         <activity
             android:name=".share.ShareReceiverActivity"
             android:exported="true"
-            android:theme="@style/Theme.I">
+            android:theme="@style/Theme.Orca">
             <!-- T157: widen mime to */* so I appears in the system share
                  sheet for any file type (xml/pdf/zip/audio/video/…). The
                  narrower text/plain + image/* + application/* set hid I
@@ -351,7 +353,7 @@
             android:exported="true"
             android:taskAffinity=""
             android:excludeFromRecents="false"
-            android:theme="@style/Theme.I">
+            android:theme="@style/Theme.Orca">
             <intent-filter>
                 <action android:name="com.orca.app.action.OPEN_WEBAPP" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -465,9 +467,14 @@
 
         <!-- Notification listener — lets android-notification read active notifications.
              User must enable this manually in Settings → Notifications → Device &
-             app notifications → Notification access. -->
+             app notifications → Notification access.
+
+             The grant is keyed on this class's fully-qualified name, so the
+             rebrand rename drops it: anyone who had notification access on
+             a pre-rebrand build has to re-enable it once. There is no way to
+             carry it over — only the user can issue the grant. -->
         <service
-            android:name=".offload.INotificationListenerService"
+            android:name=".offload.OrcaNotificationListenerService"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
@@ -511,9 +518,12 @@
 
         <!-- T323: AccessibilityService backing `android-a11y-cli`. The user
              must enable this manually under Settings → Accessibility; we
-             never start it programmatically (Android forbids that). -->
+             never start it programmatically (Android forbids that).
+
+             As with the notification listener above, the enable state is tied
+             to this class name, so the rebrand rename resets it once. -->
         <service
-            android:name=".accessibility.IAccessibilityService"
+            android:name=".accessibility.OrcaAccessibilityService"
             android:exported="true"
             android:label="@string/a11y_service_label"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -522,7 +532,7 @@
             </intent-filter>
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/i_accessibility_service" />
+                android:resource="@xml/orca_accessibility_service" />
         </service>
 
     </application>

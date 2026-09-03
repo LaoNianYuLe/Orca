@@ -38,7 +38,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.orca.app.R
 import com.orca.app.data.db.FolderEntity
-import com.orca.app.ui.components.ISmallButton
+import com.orca.app.ui.components.OrcaSmallButton
 import com.orca.app.ui.components.SectionDesign
 import com.orca.app.ui.components.SectionTextField
 
@@ -244,7 +244,7 @@ fun GroupPickerSheet(
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                ISmallButton(
+                OrcaSmallButton(
                     onClick = {
                         onChoose(
                             GroupChoice.Create(

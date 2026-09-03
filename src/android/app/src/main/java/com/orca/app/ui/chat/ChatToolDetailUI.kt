@@ -140,9 +140,9 @@ import com.orca.app.BuildConfig
 import com.orca.app.R
 import com.orca.app.data.FileMentionIndex
 import com.orca.app.logging.AppLogger
-import com.orca.app.ui.components.IAlertDialog
-import com.orca.app.ui.components.IMenu
-import com.orca.app.ui.components.IMenuDivider
+import com.orca.app.ui.components.OrcaAlertDialog
+import com.orca.app.ui.components.OrcaMenu
+import com.orca.app.ui.components.OrcaMenuDivider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -271,7 +271,7 @@ import com.orca.app.data.repository.MemoryRepository
 import com.orca.app.data.repository.ProviderRepository
 import com.orca.app.ui.browser.BrowserSheet
 import com.orca.app.ui.theme.ChatColors
-import com.orca.app.ui.components.ITextButton
+import com.orca.app.ui.components.OrcaTextButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -303,7 +303,7 @@ internal fun ToolDetailSheet(
                 .fillMaxHeight(0.85f)
                 .background(ChatColors.secondaryBg),
         ) {
-            // ── Top Nav Bar (iOS: X button + "I Computer" + action button) ──
+            // ── Top Nav Bar (iOS: X button + "Orca Computer" + action button) ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -541,7 +541,7 @@ internal fun ToolDetailSheet(
                                         if (block.content.isNotEmpty()) {
                                             // T38: linkify http/https URLs in shell output so the user can
                                             // tap them to open the in-app web preview (matches iOS
-                                            // TerminalCanvasView.addURLLinks → IOpenURLBroker).
+                                            // TerminalCanvasView.addURLLinks → OrcaOpenURLBroker).
                                             val urlClick = LocalMarkdownUrlClickHandler.current
                                             val linkified = remember(block.content, urlClick) {
                                                 if (urlClick != null) {
@@ -647,14 +647,14 @@ internal fun ToolDetailSheet(
                                     .fillMaxWidth()
                                     // T260: bound the Column to the parent
                                     // BoxWithConstraints' maxHeight so the inner
-                                    // verticalScroll ribbon (I Computer sheet
+                                    // verticalScroll ribbon (Orca Computer sheet
                                     // edit-card body) actually scrolls. Without
                                     // fillMaxHeight the Column's vertical constraint
                                     // is unbounded, the inner Column.verticalScroll
                                     // degenerates (each row laid out at full height
                                     // instead of scrolling), and the overflow
                                     // bleeds past the parent Box(weight=1f) onto
-                                    // the footer ("I is editing File / 2/3 /
+                                    // the footer ("Orca is editing File / 2/3 /
                                     // prev-next" at L5094). Mirrors the shell
                                     // branch (L4489) which already does this.
                                     .fillMaxHeight()

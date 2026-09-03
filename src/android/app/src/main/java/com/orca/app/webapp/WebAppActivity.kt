@@ -66,7 +66,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.webkit.WebViewAssetLoader
 import com.orca.app.MainActivity
-import com.orca.app.IApp
+import com.orca.app.OrcaApp
 import com.orca.app.R
 import com.orca.app.logging.AppLogger
 import kotlinx.coroutines.Dispatchers
@@ -145,7 +145,7 @@ class WebAppActivity : ComponentActivity() {
         }
 
         lifecycleScope.launch {
-            val app = applicationContext as IApp
+            val app = applicationContext as OrcaApp
             val shortcut = withContext(Dispatchers.IO) {
                 app.webAppShortcutRepository.get(shortcutId)
             }

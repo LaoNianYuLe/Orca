@@ -83,7 +83,7 @@ class ProviderRepository(private val context: Context) {
 
     // [T-android-provider-room-store] Per-row provider config DB. Lives in
     // its own provider.db file so a downgrade to a build that doesn't know
-    // about provider tables can't crash the main i.db open. The legacy
+    // about provider tables can't crash the main orca.db open. The legacy
     // SharedPreferences JSON mirror under "provider_config / config" is
     // still written on every save so older builds keep reading current
     // config — losing nothing on downgrade. See [loadConfig] for the
@@ -155,7 +155,7 @@ class ProviderRepository(private val context: Context) {
     // SharedPreferences read (~3s first-touch as the XML is parsed) + a
     // Json.decodeFromString<ProviderConfig> (~8s on a large config). It used to
     // run INLINE in this field initializer, i.e. inside ProviderRepository's
-    // constructor, which IApp.onCreate() invokes on the MAIN THREAD — so
+    // constructor, which OrcaApp.onCreate() invokes on the MAIN THREAD — so
     // cold start hung >11s. Now we start with an empty placeholder (instant, no
     // I/O) and load the real config on Dispatchers.IO, emitting it when ready.
     // Reactive consumers (config.collectAsState) update automatically on emit;
@@ -1424,7 +1424,7 @@ class ProviderRepository(private val context: Context) {
     }
 
     /**
-     * Resolve the effective model entries visible to the agent loop (i-model-use).
+     * Resolve the effective model entries visible to the agent loop (orca-model-use).
      * Expands groups to their members, unions with individual entries, dedupes by ID,
      * and filters to entries of enabled provider instances. Mirrors iOS
      * ProviderConfigStore.resolvedAgentLoopEntries.
@@ -2246,7 +2246,7 @@ class ProviderRepository(private val context: Context) {
 
         // [T-android-startup-config-stall] Config now loads asynchronously, so
         // at cold start `_config.value` may still be the empty placeholder when
-        // this fires from IApp.onCreate. Wait for the load before reading
+        // this fires from OrcaApp.onCreate. Wait for the load before reading
         // the enabled-instance set, otherwise the daily refresh would no-op on
         // "no enabled instances" and skip this launch entirely. Runs on the
         // caller's (IO) scope — does not touch the main thread.
