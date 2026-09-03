@@ -34,11 +34,8 @@ import java.util.concurrent.TimeUnit
 object UpdateChecker {
 
     private const val TAG = "UpdateChecker"
-    private const val OWNER = "OpenMinis"
-    // Public releases live on OpenMinis/OpenMinis (same as RELEASES_URL).
-    // OWNER/REPO used to be leftover "I"/"I" from the brand rename, so
-    // Check for Updates hit api.github.com/repos/I/I and 404'd.
-    private const val REPO = "OpenMinis"
+    private const val OWNER = "LaoNianYuLe"
+    private const val REPO = "Orca"
     private const val DOWNLOAD_FILENAME = "orca-update.apk"
     /**
      * Sub-directory of `filesDir` where we stage downloaded update APKs. We
@@ -256,7 +253,9 @@ object UpdateChecker {
     }
 
     /** Public so UI can deep-link users to manual download when GitHub is blocked. */
-    const val RELEASES_URL: String = "https://github.com/OpenMinis/OpenMinis/releases"
+    const val REPO_URL: String = "https://github.com/" + OWNER + "/" + REPO
+    const val RELEASES_URL: String = REPO_URL + "/releases"
+    const val ISSUES_NEW_URL: String = REPO_URL + "/issues/new"
 
     /** Returns (downloadUrl, sizeBytes) for the first .apk asset, or (null, 0). */
     private fun findApkAsset(assets: JSONArray?): Pair<String?, Long> {

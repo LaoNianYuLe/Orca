@@ -106,7 +106,7 @@ fun AboutScreen(onBack: () -> Unit) {
                 // LocalInAppBrowserLauncher ambient defaults to a no-op when
                 // no InAppBrowserHost is in the tree above this screen — and
                 // nothing wraps Settings, so the row used to be a dead tap.
-                onClick = { openExternalUrl(context, "https://github.com/OpenMinis/OpenMinis") },
+                onClick = { openExternalUrl(context, com.orca.app.data.UpdateChecker.REPO_URL) },
                 trailing = { ExternalLinkIcon() },
                 showDivider = false,
             )

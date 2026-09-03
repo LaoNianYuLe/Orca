@@ -379,7 +379,7 @@ private fun FeedbackSheetItem(
  * triage instead of asking the user to fill in environment details.
  *
  * URL shape:
- *   https://github.com/OpenMinis/OpenMinis/issues/new
+ *   https://github.com/LaoNianYuLe/Orca/issues/new
  *     ?template=bug_report.md
  *     &title=[Bug]
  *     &body=<percent-encoded markdown>
@@ -442,7 +442,7 @@ private fun buildBugReportUrl(): String {
     // since URLEncoder turns spaces into '+' which GitHub also accepts but
     // the spec calls for the literal "[Bug] " form.
     val title = java.net.URLEncoder.encode("[Bug] ", "UTF-8")
-    return "https://github.com/OpenMinis/OpenMinis/issues/new" +
+    return com.orca.app.data.UpdateChecker.ISSUES_NEW_URL +
         "?template=bug_report.md" +
         "&title=$title" +
         "&body=$encodedBody"
