@@ -36,8 +36,8 @@ android {
         applicationId = "com.orca.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 25
-        versionName = "1.12-test.2"
+        versionCode = 26
+        versionName = "1.12-test.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

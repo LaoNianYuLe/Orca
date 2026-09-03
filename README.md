@@ -20,12 +20,12 @@ and theme/startup behavior adapted for this build.
 
 ## Current test release
 
-The first public Android package is a **test release**, not a stable release.
+The current public Android package is a **test release**, not a stable release.
 It is intended for emulator and device testing of the Orca branding, mobile
 sidebar, settings navigation, first-install welcome flow, and light/dark theme
 behavior.
 
-- App version: `1.12` (version code `24`)
+- App version: `1.12-test.3` (version code `26`)
 - Package type: Android debug APK
 - Architecture: `arm64-v8a`
 - Test scope: Android; iOS packaging is not included in this release
@@ -39,6 +39,8 @@ do not trust.
 
 The APK checksum is published in the GitHub release notes so the downloaded
 file can be verified before installation.
+
+Download: [Orca-v1.12-test.3-arm64-debug.apk](https://github.com/LaoNianYuLe/Orca/releases/download/v1.12-test.3/Orca-v1.12-test.3-arm64-debug.apk)
 
 ## Build Android
 
@@ -80,8 +82,8 @@ shared API account or a bundled API key. The `models-dev-api.json` file is
 public model metadata, not an authentication credential.
 
 If an APK is distributed, the corresponding modified source must remain
-available from this repository under GPLv3. An APK is optional; the source
-repository is the required part of the release.
+available from this repository under GPLv3. The source repository is the
+required part of the release; the APK is provided as a convenience for testing.
 
 ## License and attribution
 
